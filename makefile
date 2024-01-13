@@ -11,8 +11,8 @@ $(bin)/%.o: $(src)/%.c
 	$(cc) -c $^ -o $@
 
 $(bin)/$(output): $(objects)
-	$(cc) $(objects) -o $@
+	$(cc) $(objects) -lSDL2 -o $@
 
 clean:
-	rm $(bin)/*.o
-	rm $(bin)/$(output)
+	rm -f $(bin)/*.o
+	rm -f $(bin)/$(output)
