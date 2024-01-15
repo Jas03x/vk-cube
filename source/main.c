@@ -50,19 +50,18 @@ bool initialize(void)
     vk_api.get_instance_proc_addr = SDL_Vulkan_GetVkGetInstanceProcAddr();
     vk_api.create_instance = vk_api.get_instance_proc_addr(NULL, "vkCreateInstance");
 
-    struct vk_application_info app_info;
+    struct vk_application_info app_info = { 0 };
     app_info.type = vk_application_info;
     app_info.next = NULL;
     app_info.app_name = "vk-cube";
     app_info.app_version = 1;
     app_info.engine_name = "vk-cube";
     app_info.engine_version = 1;
-    app_info.api_version = 1;
+    app_info.api_version = VK_VERSION(0, 1, 0, 0);
 
-    struct vk_instance_info instance_info;
+    struct vk_instance_info instance_info = { 0 };
     instance_info.type = vk_instance_info;
     instance_info.next = NULL;
-    instance_info.reserved = 0;
     instance_info.app_info = &app_info;
     instance_info.layer_count = 0;
     instance_info.layer_names = NULL;
@@ -154,3 +153,4 @@ int main(int argc, char* argv[])
 
     return status;
 }
+

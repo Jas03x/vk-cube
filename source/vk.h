@@ -1,6 +1,8 @@
 #ifndef VK_H
 #define VK_H
 
+#define VK_VERSION(variant, major, minor, patch) ((((variant) & 0x3) << 29) | (((major) & 0x7F) << 22) | (((minor) & 0x3FF) << 12) | ((patch) & 0xFFF))
+
 typedef void* vk_instance;
 
 enum vk_result
@@ -16,7 +18,8 @@ enum vk_structure_type
 
 struct vk_application_info
 {
-    enum vk_structure_type      type;
+    uint32_t                    type;
+    uint32_t                    reserved0;
     const void*                 next;
     const char*                 app_name;
     uint32_t                    app_version;
@@ -27,9 +30,10 @@ struct vk_application_info
 
 struct vk_instance_info
 {
-    enum vk_structure_type      type;
+    uint32_t                    type;
+    uint32_t                    reserved0;
     const void*                 next;
-    uint32_t                    reserved;
+    uint32_t                    reserved1;
     struct vk_application_info* app_info;
     uint32_t                    layer_count;
     const char* const*          layer_names;
