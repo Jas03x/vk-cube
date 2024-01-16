@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "vk_context.h"
 
@@ -9,6 +10,8 @@ struct vk_context vk_ctx = { 0 };
 
 bool initialize_function_pointers(void);
 bool initialize_instance(void);
+bool enumerate_layers(void);
+bool enumerate_extensions(void);
 
 bool initialize_vulkan_context(pfn_vk_get_instance_proc_addr pfn_get_instance_proc_addr)
 {
@@ -21,7 +24,17 @@ bool initialize_vulkan_context(pfn_vk_get_instance_proc_addr pfn_get_instance_pr
         status = initialize_function_pointers();
     }
 
-    if (status)
+    if(status)
+    {
+        status = enumerate_layers();
+    }
+
+    if(status)
+    {
+        status = enumerate_extensions();
+    }
+
+    if(status)
     {
         status = initialize_instance();
     }
@@ -38,6 +51,63 @@ bool initialize_function_pointers(void)
     vk_ctx.get_version = vk_ctx.get_instance_proc_addr(NULL, "vkEnumerateInstanceVersion");
     vk_ctx.get_layers = vk_ctx.get_instance_proc_addr(NULL, "vkEnumerateInstanceLayerProperties");
 
+    return status;
+}
+
+bool enumerate_layers(void)
+{
+    bool status = true;
+
+    uint32_t num_layers = 0;
+    struct vk_layer* p_layers = NULL;
+
+    if(vk_ctx.get_layers(&num_layers, NULL) != vk_success)
+    {
+        status = false;
+        printf("failed to get number of layers\n");
+    }
+
+    if(status)
+    {
+        p_layers = malloc(num_layers * sizeof(struct vk_layer));
+
+        if (p_layers == NULL)
+        {
+            status = false;
+            printf("failed to allocate memory\n");
+        }
+    }
+
+    if(status)
+    {
+        if(vk_ctx.get_layers(&num_layers, p_layers) != vk_success)
+        {
+            status = false;
+            printf("failed to get layers\n");
+        }
+    }
+
+    if(status)
+    {
+        printf("Layers:\n");
+        for(uint32_t i = 0; i < num_layers; i++)
+        {
+            printf("\t%s (%u, %u): %s\n", p_layers[i].name, p_layers[i].spec_version, p_layers[i].impl_version, p_layers[i].desc);
+        }
+    }
+
+    if(p_layers != NULL)
+    {
+        free(p_layers);
+        p_layers = NULL;
+    }
+
+    return status;
+}
+
+bool enumerate_extensions(void)
+{
+    bool status = true;
     return status;
 }
 
