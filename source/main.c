@@ -5,21 +5,13 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_vulkan.h>
 
-#include "vk.h"
+#include "vk_context.h"
 
 const char* window_title = "vk-cube";
 const uint32_t window_width = 1024;
 const uint32_t window_height = 768;
 
 SDL_Window* g_window = NULL;
-
-struct vk_functions
-{
-    pfn_vk_get_instance_proc_addr get_instance_proc_addr;
-    pfn_vk_create_instance        create_instance;
-};
-
-struct vk_functions vk_api = { 0 };
 
 bool initialize(void)
 {
@@ -47,32 +39,7 @@ bool initialize(void)
         }
     }
 
-    vk_api.get_instance_proc_addr = SDL_Vulkan_GetVkGetInstanceProcAddr();
-    vk_api.create_instance = vk_api.get_instance_proc_addr(NULL, "vkCreateInstance");
-
-    struct vk_application_info app_info = { 0 };
-    app_info.type = vk_application_info;
-    app_info.next = NULL;
-    app_info.app_name = "vk-cube";
-    app_info.app_version = 1;
-    app_info.engine_name = "vk-cube";
-    app_info.engine_version = 1;
-    app_info.api_version = VK_VERSION(0, 1, 0, 0);
-
-    struct vk_instance_info instance_info = { 0 };
-    instance_info.type = vk_instance_info;
-    instance_info.next = NULL;
-    instance_info.app_info = &app_info;
-    instance_info.layer_count = 0;
-    instance_info.layer_names = NULL;
-    instance_info.extension_count = 0;
-    instance_info.extension_names = NULL;
-
-    vk_instance instance = NULL;
-
-    vk_api.create_instance(&instance_info, NULL, &instance);
-
-    printf("instance: %p\n", instance);
+    status = initialize_vulkan_context(SDL_Vulkan_GetVkGetInstanceProcAddr());
 
     return status;
 }
