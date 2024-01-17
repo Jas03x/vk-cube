@@ -11,7 +11,7 @@ struct vk_context vk_ctx = { 0 };
 bool initialize_function_pointers(void);
 bool initialize_instance(void);
 bool enumerate_layers(void);
-bool enumerate_extensions(void);
+bool enumerate_extensions(const char* layer);
 
 bool initialize_vulkan_context(pfn_vk_get_instance_proc_addr pfn_get_instance_proc_addr)
 {
@@ -31,11 +31,6 @@ bool initialize_vulkan_context(pfn_vk_get_instance_proc_addr pfn_get_instance_pr
 
     if(status)
     {
-        status = enumerate_extensions();
-    }
-
-    if(status)
-    {
         status = initialize_instance();
     }
 
@@ -50,6 +45,7 @@ bool initialize_function_pointers(void)
     vk_ctx.create_instance = vk_ctx.get_instance_proc_addr(NULL, "vkCreateInstance");
     vk_ctx.get_version = vk_ctx.get_instance_proc_addr(NULL, "vkEnumerateInstanceVersion");
     vk_ctx.get_layers = vk_ctx.get_instance_proc_addr(NULL, "vkEnumerateInstanceLayerProperties");
+    vk_ctx.get_extensions = vk_ctx.get_instance_proc_addr(NULL, "vkEnumerateInstanceExtensionProperties");
 
     return status;
 }
@@ -92,8 +88,22 @@ bool enumerate_layers(void)
         printf("Layers:\n");
         for(uint32_t i = 0; i < num_layers; i++)
         {
-            printf("\t%s (%u, %u): %s\n", p_layers[i].name, p_layers[i].spec_version, p_layers[i].impl_version, p_layers[i].desc);
+            printf("\t%s (0x%X, %u): %s\n", p_layers[i].name, p_layers[i].spec_version, p_layers[i].impl_version, p_layers[i].desc);
         }
+    }
+
+    if(status)
+    {
+        for(uint32_t i = 0; status && (i < num_layers); i++)
+        {
+            status = enumerate_extensions(p_layers[i].name);
+        }
+    }
+
+    if(status)
+    {
+        // enumerate the extensions provided by the vulkan implementation
+        status = enumerate_extensions(NULL);
     }
 
     if(p_layers != NULL)
@@ -105,9 +115,62 @@ bool enumerate_layers(void)
     return status;
 }
 
-bool enumerate_extensions(void)
+bool enumerate_extensions(const char* layer)
 {
     bool status = true;
+
+    uint32_t num_extensions = 0;
+    struct vk_extension* p_extensions = NULL;
+
+    if(vk_ctx.get_extensions(layer, &num_extensions, NULL) != vk_success)
+    {
+        status = false;
+        printf("failed to get number of extensions\n");
+    }
+
+    if(status)
+    {
+        p_extensions = malloc(num_extensions * sizeof(struct vk_extension));
+
+        if(p_extensions == NULL)
+        {
+            status = false;
+            printf("failed to allocate memory\n");
+        }
+    }
+
+    if(status)
+    {
+        if(vk_ctx.get_extensions(layer, &num_extensions, p_extensions) != vk_success)
+        {
+            status = false;
+            printf("failed to get extensions\n");
+        }
+    }
+
+    if(status)
+    {
+        if(layer == NULL)
+        {
+            printf("vulkan extensions:\n");
+        }
+        else
+        {
+            printf("extensions for layer %s:\n", layer);
+        }
+
+        for(uint32_t i = 0; i < num_extensions; i++)
+        {
+            printf("\t%s\n", p_extensions[i].name);
+        }
+    }
+
+    if(p_extensions != NULL)
+    {
+        free(p_extensions);
+        p_extensions = NULL;
+    }
+
     return status;
 }
 
