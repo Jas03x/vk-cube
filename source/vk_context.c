@@ -85,25 +85,18 @@ bool enumerate_layers(void)
 
     if(status)
     {
-        printf("Layers:\n");
+        // enumerate the extensions provided by the vulkan implementation
+        printf("Layer: Vulkan implementation\n");
+        status = enumerate_extensions(NULL);
+    }
+
+    if(status)
+    {
         for(uint32_t i = 0; i < num_layers; i++)
         {
-            printf("\t%s (0x%X, %u): %s\n", p_layers[i].name, p_layers[i].spec_version, p_layers[i].impl_version, p_layers[i].desc);
-        }
-    }
-
-    if(status)
-    {
-        for(uint32_t i = 0; status && (i < num_layers); i++)
-        {
+            printf("Layer %s (0x%X, %u): %s\n", p_layers[i].name, p_layers[i].spec_version, p_layers[i].impl_version, p_layers[i].desc);
             status = enumerate_extensions(p_layers[i].name);
         }
-    }
-
-    if(status)
-    {
-        // enumerate the extensions provided by the vulkan implementation
-        status = enumerate_extensions(NULL);
     }
 
     if(p_layers != NULL)
@@ -150,18 +143,9 @@ bool enumerate_extensions(const char* layer)
 
     if(status)
     {
-        if(layer == NULL)
-        {
-            printf("vulkan extensions:\n");
-        }
-        else
-        {
-            printf("extensions for layer %s:\n", layer);
-        }
-
         for(uint32_t i = 0; i < num_extensions; i++)
         {
-            printf("\t%s\n", p_extensions[i].name);
+            printf("\tExtension: %s\n", p_extensions[i].name);
         }
     }
 
@@ -196,7 +180,11 @@ bool initialize_instance(void)
     instance_info.extension_count = 0;
     instance_info.extension_names = NULL;
 
-    vk_ctx.create_instance(&instance_info, NULL, &vk_ctx.instance);
+    if(vk_ctx.create_instance(&instance_info, NULL, &vk_ctx.instance) != vk_success)
+    {
+        status = false;
+        printf("failed to create vulkan instance\n");
+    }
 
     printf("instance: %p\n", vk_ctx.instance);
     
