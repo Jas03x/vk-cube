@@ -1,7 +1,5 @@
 cc = gcc
 
-lnx = $(bin)/$(output)
-
 $(bin)/%.o: $(src)/%.c
 	$(cc) -c $^ -o $@
 
