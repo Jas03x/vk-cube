@@ -7,12 +7,8 @@ output = vk-cube
 
 objects = $(patsubst $(src)/%.c, $(bin)/%.o, $(wildcard $(src)/*.c))
 
-$(bin)/%.o: $(src)/%.c
-	$(cc) -c $^ -o $@
-
-$(bin)/$(output): $(objects)
-	$(cc) $(objects) -lSDL2 -o $@
-
-clean:
-	rm -f $(bin)/*.o
-	rm -f $(bin)/$(output)
+ifeq ($(MAKECMDGOALS),win)
+	include makefile.win
+else ifeq ($(MAKECMDGOALS),lnx)
+	include makefile.lnx
+endif

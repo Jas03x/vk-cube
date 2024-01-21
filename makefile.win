@@ -1,0 +1,17 @@
+
+path = "c:\program files\microsoft visual studio\2022\community\vc\tools\msvc\14.38.33130\bin\hostx64\x64"
+
+cc = $(path)/cl.exe
+link = $(path)/link.exe
+
+win: $(bin)/$(output).exe
+
+$(bin)/%.o: $(src)/%.c
+	$(cc) $^
+
+$(bin)/$(output).exe: $(objects)
+	$(link) $(objects)
+
+clean:
+	rm -f $(bin)/*.o
+	rm -f $(bin)/$(output)
