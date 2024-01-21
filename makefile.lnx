@@ -1,4 +1,3 @@
-
 cc = gcc
 
 lnx = $(bin)/$(output)
