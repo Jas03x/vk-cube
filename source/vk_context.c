@@ -190,4 +190,3 @@ bool initialize_instance(void)
     
     return status;
 }
-

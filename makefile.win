@@ -4,13 +4,16 @@ path = "c:\program files\microsoft visual studio\2022\community\vc\tools\msvc\14
 cc = $(path)/cl.exe
 link = $(path)/link.exe
 
-win: $(bin)/$(output).exe
+exe = $(bin)/$(output).exe
+pdb = $(bin)/$(output).pdb
+
+win: $(exe)
 
 $(bin)/%.o: $(src)/%.c
-	$(cc) $^
+	$(cc) -Zi -c $^ -Fo:$@ -Fd:$(pdb)
 
-$(bin)/$(output).exe: $(objects)
-	$(link) $(objects)
+$(exe): $(objects)
+	$(link) -DEBUG $(objects) -PDB:$(pdb) $^ -OUT:$@
 
 clean:
 	rm -f $(bin)/*.o
