@@ -15,6 +15,7 @@ struct vk_context
     pfn_vk_enumerate_extensions       enumerate_extensions;
 
     pfn_vk_enumerate_physical_devices enumerate_devices;
+    pfn_vk_get_device_properties      get_device_properties;
 };
 
 extern struct vk_context vk_ctx;

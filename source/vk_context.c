@@ -16,6 +16,8 @@ bool enumerate_layers(void);
 bool enumerate_extensions(const char* layer);
 bool enumerate_devices(void);
 
+bool get_device_properties(vk_device device, uint32_t index);
+
 bool initialize_vulkan_context(pfn_vk_get_instance_proc_addr pfn_get_instance_proc_addr)
 {
     bool status = true;
@@ -89,6 +91,7 @@ bool initialize_instance_function_pointers(void)
     bool status = true;
 
     status &= load_function_pointer(vk_ctx.instance, "vkEnumeratePhysicalDevices", (void**) &vk_ctx.enumerate_devices);
+    status &= load_function_pointer(vk_ctx.instance, "vkGetPhysicalDeviceProperties", (void**) &vk_ctx.get_device_properties);
 
     return status;
 }
@@ -239,7 +242,7 @@ bool enumerate_devices(void)
     bool status = true;
 
     uint32_t num_devices = 0;
-    vk_physical_device* p_devices = NULL;
+    vk_device* p_devices = NULL;
 
     if(vk_ctx.enumerate_devices(vk_ctx.instance, &num_devices, NULL) != vk_success)
     {
@@ -249,7 +252,7 @@ bool enumerate_devices(void)
 
     if(status)
     {
-        p_devices = malloc(num_devices * sizeof(vk_physical_device));
+        p_devices = malloc(num_devices * sizeof(vk_device));
 
         if(p_devices == NULL)
         {
@@ -269,8 +272,9 @@ bool enumerate_devices(void)
 
     if(status)
     {
-        for(uint32_t i = 0; i < num_devices; i++)
+        for(uint32_t i = 0; status && (i < num_devices); i++)
         {
+            status = get_device_properties(p_devices[i], i);
         }
     }
 
@@ -283,3 +287,38 @@ bool enumerate_devices(void)
     return status;
 }
 
+bool get_device_properties(vk_device device, uint32_t index)
+{
+    bool status = true;
+
+    struct vk_device_properties properties = { 0 };
+
+    vk_ctx.get_device_properties(device, &properties);
+
+    if(status)
+    {
+        printf("device %u: %s\n", index, properties.device_name);
+    
+        const char* type = "unknown";
+        switch(properties.device_type)
+        {
+            case vk_device_type__integrated_gpu:
+                type = "integrated gpu";
+                break;
+            case vk_device_type__discrete_gpu:
+                type = "discrete gpu";
+                break;
+            case vk_device_type__virtual_gpu:
+                type = "virtual gpu";
+                break;
+            case vk_device_type__cpu:
+                type = "cpu";
+                break;
+            default:
+                break;
+        }
+        printf("\ttype: %s\n", type);
+    }
+
+    return status;
+}
