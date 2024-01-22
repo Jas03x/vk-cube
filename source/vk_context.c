@@ -16,7 +16,7 @@ bool enumerate_layers(void);
 bool enumerate_extensions(const char* layer);
 bool enumerate_devices(void);
 
-bool get_device_properties(vk_device device, uint32_t index);
+bool get_device_properties(vk_device device, struct vk_device_properties* properties, uint32_t index);
 
 bool initialize_vulkan_context(pfn_vk_get_instance_proc_addr pfn_get_instance_proc_addr)
 {
@@ -244,6 +244,8 @@ bool enumerate_devices(void)
     uint32_t num_devices = 0;
     vk_device* p_devices = NULL;
 
+    struct vk_device_properties* p_properties = NULL;
+
     if(vk_ctx.enumerate_devices(vk_ctx.instance, &num_devices, NULL) != vk_success)
     {
         status = false;
@@ -272,10 +274,53 @@ bool enumerate_devices(void)
 
     if(status)
     {
+        p_properties = malloc(num_devices * sizeof(struct vk_device_properties));
+
+        if(p_properties == NULL)
+        {
+            status = false;
+            printf("failed to allocate memory\n");
+        }
+    }
+
+    if(status)
+    {
         for(uint32_t i = 0; status && (i < num_devices); i++)
         {
-            status = get_device_properties(p_devices[i], i);
+            status = get_device_properties(p_devices[i], &p_properties[i], i);
         }
+    }
+
+    if(status)
+    {
+        uint32_t device_index = 0;
+
+        while(device_index < num_devices)
+        {
+            if(p_properties[device_index].device_type == vk_device_type__discrete_gpu)
+            {
+                printf("use device %u\n", device_index);
+                break;
+            }
+
+            device_index++;
+        }
+
+        if(device_index < num_devices)
+        {
+            vk_ctx.device = p_devices[device_index];
+        }
+        else
+        {
+            status = false;
+            printf("error: could not find discrete gpu\n");
+        }
+    }
+
+    if(p_properties != NULL)
+    {
+        free(p_properties);
+        p_properties = NULL;
     }
 
     if(p_devices != NULL)
@@ -287,20 +332,18 @@ bool enumerate_devices(void)
     return status;
 }
 
-bool get_device_properties(vk_device device, uint32_t index)
+bool get_device_properties(vk_device device, struct vk_device_properties* properties, uint32_t index)
 {
     bool status = true;
 
-    struct vk_device_properties properties = { 0 };
-
-    vk_ctx.get_device_properties(device, &properties);
+    vk_ctx.get_device_properties(device, properties);
 
     if(status)
     {
-        printf("device %u: %s\n", index, properties.device_name);
-    
+        printf("device %u: %s\n", index, properties->device_name);
+
         const char* type = "unknown";
-        switch(properties.device_type)
+        switch(properties->device_type)
         {
             case vk_device_type__integrated_gpu:
                 type = "integrated gpu";
@@ -318,6 +361,11 @@ bool get_device_properties(vk_device device, uint32_t index)
                 break;
         }
         printf("\ttype: %s\n", type);
+
+        printf("\tvendor: 0x%X\n", properties->vendor_id);
+        printf("\tdevice id: 0x%X\n", properties->device_id);
+        printf("\tdriver version:0x%X\n", properties->driver_version);
+        printf("\tapi version version:0x%X\n", properties->api_version);
     }
 
     return status;
