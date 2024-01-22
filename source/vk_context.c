@@ -14,6 +14,7 @@ bool initialize_instance(void);
 
 bool enumerate_layers(void);
 bool enumerate_extensions(const char* layer);
+bool enumerate_devices(void);
 
 bool initialize_vulkan_context(pfn_vk_get_instance_proc_addr pfn_get_instance_proc_addr)
 {
@@ -39,6 +40,11 @@ bool initialize_vulkan_context(pfn_vk_get_instance_proc_addr pfn_get_instance_pr
     if(status)
     {
         status = initialize_instance_function_pointers();
+    }
+
+    if(status)
+    {
+        status = enumerate_devices();
     }
 
     return status;
@@ -225,6 +231,55 @@ bool initialize_instance(void)
 
     printf("instance: %p\n", vk_ctx.instance);
     
+    return status;
+}
+
+bool enumerate_devices(void)
+{
+    bool status = true;
+
+    uint32_t num_devices = 0;
+    vk_physical_device* p_devices = NULL;
+
+    if(vk_ctx.enumerate_devices(vk_ctx.instance, &num_devices, NULL) != vk_success)
+    {
+        status = false;
+        printf("failed to get number of devices\n");
+    }
+
+    if(status)
+    {
+        p_devices = malloc(num_devices * sizeof(vk_physical_device));
+
+        if(p_devices == NULL)
+        {
+            status = false;
+            printf("failed to allocate memory\n");
+        }
+    }
+
+    if(status)
+    {
+        if(vk_ctx.enumerate_devices(vk_ctx.instance, &num_devices, p_devices) != vk_success)
+        {
+            status = false;
+            printf("failed to get devices\n");
+        }
+    }
+
+    if(status)
+    {
+        for(uint32_t i = 0; i < num_devices; i++)
+        {
+        }
+    }
+
+    if(p_devices != NULL)
+    {
+        free(p_devices);
+        p_devices = NULL;
+    }
+
     return status;
 }
 
