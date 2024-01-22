@@ -61,7 +61,7 @@ struct vk_extension
 typedef void*    (*pfn_vk_get_instance_proc_addr)(vk_instance instance, const char* name);
 typedef uint32_t (*pfn_vk_create_instance)(struct vk_instance_info* info, void* reserved, vk_instance* instance);
 typedef uint32_t (*pfn_vk_get_version)(uint32_t* version);
-typedef uint32_t (*pfn_vk_get_layers)(uint32_t* count, struct vk_layer* layers);
-typedef uint32_t (*pfn_vk_get_extensions)(const char* layer_name, uint32_t* count, struct vk_extension* extensions);
+typedef uint32_t (*pfn_vk_enumerate_layers)(uint32_t* count, struct vk_layer* layers);
+typedef uint32_t (*pfn_vk_enumerate_extensions)(const char* layer_name, uint32_t* count, struct vk_extension* extensions);
 
 #endif // VK_H

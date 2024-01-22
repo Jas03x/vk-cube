@@ -66,8 +66,8 @@ bool initialize_function_pointers(void)
     // get global functions
     status &= load_function_pointer(NULL, "vkCreateInstance", (void**) &vk_ctx.create_instance);
     status &= load_function_pointer(NULL, "vkEnumerateInstanceVersion", (void**) &vk_ctx.get_version);
-    status &= load_function_pointer(NULL, "vkEnumerateInstanceLayerProperties", (void**) &vk_ctx.get_layers);
-    status &= load_function_pointer(NULL, "vkEnumerateInstanceExtensionProperties", (void**) &vk_ctx.get_extensions);
+    status &= load_function_pointer(NULL, "vkEnumerateInstanceLayerProperties", (void**) &vk_ctx.enumerate_layers);
+    status &= load_function_pointer(NULL, "vkEnumerateInstanceExtensionProperties", (void**) &vk_ctx.enumerate_extensions);
 
     return status;
 }
@@ -79,7 +79,7 @@ bool enumerate_layers(void)
     uint32_t num_layers = 0;
     struct vk_layer* p_layers = NULL;
 
-    if(vk_ctx.get_layers(&num_layers, NULL) != vk_success)
+    if(vk_ctx.enumerate_layers(&num_layers, NULL) != vk_success)
     {
         status = false;
         printf("failed to get number of layers\n");
@@ -98,7 +98,7 @@ bool enumerate_layers(void)
 
     if(status)
     {
-        if(vk_ctx.get_layers(&num_layers, p_layers) != vk_success)
+        if(vk_ctx.enumerate_layers(&num_layers, p_layers) != vk_success)
         {
             status = false;
             printf("failed to get layers\n");
@@ -137,7 +137,7 @@ bool enumerate_extensions(const char* layer)
     uint32_t num_extensions = 0;
     struct vk_extension* p_extensions = NULL;
 
-    if(vk_ctx.get_extensions(layer, &num_extensions, NULL) != vk_success)
+    if(vk_ctx.enumerate_extensions(layer, &num_extensions, NULL) != vk_success)
     {
         status = false;
         printf("failed to get number of extensions\n");
@@ -156,7 +156,7 @@ bool enumerate_extensions(const char* layer)
 
     if(status)
     {
-        if(vk_ctx.get_extensions(layer, &num_extensions, p_extensions) != vk_success)
+        if(vk_ctx.enumerate_extensions(layer, &num_extensions, p_extensions) != vk_success)
         {
             status = false;
             printf("failed to get extensions\n");
