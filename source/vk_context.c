@@ -8,8 +8,10 @@
 
 struct vk_context vk_ctx = { 0 };
 
-bool initialize_function_pointers(void);
+bool initialize_global_function_pointers(void);
+bool initialize_instance_function_pointers(void);
 bool initialize_instance(void);
+
 bool enumerate_layers(void);
 bool enumerate_extensions(const char* layer);
 
@@ -21,7 +23,7 @@ bool initialize_vulkan_context(pfn_vk_get_instance_proc_addr pfn_get_instance_pr
 
     if(status)
     {
-        status = initialize_function_pointers();
+        status = initialize_global_function_pointers();
     }
 
     if(status)
@@ -32,6 +34,11 @@ bool initialize_vulkan_context(pfn_vk_get_instance_proc_addr pfn_get_instance_pr
     if(status)
     {
         status = initialize_instance();
+    }
+
+    if(status)
+    {
+        status = initialize_instance_function_pointers();
     }
 
     return status;
@@ -59,15 +66,23 @@ bool load_function_pointer(vk_instance instance, const char* name, void** pfn)
     return status;
 }
 
-bool initialize_function_pointers(void)
+bool initialize_global_function_pointers(void)
 {
     bool status = true;
 
-    // get global functions
     status &= load_function_pointer(NULL, "vkCreateInstance", (void**) &vk_ctx.create_instance);
     status &= load_function_pointer(NULL, "vkEnumerateInstanceVersion", (void**) &vk_ctx.get_version);
     status &= load_function_pointer(NULL, "vkEnumerateInstanceLayerProperties", (void**) &vk_ctx.enumerate_layers);
     status &= load_function_pointer(NULL, "vkEnumerateInstanceExtensionProperties", (void**) &vk_ctx.enumerate_extensions);
+
+    return status;
+}
+
+bool initialize_instance_function_pointers(void)
+{
+    bool status = true;
+
+    status &= load_function_pointer(vk_ctx.instance, "vkEnumeratePhysicalDevices", (void**) &vk_ctx.enumerate_devices);
 
     return status;
 }
@@ -212,3 +227,4 @@ bool initialize_instance(void)
     
     return status;
 }
+

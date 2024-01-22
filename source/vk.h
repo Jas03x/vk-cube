@@ -7,6 +7,7 @@
 #define VK_VERSION(variant, major, minor, patch) ((((variant) & 0x3) << 29) | (((major) & 0x7F) << 22) | (((minor) & 0x3FF) << 12) | ((patch) & 0xFFF))
 
 typedef void* vk_instance;
+typedef void* vk_physical_device;
 
 enum vk_result
 {
@@ -58,10 +59,14 @@ struct vk_extension
     uint32_t                    spec_version;
 };
 
+// global functions
 typedef void*    (*pfn_vk_get_instance_proc_addr)(vk_instance instance, const char* name);
 typedef uint32_t (*pfn_vk_create_instance)(struct vk_instance_info* info, void* reserved, vk_instance* instance);
 typedef uint32_t (*pfn_vk_get_version)(uint32_t* version);
 typedef uint32_t (*pfn_vk_enumerate_layers)(uint32_t* count, struct vk_layer* layers);
 typedef uint32_t (*pfn_vk_enumerate_extensions)(const char* layer_name, uint32_t* count, struct vk_extension* extensions);
+
+// instance level functions
+typedef uint32_t (*pfn_vk_enumerate_physical_devices)(vk_instance instance, uint32_t* count, vk_physical_device* devices);
 
 #endif // VK_H
