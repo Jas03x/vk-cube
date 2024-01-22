@@ -37,15 +37,37 @@ bool initialize_vulkan_context(pfn_vk_get_instance_proc_addr pfn_get_instance_pr
     return status;
 }
 
+bool load_function_pointer(vk_instance instance, const char* name, void** pfn)
+{
+    bool status = true;
+
+    if(pfn != NULL)
+    {
+        (*pfn) = vk_ctx.get_instance_proc_addr(instance, name);
+
+        if((*pfn) == NULL)
+        {
+            status = false;
+            printf("error: failed to load function pointer %s\n", name);
+        }
+    }
+    else
+    {
+        status = false;
+    }
+
+    return status;
+}
+
 bool initialize_function_pointers(void)
 {
     bool status = true;
 
     // get global functions
-    vk_ctx.create_instance = vk_ctx.get_instance_proc_addr(NULL, "vkCreateInstance");
-    vk_ctx.get_version = vk_ctx.get_instance_proc_addr(NULL, "vkEnumerateInstanceVersion");
-    vk_ctx.get_layers = vk_ctx.get_instance_proc_addr(NULL, "vkEnumerateInstanceLayerProperties");
-    vk_ctx.get_extensions = vk_ctx.get_instance_proc_addr(NULL, "vkEnumerateInstanceExtensionProperties");
+    status &= load_function_pointer(NULL, "vkCreateInstance", (void**) &vk_ctx.create_instance);
+    status &= load_function_pointer(NULL, "vkEnumerateInstanceVersion", (void**) &vk_ctx.get_version);
+    status &= load_function_pointer(NULL, "vkEnumerateInstanceLayerProperties", (void**) &vk_ctx.get_layers);
+    status &= load_function_pointer(NULL, "vkEnumerateInstanceExtensionProperties", (void**) &vk_ctx.get_extensions);
 
     return status;
 }
