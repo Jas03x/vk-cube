@@ -36,10 +36,10 @@ struct vk_application_info
 {
     uint32_t                           type;
     uint32_t                           reserved0;
-    const void*                        next;
-    const char*                        app_name;
+    const void*                        p_next;
+    const char*                        p_app_name;
     uint32_t                           app_version;
-    const char*                        engine_name;
+    const char*                        p_engine_name;
     uint32_t                           engine_version;
     uint32_t                           api_version;
 };
@@ -48,13 +48,13 @@ struct vk_instance_info
 {
     uint32_t                           type;
     uint32_t                           reserved0;
-    const void*                        next;
+    const void*                        p_next;
     uint32_t                           reserved1;
-    struct vk_application_info*        app_info;
+    struct vk_application_info*        p_app_info;
     uint32_t                           layer_count;
-    const char* const*                 layer_names;
+    const char* const*                 p_layer_names;
     uint32_t                           extension_count;
-    const char* const*                 extension_names;
+    const char* const*                 p_extension_names;
 };
 
 struct vk_layer
@@ -203,15 +203,44 @@ struct vk_device_properties
     struct vk_device_sparse_properties sparse_properties;
 };
 
+struct vk_queue_group_properties
+{
+    union
+    {
+        struct
+        {
+            uint32_t graphics          : 1;
+            uint32_t compute           : 1;
+            uint32_t transfer          : 1;
+            uint32_t sparse_binding    : 1;
+            uint32_t protected_memory  : 1;
+            uint32_t video_decode      : 1;
+            uint32_t video_encode      : 1;
+            uint32_t optical_flow      : 1;
+            uint32_t reserved          : 24;
+        };
+        uint32_t                       all_bits;
+    } queue_flags;
+    uint32_t                           queue_count;
+    uint32_t                           timestamp_valid_bits;
+    struct
+    {
+        uint32_t                       width;
+        uint32_t                       height;
+        uint32_t                       depth;
+    } min_image_transfer_granularity;
+};
+
 // global functions
-typedef void*    (*pfn_vk_get_instance_proc_addr)(vk_instance instance, const char* name);
-typedef uint32_t (*pfn_vk_create_instance)(struct vk_instance_info* info, void* reserved, vk_instance* instance);
-typedef uint32_t (*pfn_vk_get_version)(uint32_t* version);
-typedef uint32_t (*pfn_vk_enumerate_layers)(uint32_t* count, struct vk_layer* layers);
-typedef uint32_t (*pfn_vk_enumerate_extensions)(const char* layer_name, uint32_t* count, struct vk_extension* extensions);
+typedef void*    (*pfn_vk_get_instance_proc_addr)(vk_instance h_instance, const char* p_name);
+typedef uint32_t (*pfn_vk_create_instance)(struct vk_instance_info* p_info, void* p_reserved, vk_instance* p_instance);
+typedef uint32_t (*pfn_vk_get_version)(uint32_t* p_version);
+typedef uint32_t (*pfn_vk_enumerate_layers)(uint32_t* p_count, struct vk_layer* p_layers);
+typedef uint32_t (*pfn_vk_enumerate_extensions)(const char* p_layer_name, uint32_t* p_count, struct vk_extension* p_extensions);
 
 // instance level functions
-typedef uint32_t (*pfn_vk_enumerate_physical_devices)(vk_instance instance, uint32_t* count, vk_device* devices);
-typedef uint32_t (*pfn_vk_get_device_properties)(vk_device device, struct vk_device_properties* properties);
+typedef uint32_t (*pfn_vk_enumerate_physical_devices)(vk_instance h_instance, uint32_t* p_count, vk_device* p_devices);
+typedef void     (*pfn_vk_get_device_properties)(vk_device h_device, struct vk_device_properties* p_properties);
+typedef void     (*pfn_vk_get_device_queue_group_properties)(vk_device h_device, uint32_t* p_count, struct vk_queue_group_properties* p_properties);
 
 #endif // VK_H

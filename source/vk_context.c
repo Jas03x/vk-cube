@@ -8,15 +8,24 @@
 
 struct vk_context vk_ctx = { 0 };
 
+struct device_info
+{
+    struct vk_device_properties       device_properties;
+
+    uint32_t                          queue_property_count;
+    struct vk_queue_group_properties* p_queue_property_array;
+};
+
 bool initialize_global_function_pointers(void);
 bool initialize_instance_function_pointers(void);
 bool initialize_instance(void);
 
 bool enumerate_layers(void);
-bool enumerate_extensions(const char* layer);
+bool enumerate_extensions(const char* p_layer);
 bool enumerate_devices(void);
 
-bool get_device_properties(vk_device device, struct vk_device_properties* properties, uint32_t index);
+void print_device_info(struct device_info* p_devices, uint32_t index);
+bool get_device_queue_info(vk_device h_device, struct device_info* p_info);
 
 bool initialize_vulkan_context(pfn_vk_get_instance_proc_addr pfn_get_instance_proc_addr)
 {
@@ -52,18 +61,18 @@ bool initialize_vulkan_context(pfn_vk_get_instance_proc_addr pfn_get_instance_pr
     return status;
 }
 
-bool load_function_pointer(vk_instance instance, const char* name, void** pfn)
+bool load_function_pointer(vk_instance h_instance, const char* p_name, void** p_pfn)
 {
     bool status = true;
 
-    if(pfn != NULL)
+    if(p_pfn != NULL)
     {
-        (*pfn) = vk_ctx.get_instance_proc_addr(instance, name);
+        (*p_pfn) = vk_ctx.get_instance_proc_addr(h_instance, p_name);
 
-        if((*pfn) == NULL)
+        if((*p_pfn) == NULL)
         {
             status = false;
-            printf("error: failed to load function pointer %s\n", name);
+            printf("error: failed to load function pointer %s\n", p_name);
         }
     }
     else
@@ -90,8 +99,9 @@ bool initialize_instance_function_pointers(void)
 {
     bool status = true;
 
-    status &= load_function_pointer(vk_ctx.instance, "vkEnumeratePhysicalDevices", (void**) &vk_ctx.enumerate_devices);
-    status &= load_function_pointer(vk_ctx.instance, "vkGetPhysicalDeviceProperties", (void**) &vk_ctx.get_device_properties);
+    status &= load_function_pointer(vk_ctx.h_instance, "vkEnumeratePhysicalDevices", (void**) &vk_ctx.enumerate_devices);
+    status &= load_function_pointer(vk_ctx.h_instance, "vkGetPhysicalDeviceProperties", (void**) &vk_ctx.get_device_properties);
+    status &= load_function_pointer(vk_ctx.h_instance, "vkGetPhysicalDeviceQueueFamilyProperties", (void**) &vk_ctx.get_queue_group_properties);
 
     return status;
 }
@@ -154,14 +164,14 @@ bool enumerate_layers(void)
     return status;
 }
 
-bool enumerate_extensions(const char* layer)
+bool enumerate_extensions(const char* p_layer)
 {
     bool status = true;
 
     uint32_t num_extensions = 0;
     struct vk_extension* p_extensions = NULL;
 
-    if(vk_ctx.enumerate_extensions(layer, &num_extensions, NULL) != vk_success)
+    if(vk_ctx.enumerate_extensions(p_layer, &num_extensions, NULL) != vk_success)
     {
         status = false;
         printf("failed to get number of extensions\n");
@@ -180,7 +190,7 @@ bool enumerate_extensions(const char* layer)
 
     if(status)
     {
-        if(vk_ctx.enumerate_extensions(layer, &num_extensions, p_extensions) != vk_success)
+        if(vk_ctx.enumerate_extensions(p_layer, &num_extensions, p_extensions) != vk_success)
         {
             status = false;
             printf("failed to get extensions\n");
@@ -210,29 +220,29 @@ bool initialize_instance(void)
 
     struct vk_application_info app_info = { 0 };
     app_info.type = vk_application_info;
-    app_info.next = NULL;
-    app_info.app_name = "vk-cube";
+    app_info.p_next = NULL;
+    app_info.p_app_name = "vk-cube";
     app_info.app_version = 1;
-    app_info.engine_name = "vk-cube";
+    app_info.p_engine_name = "vk-cube";
     app_info.engine_version = 1;
     app_info.api_version = VK_VERSION(0, 1, 0, 0);
 
     struct vk_instance_info instance_info = { 0 };
     instance_info.type = vk_instance_info;
-    instance_info.next = NULL;
-    instance_info.app_info = &app_info;
+    instance_info.p_next = NULL;
+    instance_info.p_app_info = &app_info;
     instance_info.layer_count = 0;
-    instance_info.layer_names = NULL;
+    instance_info.p_layer_names = NULL;
     instance_info.extension_count = 0;
-    instance_info.extension_names = NULL;
+    instance_info.p_extension_names = NULL;
 
-    if(vk_ctx.create_instance(&instance_info, NULL, &vk_ctx.instance) != vk_success)
+    if(vk_ctx.create_instance(&instance_info, NULL, &vk_ctx.h_instance) != vk_success)
     {
         status = false;
         printf("failed to create vulkan instance\n");
     }
 
-    printf("instance: %p\n", vk_ctx.instance);
+    printf("instance: %p\n", vk_ctx.h_instance);
     
     return status;
 }
@@ -244,9 +254,9 @@ bool enumerate_devices(void)
     uint32_t num_devices = 0;
     vk_device* p_devices = NULL;
 
-    struct vk_device_properties* p_properties = NULL;
+    struct device_info* p_device_info = NULL;
 
-    if(vk_ctx.enumerate_devices(vk_ctx.instance, &num_devices, NULL) != vk_success)
+    if(vk_ctx.enumerate_devices(vk_ctx.h_instance, &num_devices, NULL) != vk_success)
     {
         status = false;
         printf("failed to get number of devices\n");
@@ -265,7 +275,7 @@ bool enumerate_devices(void)
 
     if(status)
     {
-        if(vk_ctx.enumerate_devices(vk_ctx.instance, &num_devices, p_devices) != vk_success)
+        if(vk_ctx.enumerate_devices(vk_ctx.h_instance, &num_devices, p_devices) != vk_success)
         {
             status = false;
             printf("failed to get devices\n");
@@ -274,9 +284,9 @@ bool enumerate_devices(void)
 
     if(status)
     {
-        p_properties = malloc(num_devices * sizeof(struct vk_device_properties));
+        p_device_info = malloc(num_devices * sizeof(struct device_info));
 
-        if(p_properties == NULL)
+        if(p_device_info == NULL)
         {
             status = false;
             printf("failed to allocate memory\n");
@@ -287,7 +297,17 @@ bool enumerate_devices(void)
     {
         for(uint32_t i = 0; status && (i < num_devices); i++)
         {
-            status = get_device_properties(p_devices[i], &p_properties[i], i);
+            vk_ctx.get_device_properties(p_devices[i], &p_device_info[i].device_properties);
+            
+            status = get_device_queue_info(p_devices[i], &p_device_info[i]);
+        }
+    }
+
+    if(status)
+    {
+        for(uint32_t i = 0; i < num_devices; i++)
+        {
+            print_device_info(p_device_info, i);
         }
     }
 
@@ -297,7 +317,7 @@ bool enumerate_devices(void)
 
         while(device_index < num_devices)
         {
-            if(p_properties[device_index].device_type == vk_device_type__discrete_gpu)
+            if(p_device_info[device_index].device_properties.device_type == vk_device_type__discrete_gpu)
             {
                 printf("use device %u\n", device_index);
                 break;
@@ -308,7 +328,7 @@ bool enumerate_devices(void)
 
         if(device_index < num_devices)
         {
-            vk_ctx.device = p_devices[device_index];
+            vk_ctx.h_device = p_devices[device_index];
         }
         else
         {
@@ -317,10 +337,10 @@ bool enumerate_devices(void)
         }
     }
 
-    if(p_properties != NULL)
+    if(p_device_info != NULL)
     {
-        free(p_properties);
-        p_properties = NULL;
+        free(p_device_info);
+        p_device_info = NULL;
     }
 
     if(p_devices != NULL)
@@ -332,40 +352,80 @@ bool enumerate_devices(void)
     return status;
 }
 
-bool get_device_properties(vk_device device, struct vk_device_properties* properties, uint32_t index)
+void print_device_info(struct device_info* p_devices, uint32_t index)
+{
+    printf("device %u: %s\n", index, p_devices[index].device_properties.device_name);
+
+    const char* type = "unknown";
+    switch(p_devices[index].device_properties.device_type)
+    {
+        case vk_device_type__integrated_gpu:
+            type = "integrated gpu";
+            break;
+        case vk_device_type__discrete_gpu:
+            type = "discrete gpu";
+            break;
+        case vk_device_type__virtual_gpu:
+            type = "virtual gpu";
+            break;
+        case vk_device_type__cpu:
+            type = "cpu";
+            break;
+        default:
+            break;
+    }
+    printf("\ttype: %s\n", type);
+
+    printf("\tvendor: 0x%X\n", p_devices[index].device_properties.vendor_id);
+    printf("\tdevice id: 0x%X\n", p_devices[index].device_properties.device_id);
+    printf("\tdriver version:0x%X\n", p_devices[index].device_properties.driver_version);
+    printf("\tapi version version:0x%X\n", p_devices[index].device_properties.api_version);
+
+    for(uint32_t i = 0; i < p_devices[index].queue_property_count; i++)
+    {
+        printf("\tqueue group %u:\n", i);
+        printf("\t\tqueue count: %u\n", p_devices[index].p_queue_property_array[i].queue_count);
+        
+        if(p_devices[index].p_queue_property_array[i].queue_flags.graphics) { printf("\t\tgraphics supported\n"); }
+        if(p_devices[index].p_queue_property_array[i].queue_flags.compute) { printf("\t\tcompute supported\n"); }
+        if(p_devices[index].p_queue_property_array[i].queue_flags.transfer) { printf("\t\ttransfer supported\n"); }
+        if(p_devices[index].p_queue_property_array[i].queue_flags.sparse_binding) { printf("\t\tsparse_binding supported\n"); }
+        if(p_devices[index].p_queue_property_array[i].queue_flags.protected_memory) { printf("\t\tprotected_memory supported\n"); }
+        if(p_devices[index].p_queue_property_array[i].queue_flags.video_decode) { printf("\t\tvideo_decode supported\n"); }
+        if(p_devices[index].p_queue_property_array[i].queue_flags.video_encode) { printf("\t\tvideo_encode supported\n"); }
+        if(p_devices[index].p_queue_property_array[i].queue_flags.optical_flow) { printf("\t\toptical_flow supported\n"); }
+    }
+}
+
+bool get_device_queue_info(vk_device h_device, struct device_info* p_info)
 {
     bool status = true;
 
-    vk_ctx.get_device_properties(device, properties);
+    uint32_t num_groups = 0;
+    struct vk_queue_group_properties* p_groups = NULL;
+
+    vk_ctx.get_queue_group_properties(h_device, &num_groups, NULL);
+
+    if(num_groups > 0)
+    {
+        p_groups = malloc(num_groups * sizeof(struct vk_queue_group_properties));
+
+        if(p_groups == NULL)
+        {
+            status = false;
+            printf("failed to allocate memory\n");
+        }
+    }
 
     if(status)
     {
-        printf("device %u: %s\n", index, properties->device_name);
-
-        const char* type = "unknown";
-        switch(properties->device_type)
+        if(num_groups > 0)
         {
-            case vk_device_type__integrated_gpu:
-                type = "integrated gpu";
-                break;
-            case vk_device_type__discrete_gpu:
-                type = "discrete gpu";
-                break;
-            case vk_device_type__virtual_gpu:
-                type = "virtual gpu";
-                break;
-            case vk_device_type__cpu:
-                type = "cpu";
-                break;
-            default:
-                break;
+            vk_ctx.get_queue_group_properties(h_device, &num_groups, p_groups);
         }
-        printf("\ttype: %s\n", type);
 
-        printf("\tvendor: 0x%X\n", properties->vendor_id);
-        printf("\tdevice id: 0x%X\n", properties->device_id);
-        printf("\tdriver version:0x%X\n", properties->driver_version);
-        printf("\tapi version version:0x%X\n", properties->api_version);
+        p_info->queue_property_count = num_groups;
+        p_info->p_queue_property_array = p_groups;
     }
 
     return status;
