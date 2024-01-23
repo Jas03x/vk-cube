@@ -339,6 +339,15 @@ bool enumerate_devices(void)
 
     if(p_device_info != NULL)
     {
+        for(uint32_t i = 0; i < num_devices; i++)
+        {
+            if(p_device_info[i].p_queue_property_array != NULL)
+            {
+                free(p_device_info[i].p_queue_property_array);
+                p_device_info[i].p_queue_property_array = NULL;
+            }
+        }
+
         free(p_device_info);
         p_device_info = NULL;
     }
