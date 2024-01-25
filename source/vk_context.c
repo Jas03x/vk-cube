@@ -8,12 +8,12 @@
 
 struct vk_context vk_ctx = { 0 };
 
-struct device_info
+struct physical_device_info
 {
-    struct vk_device_properties       device_properties;
+    struct vk_physical_device_properties       device_properties;
 
-    uint32_t                          queue_property_count;
-    struct vk_queue_group_properties* p_queue_property_array;
+    uint32_t                                   num_queue_groups;
+    struct vk_physical_queue_group_properties* p_queue_group_properties;
 };
 
 bool initialize_global_function_pointers(void);
@@ -24,8 +24,8 @@ bool enumerate_layers(void);
 bool enumerate_extensions(const char* p_layer);
 bool enumerate_devices(void);
 
-void print_device_info(struct device_info* p_devices, uint32_t index);
-bool get_device_queue_info(vk_device h_device, struct device_info* p_info);
+void print_physical_device_info(struct physical_device_info* p_devices, uint32_t index);
+bool get_physical_device_queue_info(vk_physical_device h_device, struct physical_device_info* p_info);
 
 bool initialize_vulkan_context(pfn_vk_get_instance_proc_addr pfn_get_instance_proc_addr)
 {
@@ -100,8 +100,8 @@ bool initialize_instance_function_pointers(void)
     bool status = true;
 
     status &= load_function_pointer(vk_ctx.h_instance, "vkEnumeratePhysicalDevices", (void**) &vk_ctx.enumerate_devices);
-    status &= load_function_pointer(vk_ctx.h_instance, "vkGetPhysicalDeviceProperties", (void**) &vk_ctx.get_device_properties);
-    status &= load_function_pointer(vk_ctx.h_instance, "vkGetPhysicalDeviceQueueFamilyProperties", (void**) &vk_ctx.get_queue_group_properties);
+    status &= load_function_pointer(vk_ctx.h_instance, "vkGetPhysicalDeviceProperties", (void**) &vk_ctx.get_physical_device_properties);
+    status &= load_function_pointer(vk_ctx.h_instance, "vkGetPhysicalDeviceQueueFamilyProperties", (void**) &vk_ctx.get_physical_queue_group_properties);
 
     return status;
 }
@@ -251,12 +251,12 @@ bool enumerate_devices(void)
 {
     bool status = true;
 
-    uint32_t num_devices = 0;
-    vk_device* p_devices = NULL;
+    uint32_t num_physical_devices = 0;
+    vk_physical_device* p_physical_devices = NULL;
 
-    struct device_info* p_device_info = NULL;
+    struct physical_device_info* p_physical_device_info = NULL;
 
-    if(vk_ctx.enumerate_devices(vk_ctx.h_instance, &num_devices, NULL) != vk_success)
+    if(vk_ctx.enumerate_devices(vk_ctx.h_instance, &num_physical_devices, NULL) != vk_success)
     {
         status = false;
         printf("failed to get number of devices\n");
@@ -264,9 +264,9 @@ bool enumerate_devices(void)
 
     if(status)
     {
-        p_devices = malloc(num_devices * sizeof(vk_device));
+        p_physical_devices = malloc(num_physical_devices * sizeof(vk_physical_device));
 
-        if(p_devices == NULL)
+        if(p_physical_devices == NULL)
         {
             status = false;
             printf("failed to allocate memory\n");
@@ -275,7 +275,7 @@ bool enumerate_devices(void)
 
     if(status)
     {
-        if(vk_ctx.enumerate_devices(vk_ctx.h_instance, &num_devices, p_devices) != vk_success)
+        if(vk_ctx.enumerate_devices(vk_ctx.h_instance, &num_physical_devices, p_physical_devices) != vk_success)
         {
             status = false;
             printf("failed to get devices\n");
@@ -284,9 +284,9 @@ bool enumerate_devices(void)
 
     if(status)
     {
-        p_device_info = malloc(num_devices * sizeof(struct device_info));
+        p_physical_device_info = malloc(num_physical_devices * sizeof(struct physical_device_info));
 
-        if(p_device_info == NULL)
+        if(p_physical_device_info == NULL)
         {
             status = false;
             printf("failed to allocate memory\n");
@@ -295,19 +295,19 @@ bool enumerate_devices(void)
 
     if(status)
     {
-        for(uint32_t i = 0; status && (i < num_devices); i++)
+        for(uint32_t i = 0; status && (i < num_physical_devices); i++)
         {
-            vk_ctx.get_device_properties(p_devices[i], &p_device_info[i].device_properties);
+            vk_ctx.get_physical_device_properties(p_physical_devices[i], &p_physical_device_info[i].device_properties);
             
-            status = get_device_queue_info(p_devices[i], &p_device_info[i]);
+            status = get_physical_device_queue_info(p_physical_devices[i], &p_physical_device_info[i]);
         }
     }
 
     if(status)
     {
-        for(uint32_t i = 0; i < num_devices; i++)
+        for(uint32_t i = 0; i < num_physical_devices; i++)
         {
-            print_device_info(p_device_info, i);
+            print_physical_device_info(p_physical_device_info, i);
         }
     }
 
@@ -315,9 +315,9 @@ bool enumerate_devices(void)
     {
         uint32_t device_index = 0;
 
-        while(device_index < num_devices)
+        while(device_index < num_physical_devices)
         {
-            if(p_device_info[device_index].device_properties.device_type == vk_device_type__discrete_gpu)
+            if(p_physical_device_info[device_index].device_properties.device_type == vk_device_type__discrete_gpu)
             {
                 printf("use device %u\n", device_index);
                 break;
@@ -326,47 +326,43 @@ bool enumerate_devices(void)
             device_index++;
         }
 
-        if(device_index < num_devices)
-        {
-            vk_ctx.h_device = p_devices[device_index];
-        }
-        else
+        if(device_index >= num_physical_devices)
         {
             status = false;
             printf("error: could not find discrete gpu\n");
         }
     }
 
-    if(p_device_info != NULL)
+    if(p_physical_device_info != NULL)
     {
-        for(uint32_t i = 0; i < num_devices; i++)
+        for(uint32_t i = 0; i < num_physical_devices; i++)
         {
-            if(p_device_info[i].p_queue_property_array != NULL)
+            if(p_physical_device_info[i].p_queue_group_properties != NULL)
             {
-                free(p_device_info[i].p_queue_property_array);
-                p_device_info[i].p_queue_property_array = NULL;
+                free(p_physical_device_info[i].p_queue_group_properties);
+                p_physical_device_info[i].p_queue_group_properties = NULL;
             }
         }
 
-        free(p_device_info);
-        p_device_info = NULL;
+        free(p_physical_device_info);
+        p_physical_device_info = NULL;
     }
 
-    if(p_devices != NULL)
+    if(p_physical_devices != NULL)
     {
-        free(p_devices);
-        p_devices = NULL;
+        free(p_physical_devices);
+        p_physical_devices = NULL;
     }
 
     return status;
 }
 
-void print_device_info(struct device_info* p_devices, uint32_t index)
+void print_physical_device_info(struct physical_device_info* p_physical_devices, uint32_t index)
 {
-    printf("device %u: %s\n", index, p_devices[index].device_properties.device_name);
+    printf("device %u: %s\n", index, p_physical_devices[index].device_properties.device_name);
 
     const char* type = "unknown";
-    switch(p_devices[index].device_properties.device_type)
+    switch(p_physical_devices[index].device_properties.device_type)
     {
         case vk_device_type__integrated_gpu:
             type = "integrated gpu";
@@ -385,39 +381,39 @@ void print_device_info(struct device_info* p_devices, uint32_t index)
     }
     printf("\ttype: %s\n", type);
 
-    printf("\tvendor: 0x%X\n", p_devices[index].device_properties.vendor_id);
-    printf("\tdevice id: 0x%X\n", p_devices[index].device_properties.device_id);
-    printf("\tdriver version:0x%X\n", p_devices[index].device_properties.driver_version);
-    printf("\tapi version version:0x%X\n", p_devices[index].device_properties.api_version);
+    printf("\tvendor: 0x%X\n", p_physical_devices[index].device_properties.vendor_id);
+    printf("\tdevice id: 0x%X\n", p_physical_devices[index].device_properties.device_id);
+    printf("\tdriver version:0x%X\n", p_physical_devices[index].device_properties.driver_version);
+    printf("\tapi version version:0x%X\n", p_physical_devices[index].device_properties.api_version);
 
-    for(uint32_t i = 0; i < p_devices[index].queue_property_count; i++)
+    for(uint32_t i = 0; i < p_physical_devices[index].num_queue_groups; i++)
     {
         printf("\tqueue group %u:\n", i);
-        printf("\t\tqueue count: %u\n", p_devices[index].p_queue_property_array[i].queue_count);
+        printf("\t\tqueue count: %u\n", p_physical_devices[index].p_queue_group_properties[i].queue_count);
         
-        if(p_devices[index].p_queue_property_array[i].queue_flags.graphics) { printf("\t\tgraphics supported\n"); }
-        if(p_devices[index].p_queue_property_array[i].queue_flags.compute) { printf("\t\tcompute supported\n"); }
-        if(p_devices[index].p_queue_property_array[i].queue_flags.transfer) { printf("\t\ttransfer supported\n"); }
-        if(p_devices[index].p_queue_property_array[i].queue_flags.sparse_binding) { printf("\t\tsparse_binding supported\n"); }
-        if(p_devices[index].p_queue_property_array[i].queue_flags.protected_memory) { printf("\t\tprotected_memory supported\n"); }
-        if(p_devices[index].p_queue_property_array[i].queue_flags.video_decode) { printf("\t\tvideo_decode supported\n"); }
-        if(p_devices[index].p_queue_property_array[i].queue_flags.video_encode) { printf("\t\tvideo_encode supported\n"); }
-        if(p_devices[index].p_queue_property_array[i].queue_flags.optical_flow) { printf("\t\toptical_flow supported\n"); }
+        if(p_physical_devices[index].p_queue_group_properties[i].queue_flags.graphics) { printf("\t\tgraphics supported\n"); }
+        if(p_physical_devices[index].p_queue_group_properties[i].queue_flags.compute) { printf("\t\tcompute supported\n"); }
+        if(p_physical_devices[index].p_queue_group_properties[i].queue_flags.transfer) { printf("\t\ttransfer supported\n"); }
+        if(p_physical_devices[index].p_queue_group_properties[i].queue_flags.sparse_binding) { printf("\t\tsparse_binding supported\n"); }
+        if(p_physical_devices[index].p_queue_group_properties[i].queue_flags.protected_memory) { printf("\t\tprotected_memory supported\n"); }
+        if(p_physical_devices[index].p_queue_group_properties[i].queue_flags.video_decode) { printf("\t\tvideo_decode supported\n"); }
+        if(p_physical_devices[index].p_queue_group_properties[i].queue_flags.video_encode) { printf("\t\tvideo_encode supported\n"); }
+        if(p_physical_devices[index].p_queue_group_properties[i].queue_flags.optical_flow) { printf("\t\toptical_flow supported\n"); }
     }
 }
 
-bool get_device_queue_info(vk_device h_device, struct device_info* p_info)
+bool get_physical_device_queue_info(vk_physical_device h_physical_device, struct physical_device_info* p_info)
 {
     bool status = true;
 
     uint32_t num_groups = 0;
-    struct vk_queue_group_properties* p_groups = NULL;
+    struct vk_physical_queue_group_properties* p_groups = NULL;
 
-    vk_ctx.get_queue_group_properties(h_device, &num_groups, NULL);
+    vk_ctx.get_physical_queue_group_properties(h_physical_device, &num_groups, NULL);
 
     if(num_groups > 0)
     {
-        p_groups = malloc(num_groups * sizeof(struct vk_queue_group_properties));
+        p_groups = malloc(num_groups * sizeof(struct vk_physical_queue_group_properties));
 
         if(p_groups == NULL)
         {
@@ -430,11 +426,11 @@ bool get_device_queue_info(vk_device h_device, struct device_info* p_info)
     {
         if(num_groups > 0)
         {
-            vk_ctx.get_queue_group_properties(h_device, &num_groups, p_groups);
+            vk_ctx.get_physical_queue_group_properties(h_physical_device, &num_groups, p_groups);
         }
 
-        p_info->queue_property_count = num_groups;
-        p_info->p_queue_property_array = p_groups;
+        p_info->num_queue_groups = num_groups;
+        p_info->p_queue_group_properties = p_groups;
     }
 
     return status;

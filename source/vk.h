@@ -9,7 +9,7 @@
 #define VK_VERSION(variant, major, minor, patch) ((((variant) & 0x3) << 29) | (((major) & 0x7F) << 22) | (((minor) & 0x3FF) << 12) | ((patch) & 0xFFF))
 
 typedef void* vk_instance;
-typedef void* vk_device;
+typedef void* vk_physical_device;
 
 enum vk_result
 {
@@ -190,7 +190,7 @@ struct vk_device_sparse_properties
     uint32_t                           residency_non_resident_strict;
 };
 
-struct vk_device_properties
+struct vk_physical_device_properties
 {
     uint32_t                           api_version;
     uint32_t                           driver_version;
@@ -203,7 +203,7 @@ struct vk_device_properties
     struct vk_device_sparse_properties sparse_properties;
 };
 
-struct vk_queue_group_properties
+struct vk_physical_queue_group_properties
 {
     union
     {
@@ -239,8 +239,8 @@ typedef uint32_t (*pfn_vk_enumerate_layers)(uint32_t* p_count, struct vk_layer* 
 typedef uint32_t (*pfn_vk_enumerate_extensions)(const char* p_layer_name, uint32_t* p_count, struct vk_extension* p_extensions);
 
 // instance level functions
-typedef uint32_t (*pfn_vk_enumerate_physical_devices)(vk_instance h_instance, uint32_t* p_count, vk_device* p_devices);
-typedef void     (*pfn_vk_get_device_properties)(vk_device h_device, struct vk_device_properties* p_properties);
-typedef void     (*pfn_vk_get_device_queue_group_properties)(vk_device h_device, uint32_t* p_count, struct vk_queue_group_properties* p_properties);
+typedef uint32_t (*pfn_vk_enumerate_physical_devices)(vk_instance h_instance, uint32_t* p_count, vk_physical_device* p_devices);
+typedef void     (*pfn_vk_get_physical_device_properties)(vk_physical_device h_device, struct vk_physical_device_properties* p_properties);
+typedef void     (*pfn_vk_get_physical_queue_group_properties)(vk_physical_device h_device, uint32_t* p_count, struct vk_physical_queue_group_properties* p_properties);
 
 #endif // VK_H
