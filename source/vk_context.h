@@ -17,6 +17,7 @@ struct vk_context
     pfn_vk_enumerate_physical_devices            enumerate_devices;
     pfn_vk_get_physical_device_properties        get_physical_device_properties;
     pfn_vk_get_physical_queue_group_properties   get_physical_queue_group_properties;
+    pfn_vk_create_device                         create_device;
 };
 
 extern struct vk_context vk_ctx;

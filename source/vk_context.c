@@ -10,10 +10,10 @@ struct vk_context vk_ctx = { 0 };
 
 struct physical_device_info
 {
-    struct vk_physical_device_properties       device_properties;
+    struct vk_physical_device_properties device_properties;
 
-    uint32_t                                   num_queue_groups;
-    struct vk_physical_queue_group_properties* p_queue_group_properties;
+    uint32_t                             num_queue_groups;
+    struct vk_queue_group_properties*    p_queue_group_properties;
 };
 
 bool initialize_global_function_pointers(void);
@@ -102,6 +102,7 @@ bool initialize_instance_function_pointers(void)
     status &= load_function_pointer(vk_ctx.h_instance, "vkEnumeratePhysicalDevices", (void**) &vk_ctx.enumerate_devices);
     status &= load_function_pointer(vk_ctx.h_instance, "vkGetPhysicalDeviceProperties", (void**) &vk_ctx.get_physical_device_properties);
     status &= load_function_pointer(vk_ctx.h_instance, "vkGetPhysicalDeviceQueueFamilyProperties", (void**) &vk_ctx.get_physical_queue_group_properties);
+    status &= load_function_pointer(vk_ctx.h_instance, "vkCreateDevice", (void**) &vk_ctx.create_device);
 
     return status;
 }
@@ -219,7 +220,7 @@ bool initialize_instance(void)
     bool status = true;
 
     struct vk_application_info app_info = { 0 };
-    app_info.type = vk_application_info;
+    app_info.s_type = vk_application_info;
     app_info.p_next = NULL;
     app_info.p_app_name = "vk-cube";
     app_info.app_version = 1;
@@ -228,7 +229,7 @@ bool initialize_instance(void)
     app_info.api_version = VK_VERSION(0, 1, 0, 0);
 
     struct vk_instance_info instance_info = { 0 };
-    instance_info.type = vk_instance_info;
+    instance_info.s_type = vk_instance_info;
     instance_info.p_next = NULL;
     instance_info.p_app_info = &app_info;
     instance_info.layer_count = 0;
@@ -251,9 +252,11 @@ bool enumerate_devices(void)
 {
     bool status = true;
 
+    uint32_t device_index = 0;
+    uint32_t queue_group_index = 0;
     uint32_t num_physical_devices = 0;
-    vk_physical_device* p_physical_devices = NULL;
 
+    vk_physical_device* p_physical_devices = NULL;
     struct physical_device_info* p_physical_device_info = NULL;
 
     if(vk_ctx.enumerate_devices(vk_ctx.h_instance, &num_physical_devices, NULL) != vk_success)
@@ -313,8 +316,6 @@ bool enumerate_devices(void)
 
     if(status)
     {
-        uint32_t device_index = 0;
-
         while(device_index < num_physical_devices)
         {
             if(p_physical_device_info[device_index].device_properties.device_type == vk_device_type__discrete_gpu)
@@ -332,6 +333,58 @@ bool enumerate_devices(void)
             printf("error: could not find discrete gpu\n");
         }
     }
+
+    if(status)
+    {
+        while(queue_group_index < p_physical_device_info[device_index].num_queue_groups)
+        {
+            if(p_physical_device_info[device_index].p_queue_group_properties[queue_group_index].queue_flags.graphics)
+            {
+                printf("use queue group %u\n", queue_group_index);
+                break;
+            }
+
+            queue_group_index++;
+        }
+
+        if(queue_group_index >= p_physical_device_info[device_index].num_queue_groups)
+        {
+            status = false;
+            printf("error: could not find queue group\n");
+        }
+    }
+
+#if 0
+    if(status)
+    {
+        const uint32_t MAX_QUEUES = 2;
+
+        const float p_queue_priorities[MAX_QUEUES] = { 1.0f, 1.0f };
+
+        uint32_t queue_count = p_physical_device_info[device_index].p_queue_group_properties[queue_group_index].queue_count;
+
+        if(queue_count > MAX_QUEUES)
+        {
+            queue_count = MAX_QUEUES;
+        }
+
+        struct vk_queue_creation_info queue_info = { 0 };
+        queue_info.s_type = vk_queue_create_info;
+        queue_info.p_next = NULL;
+        queue_info.queue_group_index = queue_group_index;
+        queue_info.queue_count = queue_count;
+        queue_info.p_queue_priorities = p_queue_priorities;
+
+        struct vk_device_creation_info device_info = { 0 };
+        device_info.s_type = vk_device_create_info;
+        device_info.p_next = NULL;
+        device_info.queue_info_count = 1;
+        device_info.p_queue_info_array = &queue_info;
+        device_info.
+
+        vk_ctx.create_device(p_physical_devices[device_index], )
+    }
+#endif
 
     if(p_physical_device_info != NULL)
     {
@@ -407,13 +460,13 @@ bool get_physical_device_queue_info(vk_physical_device h_physical_device, struct
     bool status = true;
 
     uint32_t num_groups = 0;
-    struct vk_physical_queue_group_properties* p_groups = NULL;
+    struct vk_queue_group_properties* p_groups = NULL;
 
     vk_ctx.get_physical_queue_group_properties(h_physical_device, &num_groups, NULL);
 
     if(num_groups > 0)
     {
-        p_groups = malloc(num_groups * sizeof(struct vk_physical_queue_group_properties));
+        p_groups = malloc(num_groups * sizeof(struct vk_queue_group_properties));
 
         if(p_groups == NULL)
         {
