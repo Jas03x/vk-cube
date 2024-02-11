@@ -22,12 +22,12 @@ libraries = SDL2.lib SDL2main.lib shell32.lib
 $(bin)/$(exe): $(objects)
 	$(link) -SUBSYSTEM:CONSOLE -DEBUG $(library_paths) $^ $(libraries) -OUT:$@ -PDB:$(bin)/$(pdb)
 
-$(bin)/%.d: $(src)/%.c
-	$(gcc) -I $(src) -MM -MT $(bin)/$*.o $^ -MF $(bin)/$*.d
-
 -include $(objects:.o=.d)
 
-$(bin)/%.o: $(src)/%.c
+$(bin)/%.d: $(src)/%.c
+	$(gcc) -I $(src) -MM -MT $(bin)/$*.o $(src)/$*.c -MF $(bin)/$*.d
+
+$(bin)/%.o: $(src)/%.c $(bin)/%.d
 	$(cc) -Zi $(include_paths) -c $(src)/$*.c -Fo:$@ -Fd:$(bin)/$(pdb)
 
 clean:
