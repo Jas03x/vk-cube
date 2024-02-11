@@ -1,0 +1,11 @@
+cc = gcc
+
+$(bin)/%.o: $(src)/%.c
+	$(cc) -c $^ -o $@
+
+$(bin)/$(output): $(objects)
+	$(cc) $(objects) -lSDL2 -o $@
+
+clean:
+	rm -f $(bin)/*.o
+	rm -f $(bin)/$(output)
