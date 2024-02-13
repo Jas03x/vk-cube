@@ -15,7 +15,7 @@ bool initialize_device(void);
 
 bool enumerate_layers(void);
 bool enumerate_extensions(const char* p_layer);
-bool enumerate_devices(void);
+bool enumerate_devices_and_queues(struct vk_physical_device_properties* p_device_properties, uint32_t* p_queue_group_index, struct vk_queue_group_properties* p_queue_group_properties);
 
 bool get_physical_device_queue_info(vk_physical_device h_physical_device, uint32_t* p_num_queue_groups, struct vk_queue_group_properties** p_queue_group_properties);
 
@@ -242,7 +242,7 @@ bool initialize_instance(void)
     return status;
 }
 
-bool enumerate_devices(void)
+bool enumerate_devices_and_queues(struct vk_physical_device_properties* p_device_properties, uint32_t* p_queue_group_index, struct vk_queue_group_properties* p_queue_group_properties)
 {
     bool status = true;
 
@@ -355,6 +355,13 @@ bool enumerate_devices(void)
         }
     }
 
+    if(status)
+    {
+        *p_queue_group_index = queue_group_index;
+        memcpy(p_device_properties, &p_physical_device_info[device_index].device_properties, sizeof(struct vk_physical_device_properties));
+        memcpy(p_queue_group_properties, &p_physical_device_info[device_index].p_queue_group_properties[queue_group_index], sizeof(struct vk_queue_group_properties));
+    }
+
     if(p_physical_device_info != NULL)
     {
         for(uint32_t i = 0; i < num_physical_devices; i++)
@@ -382,6 +389,15 @@ bool enumerate_devices(void)
 bool initialize_device(void)
 {
     bool status = true;
+
+    uint32_t queue_group_index = 0;
+    struct vk_physical_device_properties device_properties = { 0 };
+    struct vk_queue_group_properties queue_group_properties = { 0 };
+
+    if(status)
+    {
+        status = enumerate_devices_and_queues(&device_properties, &queue_group_index, &queue_group_properties);
+    }
 
 #if 0
     if(status)

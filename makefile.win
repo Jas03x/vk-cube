@@ -1,9 +1,9 @@
-path = "c:\program files\microsoft visual studio\2022\community\vc\tools\msvc\14.38.33130\bin\hostx64\x64"
+msvc_path = "c:\program files\microsoft visual studio\2022\community\vc\tools\msvc\14.38.33130\bin\hostx64\x64"
 cygwin_path = "c:\cygwin64\bin"
 
-cc = $(path)/cl.exe
+cc = $(msvc_path)/cl.exe
 gcc = $(cygwin_path)/g++.exe
-link = $(path)/link.exe
+link = $(msvc_path)/link.exe
 
 exe = $(output).exe
 pdb = $(output).pdb
