@@ -25,7 +25,7 @@ $(bin)/$(exe): $(objects)
 -include $(objects:.o=.d)
 
 $(bin)/%.d: $(src)/%.c
-	$(gcc) -I $(src) -MM -MT $(bin)/$*.o $(src)/$*.c -MF $(bin)/$*.d
+	$(gcc) -I $(src) -MM -MT $(bin)/$*.o $^ -MF $@ 
 
 $(bin)/%.o: $(src)/%.c $(bin)/%.d
 	$(cc) -Zi $(include_paths) -c $(src)/$*.c -Fo:$@ -Fd:$(bin)/$(pdb)

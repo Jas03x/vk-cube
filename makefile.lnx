@@ -1,11 +1,17 @@
 cc = gcc
 
-$(bin)/%.o: $(src)/%.c
-	$(cc) -c $^ -o $@
-
 $(bin)/$(output): $(objects)
 	$(cc) $(objects) -lSDL2 -o $@
 
+-include $(objects:.o=.d)
+
+$(bin)/%.d: $(src)/%.c
+	$(cc) -I $(src) -MM -MT $(bin)/$*.o $^ -MF $@
+
+$(bin)/%.o: $(src)/%.c $(bin)/%.d
+	$(cc) -Wall -Werror -c $(src)/$*.c -o $@
+
 clean:
+	rm -f $(bin)/*.d
 	rm -f $(bin)/*.o
 	rm -f $(bin)/$(output)

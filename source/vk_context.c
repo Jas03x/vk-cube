@@ -512,3 +512,4 @@ bool get_physical_device_queue_info(vk_physical_device h_physical_device, uint32
 
     return status;
 }
+
