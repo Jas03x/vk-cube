@@ -8,6 +8,15 @@
 
 struct vk_context vk_ctx = { 0 };
 
+struct physical_device_info
+{
+    vk_physical_device                   handle;
+    struct vk_physical_device_properties properties;
+
+    uint32_t                             queue_group_count;
+    struct vk_queue_group_properties*    p_queue_group_properties;
+};
+
 bool initialize_global_function_pointers(void);
 bool initialize_instance_function_pointers(void);
 bool initialize_instance(void);
@@ -15,11 +24,13 @@ bool initialize_device(void);
 
 bool enumerate_layers(void);
 bool enumerate_extensions(const char* p_layer);
-bool enumerate_devices_and_queues(struct vk_physical_device_properties* p_device_properties, uint32_t* p_queue_group_index, struct vk_queue_group_properties* p_queue_group_properties);
+bool enumerate_devices_and_queues(uint32_t* p_device_count, struct physical_device_info** p_device_info);
 
 bool get_physical_device_queue_info(vk_physical_device h_physical_device, uint32_t* p_num_queue_groups, struct vk_queue_group_properties** p_queue_group_properties);
 
 void print_physical_device_info(uint32_t device_index, struct vk_physical_device_properties* p_device_properties, uint32_t num_queue_groups, struct vk_queue_group_properties* p_queue_group_properties);
+
+void free_physical_device_info(uint32_t p_device_count, struct physical_device_info* p_device_info);
 
 bool initialize_vulkan_context(pfn_vk_get_instance_proc_addr pfn_get_instance_proc_addr)
 {
@@ -242,23 +253,15 @@ bool initialize_instance(void)
     return status;
 }
 
-bool enumerate_devices_and_queues(struct vk_physical_device_properties* p_device_properties, uint32_t* p_queue_group_index, struct vk_queue_group_properties* p_queue_group_properties)
+bool enumerate_devices_and_queues(uint32_t* p_device_count, struct physical_device_info** p_device_info)
 {
     bool status = true;
 
-    uint32_t device_index = 0;
-    uint32_t queue_group_index = 0;
     uint32_t num_physical_devices = 0;
 
-    vk_physical_device* p_physical_devices = NULL;
+    vk_physical_device* p_physical_device_handles = NULL;
 
-    struct physical_device_info
-    {
-        struct vk_physical_device_properties device_properties;
-
-        uint32_t                             num_queue_groups;
-        struct vk_queue_group_properties*    p_queue_group_properties;
-    } *p_physical_device_info = NULL;
+    struct physical_device_info *p_physical_device_info = NULL;
 
     if(vk_ctx.enumerate_devices(vk_ctx.h_instance, &num_physical_devices, NULL) != vk_success)
     {
@@ -268,9 +271,9 @@ bool enumerate_devices_and_queues(struct vk_physical_device_properties* p_device
 
     if(status)
     {
-        p_physical_devices = malloc(num_physical_devices * sizeof(vk_physical_device));
+        p_physical_device_handles = malloc(num_physical_devices * sizeof(vk_physical_device));
 
-        if(p_physical_devices == NULL)
+        if(p_physical_device_handles == NULL)
         {
             status = false;
             printf("failed to allocate memory\n");
@@ -279,7 +282,7 @@ bool enumerate_devices_and_queues(struct vk_physical_device_properties* p_device
 
     if(status)
     {
-        if(vk_ctx.enumerate_devices(vk_ctx.h_instance, &num_physical_devices, p_physical_devices) != vk_success)
+        if(vk_ctx.enumerate_devices(vk_ctx.h_instance, &num_physical_devices, p_physical_device_handles) != vk_success)
         {
             status = false;
             printf("failed to get devices\n");
@@ -301,9 +304,10 @@ bool enumerate_devices_and_queues(struct vk_physical_device_properties* p_device
     {
         for(uint32_t i = 0; status && (i < num_physical_devices); i++)
         {
-            vk_ctx.get_physical_device_properties(p_physical_devices[i], &p_physical_device_info[i].device_properties);
+            p_physical_device_info[i].handle = p_physical_device_handles[i];
+            vk_ctx.get_physical_device_properties(p_physical_device_handles[i], &p_physical_device_info[i].properties);
             
-            status = get_physical_device_queue_info(p_physical_devices[i], &p_physical_device_info[i].num_queue_groups, &p_physical_device_info[i].p_queue_group_properties);
+            status = get_physical_device_queue_info(p_physical_device_handles[i], &p_physical_device_info[i].queue_group_count, &p_physical_device_info[i].p_queue_group_properties);
         }
     }
 
@@ -311,15 +315,67 @@ bool enumerate_devices_and_queues(struct vk_physical_device_properties* p_device
     {
         for(uint32_t i = 0; i < num_physical_devices; i++)
         {
-            print_physical_device_info(i, &p_physical_device_info[i].device_properties, p_physical_device_info[i].num_queue_groups, p_physical_device_info[i].p_queue_group_properties);
+            print_physical_device_info(i, &p_physical_device_info[i].properties, p_physical_device_info[i].queue_group_count, p_physical_device_info[i].p_queue_group_properties);
         }
+    }
+
+    if (status)
+    {
+        *p_device_count = num_physical_devices;
+        *p_device_info = p_physical_device_info;
+    }
+    else
+    {
+        free_physical_device_info(num_physical_devices, p_physical_device_info);
+        p_physical_device_info = NULL;
+    }
+
+    if(p_physical_device_handles != NULL)
+    {
+        free(p_physical_device_handles);
+        p_physical_device_handles = NULL;
+    }
+
+    return status;
+}
+
+void free_physical_device_info(uint32_t p_device_count, struct physical_device_info* p_device_info)
+{
+    if(p_device_info != NULL)
+    {
+        for(uint32_t i = 0; i < p_device_count; i++)
+        {
+            if(p_device_info[i].p_queue_group_properties != NULL)
+            {
+                free(p_device_info[i].p_queue_group_properties);
+                p_device_info[i].p_queue_group_properties = NULL;
+            }
+        }
+
+        free(p_device_info);
+        p_device_info = NULL;
+    }
+}
+
+bool initialize_device(void)
+{
+    bool status = true;
+
+    uint32_t device_count = 0;
+    uint32_t device_index = 0;
+    uint32_t queue_group_index = 0;
+    struct physical_device_info* p_device_info = NULL;
+
+    if(status)
+    {
+        status = enumerate_devices_and_queues(&device_count, &p_device_info);
     }
 
     if(status)
     {
-        while(device_index < num_physical_devices)
+        while(device_index < device_count)
         {
-            if(p_physical_device_info[device_index].device_properties.device_type == vk_device_type__discrete_gpu)
+            if(p_device_info[device_index].properties.device_type == vk_device_type__discrete_gpu)
             {
                 printf("use device %u\n", device_index);
                 break;
@@ -328,7 +384,7 @@ bool enumerate_devices_and_queues(struct vk_physical_device_properties* p_device
             device_index++;
         }
 
-        if(device_index >= num_physical_devices)
+        if(device_index >= device_count)
         {
             status = false;
             printf("error: could not find discrete gpu\n");
@@ -337,9 +393,9 @@ bool enumerate_devices_and_queues(struct vk_physical_device_properties* p_device
 
     if(status)
     {
-        while(queue_group_index < p_physical_device_info[device_index].num_queue_groups)
+        while(queue_group_index < p_device_info[device_index].queue_group_count)
         {
-            if(p_physical_device_info[device_index].p_queue_group_properties[queue_group_index].queue_flags.graphics)
+            if(p_device_info[device_index].p_queue_group_properties[queue_group_index].queue_flags.graphics)
             {
                 printf("use queue group %u\n", queue_group_index);
                 break;
@@ -348,55 +404,11 @@ bool enumerate_devices_and_queues(struct vk_physical_device_properties* p_device
             queue_group_index++;
         }
 
-        if(queue_group_index >= p_physical_device_info[device_index].num_queue_groups)
+        if(queue_group_index >= p_device_info[device_index].queue_group_count)
         {
             status = false;
             printf("error: could not find queue group\n");
         }
-    }
-
-    if(status)
-    {
-        *p_queue_group_index = queue_group_index;
-        memcpy(p_device_properties, &p_physical_device_info[device_index].device_properties, sizeof(struct vk_physical_device_properties));
-        memcpy(p_queue_group_properties, &p_physical_device_info[device_index].p_queue_group_properties[queue_group_index], sizeof(struct vk_queue_group_properties));
-    }
-
-    if(p_physical_device_info != NULL)
-    {
-        for(uint32_t i = 0; i < num_physical_devices; i++)
-        {
-            if(p_physical_device_info[i].p_queue_group_properties != NULL)
-            {
-                free(p_physical_device_info[i].p_queue_group_properties);
-                p_physical_device_info[i].p_queue_group_properties = NULL;
-            }
-        }
-
-        free(p_physical_device_info);
-        p_physical_device_info = NULL;
-    }
-
-    if(p_physical_devices != NULL)
-    {
-        free(p_physical_devices);
-        p_physical_devices = NULL;
-    }
-
-    return status;
-}
-
-bool initialize_device(void)
-{
-    bool status = true;
-
-    uint32_t queue_group_index = 0;
-    struct vk_physical_device_properties device_properties = { 0 };
-    struct vk_queue_group_properties queue_group_properties = { 0 };
-
-    if(status)
-    {
-        status = enumerate_devices_and_queues(&device_properties, &queue_group_index, &queue_group_properties);
     }
 
 #if 0
@@ -430,6 +442,9 @@ bool initialize_device(void)
         vk_ctx.create_device(p_physical_devices[device_index], )
     }
 #endif
+
+    free_physical_device_info(device_count, p_device_info);
+    p_device_info = NULL;
 
     return status;
 }
