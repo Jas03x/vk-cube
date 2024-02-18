@@ -14,7 +14,9 @@ release: $(bin)/$(output)
 $(bin)/$(output): $(objects)
 	$(cc) $(objects) -lSDL2 -o $@
 
+ifneq (,$(filter debug release, $(MAKECMDGOALS)))
 -include $(objects:.o=.d)
+endif
 
 $(bin)/%.d:
 	$(cc) -I $(src) -MM -MT "$(bin)/$*.o $(bin)/$*.d" $(src)/$*.c -MF $@
