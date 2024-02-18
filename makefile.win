@@ -19,16 +19,28 @@ library_paths += -LIBPATH:"c:\libraries\sdl2\lib\x64"
 
 libraries = SDL2.lib SDL2main.lib shell32.lib
 
+debug: cflags += -Zi
+debug: lflags += -DEBUG
+
+default:
+	$(error target not specified)
+
+debug: $(bin)/$(exe)
+
+release: $(bin)/$(exe)
+
 $(bin)/$(exe): $(objects)
-	$(link) -SUBSYSTEM:CONSOLE -DEBUG $(library_paths) $^ $(libraries) -OUT:$@ -PDB:$(bin)/$(pdb)
+	$(link) -SUBSYSTEM:CONSOLE $(lflags) $(library_paths) $^ $(libraries) -OUT:$@ -PDB:$(bin)/$(pdb)
 
+ifneq (,$(filter debug release, $(MAKECMDGOALS)))
 -include $(objects:.o=.d)
+endif
 
-$(bin)/%.d: $(src)/%.c
-	$(gcc) -I $(src) -MM -MT $(bin)/$*.o $^ -MF $@ 
+$(bin)/%.d:
+	$(gcc) -I $(src) -MM -MT $(bin)/$*.o $(src)/$*.c -MF $@ 
 
-$(bin)/%.o: $(src)/%.c $(bin)/%.d
-	$(cc) -Zi $(include_paths) -c $(src)/$*.c -Fo:$@ -Fd:$(bin)/$(pdb)
+$(bin)/%.o:
+	$(cc) $(cflags) $(include_paths) -c $(src)/$*.c -Fo:$@ -Fd:$(bin)/$(pdb)
 
 clean:
 	rm -f $(bin)/*.d
