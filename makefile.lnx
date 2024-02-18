@@ -16,8 +16,8 @@ $(bin)/$(output): $(objects)
 
 -include $(objects:.o=.d)
 
-$(bin)/%.d: $(src)/%.c
-	$(cc) -I $(src) -MM -MT $(bin)/$*.o $^ -MF $@
+$(bin)/%.d:
+	$(cc) -I $(src) -MM -MT "$(bin)/$*.o $(bin)/$*.d" $(src)/$*.c -MF $@
 
 $(bin)/%.o: $(src)/%.c $(bin)/%.d
 	$(cc) $(cflags) -c $(src)/$*.c -o $@
