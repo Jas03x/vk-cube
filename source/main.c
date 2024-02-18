@@ -113,10 +113,7 @@ int main(int argc, char* argv[])
 
     uninitialize();
 
-    if(status != 0)
-    {
-        printf("exiting with error code 0x%X\n", status);
-    }
+    printf("exit with code 0x%X\n", status);
 
     return status;
 }

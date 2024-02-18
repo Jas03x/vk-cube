@@ -6,18 +6,25 @@
 struct vk_context
 {
     vk_instance                                  h_instance;
+    vk_physical_device                           h_physical_device;
 
     pfn_vk_get_instance_proc_addr                get_instance_proc_addr;
 
+    // global functions
     pfn_vk_get_version                           get_version;
     pfn_vk_create_instance                       create_instance;
     pfn_vk_enumerate_layers                      enumerate_layers;
     pfn_vk_enumerate_extensions                  enumerate_extensions;
 
+    // instance level functions
     pfn_vk_enumerate_physical_devices            enumerate_devices;
     pfn_vk_get_physical_device_properties        get_physical_device_properties;
     pfn_vk_get_physical_queue_group_properties   get_physical_queue_group_properties;
     pfn_vk_create_device                         create_device;
+
+    // device level functions
+    pfn_vk_enumerate_device_layers               enumerate_device_layers;
+    pfn_vk_enumerate_device_extensions           enumerate_device_extensions;
 };
 
 extern struct vk_context vk_ctx;

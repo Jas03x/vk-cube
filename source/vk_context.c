@@ -19,12 +19,16 @@ struct physical_device_info
 
 bool initialize_global_function_pointers(void);
 bool initialize_instance_function_pointers(void);
+bool initialize_physical_device_function_pointers(void);
+
 bool initialize_instance(void);
 bool initialize_device(void);
 
 bool enumerate_layers(void);
 bool enumerate_extensions(const char* p_layer);
 bool enumerate_devices_and_queues(uint32_t* p_device_count, struct physical_device_info** p_device_info);
+bool enumerate_device_layers_and_extensions(vk_physical_device h_physical_device);
+bool enumerate_device_extensions(vk_physical_device h_physical_device, const char* p_layer);
 
 bool get_physical_device_queue_info(vk_physical_device h_physical_device, uint32_t* p_num_queue_groups, struct vk_queue_group_properties** p_queue_group_properties);
 
@@ -108,6 +112,16 @@ bool initialize_instance_function_pointers(void)
     status &= load_function_pointer(vk_ctx.h_instance, "vkGetPhysicalDeviceProperties", (void**) &vk_ctx.get_physical_device_properties);
     status &= load_function_pointer(vk_ctx.h_instance, "vkGetPhysicalDeviceQueueFamilyProperties", (void**) &vk_ctx.get_physical_queue_group_properties);
     status &= load_function_pointer(vk_ctx.h_instance, "vkCreateDevice", (void**) &vk_ctx.create_device);
+
+    return status;
+}
+
+bool initialize_physical_device_function_pointers(void)
+{
+    bool status = true;
+
+    status &= load_function_pointer(vk_ctx.h_physical_device, "vkEnumerateDeviceLayerProperties", (void**) &vk_ctx.enumerate_device_layers);
+    status &= load_function_pointer(vk_ctx.h_physical_device, "vkEnumerateDeviceExtensionProperties", (void**) &vk_ctx.enumerate_device_extensions);
 
     return status;
 }
@@ -393,6 +407,17 @@ bool initialize_device(void)
 
     if(status)
     {
+        vk_ctx.h_physical_device = p_device_info[device_index].handle;
+        status = initialize_physical_device_function_pointers();
+    }
+
+    if(status)
+    {
+        status = enumerate_device_layers_and_extensions(vk_ctx.h_physical_device);
+    }
+
+    if(status)
+    {
         while(queue_group_index < p_device_info[device_index].queue_group_count)
         {
             if(p_device_info[device_index].p_queue_group_properties[queue_group_index].queue_flags.graphics)
@@ -528,3 +553,110 @@ bool get_physical_device_queue_info(vk_physical_device h_physical_device, uint32
     return status;
 }
 
+bool enumerate_device_layers_and_extensions(vk_physical_device h_physical_device)
+{
+    bool status = true;
+
+    uint32_t num_layers = 0;
+    struct vk_layer* p_layers = NULL;
+
+    if(vk_ctx.enumerate_device_layers(h_physical_device, &num_layers, NULL) != vk_success)
+    {
+        status = false;
+        printf("failed to get number of layers\n");
+    }
+
+    if(status)
+    {
+        p_layers = malloc(num_layers * sizeof(struct vk_layer));
+
+        if (p_layers == NULL)
+        {
+            status = false;
+            printf("failed to allocate memory\n");
+        }
+    }
+
+    if(status)
+    {
+        if(vk_ctx.enumerate_device_layers(h_physical_device, &num_layers, p_layers) != vk_success)
+        {
+            status = false;
+            printf("failed to get layers\n");
+        }
+    }
+
+    if(status)
+    {
+        // enumerate the extensions provided by the vulkan implementation
+        printf("Device layer: Vulkan implementation\n");
+        status = enumerate_device_extensions(h_physical_device, NULL);
+    }
+
+    if(status)
+    {
+        for(uint32_t i = 0; i < num_layers; i++)
+        {
+            printf("Device layer %s (0x%X, %u): %s\n", p_layers[i].name, p_layers[i].spec_version, p_layers[i].impl_version, p_layers[i].desc);
+            status = enumerate_device_extensions(h_physical_device, p_layers[i].name);
+        }
+    }
+
+    if(p_layers != NULL)
+    {
+        free(p_layers);
+        p_layers = NULL;
+    }
+
+    return status;
+}
+
+bool enumerate_device_extensions(vk_physical_device h_physical_device, const char* p_layer)
+{
+    bool status = true;
+
+    uint32_t num_extensions = 0;
+    struct vk_extension* p_extensions = NULL;
+
+    if(vk_ctx.enumerate_device_extensions(h_physical_device, p_layer, &num_extensions, NULL) != vk_success)
+    {
+        status = false;
+        printf("failed to get number of extensions\n");
+    }
+
+    if(status)
+    {
+        p_extensions = malloc(num_extensions * sizeof(struct vk_extension));
+
+        if(p_extensions == NULL)
+        {
+            status = false;
+            printf("failed to allocate memory\n");
+        }
+    }
+
+    if(status)
+    {
+        if(vk_ctx.enumerate_device_extensions(h_physical_device, p_layer, &num_extensions, p_extensions) != vk_success)
+        {
+            status = false;
+            printf("failed to get extensions\n");
+        }
+    }
+
+    if(status)
+    {
+        for(uint32_t i = 0; i < num_extensions; i++)
+        {
+            printf("\tDevice extension: %s\n", p_extensions[i].name);
+        }
+    }
+
+    if(p_extensions != NULL)
+    {
+        free(p_extensions);
+        p_extensions = NULL;
+    }
+
+    return status;
+}
