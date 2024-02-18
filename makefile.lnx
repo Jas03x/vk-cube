@@ -21,7 +21,7 @@ endif
 $(bin)/%.d:
 	$(cc) -I $(src) -MM -MT "$(bin)/$*.o $(bin)/$*.d" $(src)/$*.c -MF $@
 
-$(bin)/%.o: $(src)/%.c
+$(bin)/%.o:
 	$(cc) $(cflags) -c $(src)/$*.c -o $@
 
 clean:
