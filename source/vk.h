@@ -12,6 +12,12 @@ typedef void* vk_instance;
 typedef void* vk_physical_device;
 typedef void* vk_device;
 
+enum
+{
+    vk_false = 0,
+    vk_true  = 1
+};
+
 enum vk_result
 {
     vk_success = 0
@@ -234,7 +240,7 @@ struct vk_queue_group_properties
     } min_image_transfer_granularity;
 };
 
-struct vk_device_features
+struct vk_physical_device_features
 {
     uint32_t                             robust_buffer_access;
     uint32_t                             full_draw_index_uint32;
@@ -328,6 +334,7 @@ typedef uint32_t (*pfn_vk_enumerate_extensions)(const char* p_layer_name, uint32
 // instance level functions
 typedef uint32_t (*pfn_vk_enumerate_physical_devices)(vk_instance h_instance, uint32_t* p_count, vk_physical_device* p_devices);
 typedef void     (*pfn_vk_get_physical_device_properties)(vk_physical_device h_device, struct vk_physical_device_properties* p_properties);
+typedef void     (*pfn_vk_get_physical_device_features)(vk_physical_device h_device, struct vk_physical_device_features* p_features);
 typedef void     (*pfn_vk_get_physical_queue_group_properties)(vk_physical_device h_device, uint32_t* p_count, struct vk_queue_group_properties* p_properties);
 typedef uint32_t (*pfn_vk_create_device)(vk_physical_device h_physical_device, struct vk_device_creation_info* p_info, void* p_reserved, vk_device* p_device);
 

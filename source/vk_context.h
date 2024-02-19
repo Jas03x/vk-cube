@@ -19,6 +19,7 @@ struct vk_context
     // instance level functions
     pfn_vk_enumerate_physical_devices            enumerate_devices;
     pfn_vk_get_physical_device_properties        get_physical_device_properties;
+    pfn_vk_get_physical_device_features          get_physical_device_features;
     pfn_vk_get_physical_queue_group_properties   get_physical_queue_group_properties;
     pfn_vk_create_device                         create_device;
 
