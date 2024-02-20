@@ -29,8 +29,8 @@ bool initialize_physical_device_function_pointers(void);
 bool initialize_instance(void);
 bool initialize_device(void);
 
-bool enumerate_layers(void);
-bool enumerate_extensions(const char* p_layer);
+bool enumerate_instance_layers(void);
+bool enumerate_instance_extensions(const char* p_layer);
 bool enumerate_gpus(uint32_t* p_gpu_count, struct gpu_info** p_gpu_info_array);
 bool enumerate_device_layers_and_extensions(vk_physical_device h_physical_device);
 bool enumerate_device_extensions(vk_physical_device h_physical_device, const char* p_layer);
@@ -127,7 +127,7 @@ bool initialize_physical_device_function_pointers(void)
     return status;
 }
 
-bool enumerate_layers(void)
+bool enumerate_instance_layers(void)
 {
     bool status = true;
 
@@ -164,7 +164,7 @@ bool enumerate_layers(void)
     {
         // enumerate the extensions provided by the vulkan implementation
         printf("Layer: Vulkan implementation\n");
-        status = enumerate_extensions(NULL);
+        status = enumerate_instance_extensions(NULL);
     }
 
     if(status)
@@ -172,7 +172,7 @@ bool enumerate_layers(void)
         for(uint32_t i = 0; i < num_layers; i++)
         {
             printf("Layer %s (0x%X, %u): %s\n", p_layers[i].name, p_layers[i].spec_version, p_layers[i].impl_version, p_layers[i].desc);
-            status = enumerate_extensions(p_layers[i].name);
+            status = enumerate_instance_extensions(p_layers[i].name);
         }
     }
 
@@ -185,7 +185,7 @@ bool enumerate_layers(void)
     return status;
 }
 
-bool enumerate_extensions(const char* p_layer)
+bool enumerate_instance_extensions(const char* p_layer)
 {
     bool status = true;
 
@@ -241,7 +241,7 @@ bool initialize_instance(void)
 
     if(status)
     {
-        status = enumerate_layers();
+        status = enumerate_instance_layers();
     }
 
     if(status)
