@@ -122,8 +122,8 @@ bool initialize_physical_device_function_pointers(void)
 {
     bool status = true;
 
-    status &= load_function_pointer(vk_ctx.h_physical_device, "vkEnumerateDeviceLayerProperties", (void**) &vk_ctx.enumerate_device_layers);
-    status &= load_function_pointer(vk_ctx.h_physical_device, "vkEnumerateDeviceExtensionProperties", (void**) &vk_ctx.enumerate_device_extensions);
+    status &= load_function_pointer(vk_ctx.h_instance, "vkEnumerateDeviceLayerProperties", (void**) &vk_ctx.enumerate_device_layers);
+    status &= load_function_pointer(vk_ctx.h_instance, "vkEnumerateDeviceExtensionProperties", (void**) &vk_ctx.enumerate_device_extensions);
 
     return status;
 }
@@ -410,13 +410,12 @@ bool initialize_device(void)
 
     if(status)
     {
-        vk_ctx.h_physical_device = p_device_info[device_index].handle;
         status = initialize_physical_device_function_pointers();
     }
 
     if(status)
     {
-        status = enumerate_device_layers_and_extensions(vk_ctx.h_physical_device);
+        status = enumerate_device_layers_and_extensions(p_device_info[device_index].handle);
     }
 
     if(status)

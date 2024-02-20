@@ -6,7 +6,6 @@
 struct vk_context
 {
     vk_instance                                  h_instance;
-    vk_physical_device                           h_physical_device;
 
     pfn_vk_get_instance_proc_addr                get_instance_proc_addr;
 
