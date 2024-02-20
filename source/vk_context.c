@@ -8,7 +8,7 @@
 
 struct vk_context vk_ctx = { 0 };
 
-struct physical_device_info
+struct gpu_info
 {
     vk_physical_device                   handle;
     struct vk_physical_device_properties properties;
@@ -16,6 +16,10 @@ struct physical_device_info
 
     uint32_t                             queue_group_count;
     struct vk_queue_group_properties*    p_queue_group_properties;
+};
+
+struct layer
+{
 };
 
 bool initialize_global_function_pointers(void);
@@ -27,15 +31,15 @@ bool initialize_device(void);
 
 bool enumerate_layers(void);
 bool enumerate_extensions(const char* p_layer);
-bool enumerate_devices_and_queues(uint32_t* p_device_count, struct physical_device_info** p_device_info);
+bool enumerate_gpus(uint32_t* p_gpu_count, struct gpu_info** p_gpu_info_array);
 bool enumerate_device_layers_and_extensions(vk_physical_device h_physical_device);
 bool enumerate_device_extensions(vk_physical_device h_physical_device, const char* p_layer);
 
-bool get_physical_device_queue_info(vk_physical_device h_physical_device, uint32_t* p_num_queue_groups, struct vk_queue_group_properties** p_queue_group_properties);
+bool get_gpu_queue_info(vk_physical_device h_physical_device, uint32_t* p_num_queue_groups, struct vk_queue_group_properties** p_queue_group_properties);
 
-void print_physical_device_info(uint32_t device_index, struct vk_physical_device_properties* p_device_properties, struct vk_physical_device_features* p_device_features, uint32_t num_queue_groups, struct vk_queue_group_properties* p_queue_group_properties);
+void print_gpu_info(uint32_t gpu_index, struct gpu_info* p_gpu_info);
 
-void free_physical_device_info(uint32_t p_device_count, struct physical_device_info* p_device_info);
+void free_gpu_info(uint32_t gpu_count, struct gpu_info* p_gpu_info_array);
 
 bool initialize_vulkan_context(pfn_vk_get_instance_proc_addr pfn_get_instance_proc_addr)
 {
@@ -46,11 +50,6 @@ bool initialize_vulkan_context(pfn_vk_get_instance_proc_addr pfn_get_instance_pr
     if(status)
     {
         status = initialize_global_function_pointers();
-    }
-
-    if(status)
-    {
-        status = enumerate_layers();
     }
 
     if(status)
@@ -240,36 +239,42 @@ bool initialize_instance(void)
 {
     bool status = true;
 
-    struct vk_application_info app_info = { 0 };
-    app_info.s_type = vk_application_info;
-    app_info.p_next = NULL;
-    app_info.p_app_name = "vk-cube";
-    app_info.app_version = 1;
-    app_info.p_engine_name = "vk-cube";
-    app_info.engine_version = 1;
-    app_info.api_version = VK_VERSION(0, 1, 0, 0);
-
-    struct vk_instance_info instance_info = { 0 };
-    instance_info.s_type = vk_instance_info;
-    instance_info.p_next = NULL;
-    instance_info.p_app_info = &app_info;
-    instance_info.layer_count = 0;
-    instance_info.p_layer_names = NULL;
-    instance_info.extension_count = 0;
-    instance_info.p_extension_names = NULL;
-
-    if(vk_ctx.create_instance(&instance_info, NULL, &vk_ctx.h_instance) != vk_success)
+    if(status)
     {
-        status = false;
-        printf("failed to create vulkan instance\n");
+        status = enumerate_layers();
     }
 
-    printf("instance: 0x%p\n", vk_ctx.h_instance);
+    if(status)
+    {
+        struct vk_application_info app_info = { 0 };
+        app_info.s_type = vk_application_info;
+        app_info.p_next = NULL;
+        app_info.p_app_name = "vk-cube";
+        app_info.app_version = 1;
+        app_info.p_engine_name = "vk-cube";
+        app_info.engine_version = 1;
+        app_info.api_version = VK_VERSION(0, 1, 0, 0);
+
+        struct vk_instance_info instance_info = { 0 };
+        instance_info.s_type = vk_instance_info;
+        instance_info.p_next = NULL;
+        instance_info.p_app_info = &app_info;
+        instance_info.layer_count = 0;
+        instance_info.p_layer_names = NULL;
+        instance_info.extension_count = 0;
+        instance_info.p_extension_names = NULL;
+
+        if(vk_ctx.create_instance(&instance_info, NULL, &vk_ctx.h_instance) != vk_success)
+        {
+            status = false;
+            printf("failed to create vulkan instance\n");
+        }
+    }
     
     return status;
 }
 
-bool enumerate_devices_and_queues(uint32_t* p_device_count, struct physical_device_info** p_device_info)
+bool enumerate_gpus(uint32_t* p_gpu_count, struct gpu_info** p_gpu_info_array)
 {
     bool status = true;
 
@@ -277,7 +282,7 @@ bool enumerate_devices_and_queues(uint32_t* p_device_count, struct physical_devi
 
     vk_physical_device* p_physical_device_handles = NULL;
 
-    struct physical_device_info *p_physical_device_info = NULL;
+    struct gpu_info* p_info_array = NULL;
 
     if(vk_ctx.enumerate_devices(vk_ctx.h_instance, &num_physical_devices, NULL) != vk_success)
     {
@@ -307,9 +312,9 @@ bool enumerate_devices_and_queues(uint32_t* p_device_count, struct physical_devi
 
     if(status)
     {
-        p_physical_device_info = malloc(num_physical_devices * sizeof(struct physical_device_info));
+        p_info_array = malloc(num_physical_devices * sizeof(struct gpu_info));
 
-        if(p_physical_device_info == NULL)
+        if(p_info_array == NULL)
         {
             status = false;
             printf("failed to allocate memory\n");
@@ -320,11 +325,11 @@ bool enumerate_devices_and_queues(uint32_t* p_device_count, struct physical_devi
     {
         for(uint32_t i = 0; status && (i < num_physical_devices); i++)
         {
-            p_physical_device_info[i].handle = p_physical_device_handles[i];
-            vk_ctx.get_physical_device_properties(p_physical_device_handles[i], &p_physical_device_info[i].properties);
-            vk_ctx.get_physical_device_features(p_physical_device_handles[i], &p_physical_device_info[i].features);
+            p_info_array[i].handle = p_physical_device_handles[i];
+            vk_ctx.get_physical_device_properties(p_physical_device_handles[i], &p_info_array[i].properties);
+            vk_ctx.get_physical_device_features(p_physical_device_handles[i], &p_info_array[i].features);
             
-            status = get_physical_device_queue_info(p_physical_device_handles[i], &p_physical_device_info[i].queue_group_count, &p_physical_device_info[i].p_queue_group_properties);
+            status = get_gpu_queue_info(p_physical_device_handles[i], &p_info_array[i].queue_group_count, &p_info_array[i].p_queue_group_properties);
         }
     }
 
@@ -332,19 +337,19 @@ bool enumerate_devices_and_queues(uint32_t* p_device_count, struct physical_devi
     {
         for(uint32_t i = 0; i < num_physical_devices; i++)
         {
-            print_physical_device_info(i, &p_physical_device_info[i].properties, &p_physical_device_info[i].features, p_physical_device_info[i].queue_group_count, p_physical_device_info[i].p_queue_group_properties);
+            print_gpu_info(i, &p_info_array[i]);
         }
     }
 
     if (status)
     {
-        *p_device_count = num_physical_devices;
-        *p_device_info = p_physical_device_info;
+        *p_gpu_count = num_physical_devices;
+        *p_gpu_info_array = p_info_array;
     }
     else
     {
-        free_physical_device_info(num_physical_devices, p_physical_device_info);
-        p_physical_device_info = NULL;
+        free_gpu_info(num_physical_devices, p_info_array);
+        p_info_array = NULL;
     }
 
     if(p_physical_device_handles != NULL)
@@ -356,21 +361,21 @@ bool enumerate_devices_and_queues(uint32_t* p_device_count, struct physical_devi
     return status;
 }
 
-void free_physical_device_info(uint32_t p_device_count, struct physical_device_info* p_device_info)
+void free_gpu_info(uint32_t gpu_count, struct gpu_info* p_gpu_info_array)
 {
-    if(p_device_info != NULL)
+    if(p_gpu_info_array != NULL)
     {
-        for(uint32_t i = 0; i < p_device_count; i++)
+        for(uint32_t i = 0; i < gpu_count; i++)
         {
-            if(p_device_info[i].p_queue_group_properties != NULL)
+            if(p_gpu_info_array[i].p_queue_group_properties != NULL)
             {
-                free(p_device_info[i].p_queue_group_properties);
-                p_device_info[i].p_queue_group_properties = NULL;
+                free(p_gpu_info_array[i].p_queue_group_properties);
+                p_gpu_info_array[i].p_queue_group_properties = NULL;
             }
         }
 
-        free(p_device_info);
-        p_device_info = NULL;
+        free(p_gpu_info_array);
+        p_gpu_info_array = NULL;
     }
 }
 
@@ -378,30 +383,30 @@ bool initialize_device(void)
 {
     bool status = true;
 
-    uint32_t device_count = 0;
-    uint32_t device_index = 0;
+    uint32_t gpu_count = 0;
+    uint32_t gpu_index = 0;
     uint32_t queue_group_index = 0;
-    struct physical_device_info* p_device_info = NULL;
+    struct gpu_info* p_gpu_info = NULL;
 
     if(status)
     {
-        status = enumerate_devices_and_queues(&device_count, &p_device_info);
+        status = enumerate_gpus(&gpu_count, &p_gpu_info);
     }
 
     if(status)
     {
-        while(device_index < device_count)
+        while(gpu_index < gpu_count)
         {
-            if(p_device_info[device_index].properties.device_type == vk_device_type__discrete_gpu)
+            if(p_gpu_info[gpu_index].properties.device_type == vk_device_type__discrete_gpu)
             {
-                printf("use device %u\n", device_index);
+                printf("use device %u\n", gpu_index);
                 break;
             }
 
-            device_index++;
+            gpu_index++;
         }
 
-        if(device_index >= device_count)
+        if(gpu_index >= gpu_count)
         {
             status = false;
             printf("error: could not find discrete gpu\n");
@@ -415,14 +420,14 @@ bool initialize_device(void)
 
     if(status)
     {
-        status = enumerate_device_layers_and_extensions(p_device_info[device_index].handle);
+        status = enumerate_device_layers_and_extensions(p_gpu_info[gpu_index].handle);
     }
 
     if(status)
     {
-        while(queue_group_index < p_device_info[device_index].queue_group_count)
+        while(queue_group_index < p_gpu_info[gpu_index].queue_group_count)
         {
-            if(p_device_info[device_index].p_queue_group_properties[queue_group_index].queue_flags.graphics)
+            if(p_gpu_info[gpu_index].p_queue_group_properties[queue_group_index].queue_flags.graphics)
             {
                 printf("use queue group %u\n", queue_group_index);
                 break;
@@ -431,7 +436,7 @@ bool initialize_device(void)
             queue_group_index++;
         }
 
-        if(queue_group_index >= p_device_info[device_index].queue_group_count)
+        if(queue_group_index >= p_gpu_info[gpu_index].queue_group_count)
         {
             status = false;
             printf("error: could not find queue group\n");
@@ -470,19 +475,19 @@ bool initialize_device(void)
     }
 #endif
 
-    free_physical_device_info(device_count, p_device_info);
-    p_device_info = NULL;
+    free_gpu_info(gpu_count, p_gpu_info);
+    p_gpu_info = NULL;
 
     return status;
 }
 
 
-void print_physical_device_info(uint32_t device_index, struct vk_physical_device_properties* p_device_properties, struct vk_physical_device_features* p_device_features, uint32_t num_queue_groups, struct vk_queue_group_properties* p_queue_group_properties)
+void print_gpu_info(uint32_t gpu_index, struct gpu_info* p_gpu_info)
 {
-    printf("device %u: %s\n", device_index, p_device_properties->device_name);
+    printf("device %u: %s\n", gpu_index, p_gpu_info->properties.device_name);
 
     const char* type = "unknown";
-    switch(p_device_properties->device_type)
+    switch(p_gpu_info->properties.device_type)
     {
         case vk_device_type__integrated_gpu:
             type = "integrated gpu";
@@ -501,85 +506,85 @@ void print_physical_device_info(uint32_t device_index, struct vk_physical_device
     }
     printf("\ttype: %s\n", type);
 
-    printf("\tvendor: 0x%X\n", p_device_properties->vendor_id);
-    printf("\tdevice id: 0x%X\n", p_device_properties->device_id);
-    printf("\tdriver version:0x%X\n", p_device_properties->driver_version);
-    printf("\tapi version version:0x%X\n", p_device_properties->api_version);
+    printf("\tvendor: 0x%X\n", p_gpu_info->properties.vendor_id);
+    printf("\tdevice id: 0x%X\n", p_gpu_info->properties.device_id);
+    printf("\tdriver version:0x%X\n", p_gpu_info->properties.driver_version);
+    printf("\tapi version version:0x%X\n", p_gpu_info->properties.api_version);
 
     printf("\tFeatures:\n");
-    if(p_device_features->robust_buffer_access) { printf("\t\tRobust buffer access\n"); }
-    if(p_device_features->full_draw_index_uint32) { printf("\t\tFull draw index\n"); }
-    if(p_device_features->image_cube_array) { printf("\t\tImage cube array\n"); }
-    if(p_device_features->independent_blend) { printf("\t\tIndependent blend\n"); }
-    if(p_device_features->geometry_shader) { printf("\t\tGeometry shader\n"); }
-    if(p_device_features->tessellation_shader) { printf("\t\tTessellation shader\n"); }
-    if(p_device_features->sample_rate_shading) { printf("\t\tSample rate shading\n"); }
-    if(p_device_features->dual_src_blend) { printf("\t\tDual source blend\n"); }
-    if(p_device_features->logic_op) { printf("\t\tLogic op\n"); }
-    if(p_device_features->multi_draw_indirect) { printf("\t\tMulti draw indirect\n"); }
-    if(p_device_features->draw_indirect_first_instance) { printf("\t\tDraw indirect first instance\n"); }
-    if(p_device_features->depth_clamp) { printf("\t\tDepth clamp\n"); }
-    if(p_device_features->depth_bias_clamp) { printf("\t\tDepth bias clamp\n"); }
-    if(p_device_features->fill_mode_non_solid) { printf("\t\tFill mode non solid\n"); }
-    if(p_device_features->depth_bounds) { printf("\t\tDepth bounds\n"); }
-    if(p_device_features->wide_lines) { printf("\t\tWide lines\n"); }
-    if(p_device_features->large_points) { printf("\t\tLarge points\n"); }
-    if(p_device_features->alpha_to_one) { printf("\t\tAlpha to one\n"); }
-    if(p_device_features->multi_viewport) { printf("\t\tMulti viewport\n"); }
-    if(p_device_features->sampler_anisotropy) { printf("\t\tSampler anisotropy\n"); }
-    if(p_device_features->texture_compression_etc2) { printf("\t\tTexture compression etc2\n"); }
-    if(p_device_features->texture_compression_astc_ldr) { printf("\t\tTexture compression astc ldr\n"); }
-    if(p_device_features->texture_compression_bc) { printf("\t\tTexture compression bc\n"); }
-    if(p_device_features->occlusion_query_precise) { printf("\t\tOcclusion query precise\n"); }
-    if(p_device_features->pipeline_statistics_query) { printf("\t\tPipeline statistics query\n"); }
-    if(p_device_features->vertex_pipeline_stores_and_atomics) { printf("\t\tVertex pipeline stores and atomics\n"); }
-    if(p_device_features->fragment_stores_and_atomics) { printf("\t\tFragment stores and atomics\n"); }
-    if(p_device_features->shader_tessellation_and_geometry_point_size) { printf("\t\tShader tessellation and geometry point size\n"); }
-    if(p_device_features->shader_image_gather_extended) { printf("\t\tShader image gather extended\n"); }
-    if(p_device_features->shader_storage_image_extended_formats) { printf("\t\tShader storage image extended formats\n"); }
-    if(p_device_features->shader_storage_image_multisample) { printf("\t\tShader storage image multisample\n"); }
-    if(p_device_features->shader_storage_image_read_without_format) { printf("\t\tShader storage image read without format\n"); }
-    if(p_device_features->shader_storage_image_write_without_format) { printf("\t\tShader storage image write without format\n"); }
-    if(p_device_features->shader_uniform_buffer_array_dynamic_indexing) { printf("\t\tShader uniform buffer array dynamic indexing\n"); }
-    if(p_device_features->shader_sampled_image_array_dynamic_indexing) { printf("\t\tShader sampled image array dynamic indexing\n"); }
-    if(p_device_features->shader_storage_buffer_array_dynamic_indexing) { printf("\t\tShader storage buffer array dynamic indexing\n"); }
-    if(p_device_features->shader_storage_image_array_dynamic_indexing) { printf("\t\tShader storage image array dynamic indexing\n"); }
-    if(p_device_features->shader_clip_distance) { printf("\t\tShader clip distance\n"); }
-    if(p_device_features->shader_cull_distance) { printf("\t\tShader cull distance\n"); }
-    if(p_device_features->shader_float64) { printf("\t\tShader float 64\n"); }
-    if(p_device_features->shader_int64) { printf("\t\tShader int 64\n"); }
-    if(p_device_features->shader_int16) { printf("\t\tShader int 16\n"); }
-    if(p_device_features->shader_resource_residency) { printf("\t\tShader resource residency\n"); }
-    if(p_device_features->shader_resource_min_lod) { printf("\t\tShader resource min lod\n"); }
-    if(p_device_features->sparse_binding) { printf("\t\tSparse binding\n"); }
-    if(p_device_features->sparse_residency_buffer) { printf("\t\tSparse residency buffer\n"); }
-    if(p_device_features->sparse_residency_image2D) { printf("\t\tSparse residency image 2D\n"); }
-    if(p_device_features->sparse_residency_image3D) { printf("\t\tSparse residency image 3D\n"); }
-    if(p_device_features->sparse_residency2_samples) { printf("\t\tSparse residency 2 samples\n"); }
-    if(p_device_features->sparse_residency4_samples) { printf("\t\tSparse residency 4 samples\n"); }
-    if(p_device_features->sparse_residency8_samples) { printf("\t\tSparse residency 8 samples\n"); }
-    if(p_device_features->sparse_residency16_samples) { printf("\t\tSparse residency 16 samples\n"); }
-    if(p_device_features->sparse_residency_aliased) { printf("\t\tSparse residency aliased\n"); }
-    if(p_device_features->variable_multisample_rate) { printf("\t\tVariable multi-sample rate\n"); }
-    if(p_device_features->inherited_queries) { printf("\t\tInherited queries\n"); }
+    if(p_gpu_info->features.robust_buffer_access) { printf("\t\tRobust buffer access\n"); }
+    if(p_gpu_info->features.full_draw_index_uint32) { printf("\t\tFull draw index\n"); }
+    if(p_gpu_info->features.image_cube_array) { printf("\t\tImage cube array\n"); }
+    if(p_gpu_info->features.independent_blend) { printf("\t\tIndependent blend\n"); }
+    if(p_gpu_info->features.geometry_shader) { printf("\t\tGeometry shader\n"); }
+    if(p_gpu_info->features.tessellation_shader) { printf("\t\tTessellation shader\n"); }
+    if(p_gpu_info->features.sample_rate_shading) { printf("\t\tSample rate shading\n"); }
+    if(p_gpu_info->features.dual_src_blend) { printf("\t\tDual source blend\n"); }
+    if(p_gpu_info->features.logic_op) { printf("\t\tLogic op\n"); }
+    if(p_gpu_info->features.multi_draw_indirect) { printf("\t\tMulti draw indirect\n"); }
+    if(p_gpu_info->features.draw_indirect_first_instance) { printf("\t\tDraw indirect first instance\n"); }
+    if(p_gpu_info->features.depth_clamp) { printf("\t\tDepth clamp\n"); }
+    if(p_gpu_info->features.depth_bias_clamp) { printf("\t\tDepth bias clamp\n"); }
+    if(p_gpu_info->features.fill_mode_non_solid) { printf("\t\tFill mode non solid\n"); }
+    if(p_gpu_info->features.depth_bounds) { printf("\t\tDepth bounds\n"); }
+    if(p_gpu_info->features.wide_lines) { printf("\t\tWide lines\n"); }
+    if(p_gpu_info->features.large_points) { printf("\t\tLarge points\n"); }
+    if(p_gpu_info->features.alpha_to_one) { printf("\t\tAlpha to one\n"); }
+    if(p_gpu_info->features.multi_viewport) { printf("\t\tMulti viewport\n"); }
+    if(p_gpu_info->features.sampler_anisotropy) { printf("\t\tSampler anisotropy\n"); }
+    if(p_gpu_info->features.texture_compression_etc2) { printf("\t\tTexture compression etc2\n"); }
+    if(p_gpu_info->features.texture_compression_astc_ldr) { printf("\t\tTexture compression astc ldr\n"); }
+    if(p_gpu_info->features.texture_compression_bc) { printf("\t\tTexture compression bc\n"); }
+    if(p_gpu_info->features.occlusion_query_precise) { printf("\t\tOcclusion query precise\n"); }
+    if(p_gpu_info->features.pipeline_statistics_query) { printf("\t\tPipeline statistics query\n"); }
+    if(p_gpu_info->features.vertex_pipeline_stores_and_atomics) { printf("\t\tVertex pipeline stores and atomics\n"); }
+    if(p_gpu_info->features.fragment_stores_and_atomics) { printf("\t\tFragment stores and atomics\n"); }
+    if(p_gpu_info->features.shader_tessellation_and_geometry_point_size) { printf("\t\tShader tessellation and geometry point size\n"); }
+    if(p_gpu_info->features.shader_image_gather_extended) { printf("\t\tShader image gather extended\n"); }
+    if(p_gpu_info->features.shader_storage_image_extended_formats) { printf("\t\tShader storage image extended formats\n"); }
+    if(p_gpu_info->features.shader_storage_image_multisample) { printf("\t\tShader storage image multisample\n"); }
+    if(p_gpu_info->features.shader_storage_image_read_without_format) { printf("\t\tShader storage image read without format\n"); }
+    if(p_gpu_info->features.shader_storage_image_write_without_format) { printf("\t\tShader storage image write without format\n"); }
+    if(p_gpu_info->features.shader_uniform_buffer_array_dynamic_indexing) { printf("\t\tShader uniform buffer array dynamic indexing\n"); }
+    if(p_gpu_info->features.shader_sampled_image_array_dynamic_indexing) { printf("\t\tShader sampled image array dynamic indexing\n"); }
+    if(p_gpu_info->features.shader_storage_buffer_array_dynamic_indexing) { printf("\t\tShader storage buffer array dynamic indexing\n"); }
+    if(p_gpu_info->features.shader_storage_image_array_dynamic_indexing) { printf("\t\tShader storage image array dynamic indexing\n"); }
+    if(p_gpu_info->features.shader_clip_distance) { printf("\t\tShader clip distance\n"); }
+    if(p_gpu_info->features.shader_cull_distance) { printf("\t\tShader cull distance\n"); }
+    if(p_gpu_info->features.shader_float64) { printf("\t\tShader float 64\n"); }
+    if(p_gpu_info->features.shader_int64) { printf("\t\tShader int 64\n"); }
+    if(p_gpu_info->features.shader_int16) { printf("\t\tShader int 16\n"); }
+    if(p_gpu_info->features.shader_resource_residency) { printf("\t\tShader resource residency\n"); }
+    if(p_gpu_info->features.shader_resource_min_lod) { printf("\t\tShader resource min lod\n"); }
+    if(p_gpu_info->features.sparse_binding) { printf("\t\tSparse binding\n"); }
+    if(p_gpu_info->features.sparse_residency_buffer) { printf("\t\tSparse residency buffer\n"); }
+    if(p_gpu_info->features.sparse_residency_image2D) { printf("\t\tSparse residency image 2D\n"); }
+    if(p_gpu_info->features.sparse_residency_image3D) { printf("\t\tSparse residency image 3D\n"); }
+    if(p_gpu_info->features.sparse_residency2_samples) { printf("\t\tSparse residency 2 samples\n"); }
+    if(p_gpu_info->features.sparse_residency4_samples) { printf("\t\tSparse residency 4 samples\n"); }
+    if(p_gpu_info->features.sparse_residency8_samples) { printf("\t\tSparse residency 8 samples\n"); }
+    if(p_gpu_info->features.sparse_residency16_samples) { printf("\t\tSparse residency 16 samples\n"); }
+    if(p_gpu_info->features.sparse_residency_aliased) { printf("\t\tSparse residency aliased\n"); }
+    if(p_gpu_info->features.variable_multisample_rate) { printf("\t\tVariable multi-sample rate\n"); }
+    if(p_gpu_info->features.inherited_queries) { printf("\t\tInherited queries\n"); }
 
-    for(uint32_t i = 0; i < num_queue_groups; i++)
+    for(uint32_t i = 0; i < p_gpu_info->queue_group_count; i++)
     {
         printf("\tqueue group %u:\n", i);
-        printf("\t\tqueue count: %u\n", p_queue_group_properties[i].queue_count);
+        printf("\t\tqueue count: %u\n", p_gpu_info->p_queue_group_properties[i].queue_count);
         
-        if(p_queue_group_properties[i].queue_flags.graphics) { printf("\t\tgraphics supported\n"); }
-        if(p_queue_group_properties[i].queue_flags.compute) { printf("\t\tcompute supported\n"); }
-        if(p_queue_group_properties[i].queue_flags.transfer) { printf("\t\ttransfer supported\n"); }
-        if(p_queue_group_properties[i].queue_flags.sparse_binding) { printf("\t\tsparse_binding supported\n"); }
-        if(p_queue_group_properties[i].queue_flags.protected_memory) { printf("\t\tprotected_memory supported\n"); }
-        if(p_queue_group_properties[i].queue_flags.video_decode) { printf("\t\tvideo_decode supported\n"); }
-        if(p_queue_group_properties[i].queue_flags.video_encode) { printf("\t\tvideo_encode supported\n"); }
-        if(p_queue_group_properties[i].queue_flags.optical_flow) { printf("\t\toptical_flow supported\n"); }
+        if(p_gpu_info->p_queue_group_properties[i].queue_flags.graphics) { printf("\t\tgraphics supported\n"); }
+        if(p_gpu_info->p_queue_group_properties[i].queue_flags.compute) { printf("\t\tcompute supported\n"); }
+        if(p_gpu_info->p_queue_group_properties[i].queue_flags.transfer) { printf("\t\ttransfer supported\n"); }
+        if(p_gpu_info->p_queue_group_properties[i].queue_flags.sparse_binding) { printf("\t\tsparse_binding supported\n"); }
+        if(p_gpu_info->p_queue_group_properties[i].queue_flags.protected_memory) { printf("\t\tprotected_memory supported\n"); }
+        if(p_gpu_info->p_queue_group_properties[i].queue_flags.video_decode) { printf("\t\tvideo_decode supported\n"); }
+        if(p_gpu_info->p_queue_group_properties[i].queue_flags.video_encode) { printf("\t\tvideo_encode supported\n"); }
+        if(p_gpu_info->p_queue_group_properties[i].queue_flags.optical_flow) { printf("\t\toptical_flow supported\n"); }
     }
 }
 
-bool get_physical_device_queue_info(vk_physical_device h_physical_device, uint32_t* p_num_queue_groups, struct vk_queue_group_properties** p_queue_group_properties)
+bool get_gpu_queue_info(vk_physical_device h_physical_device, uint32_t* p_num_queue_groups, struct vk_queue_group_properties** p_queue_group_properties)
 {
     bool status = true;
 
