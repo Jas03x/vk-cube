@@ -346,6 +346,8 @@ bool initialize_instance(void)
             printf("failed to create vulkan instance\n");
         }
     }
+
+    free_layers(&layers);
     
     return status;
 }
