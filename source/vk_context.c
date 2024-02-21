@@ -1,8 +1,9 @@
 
 #include <stdbool.h>
-#include <stdint.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "vk_context.h"
 
@@ -158,7 +159,7 @@ bool enumerate_instance_layers(struct layer_list* p_layers)
 
     if(status)
     {
-        layers.array = malloc(layers.count * sizeof(struct vk_layer));
+        layers.array = calloc(layers.count, sizeof(struct vk_layer));
 
         if(layers.array == NULL)
         {
@@ -169,7 +170,7 @@ bool enumerate_instance_layers(struct layer_list* p_layers)
 
     if(status)
     {
-        layers.extension_lists = malloc(layers.count * sizeof(struct extension_list));
+        layers.extension_lists = calloc(layers.count, sizeof(struct extension_list));
 
         if(layers.extension_lists == NULL)
         {
@@ -270,7 +271,7 @@ bool enumerate_instance_extensions(const char* p_layer, struct extension_list* p
 
     if(status)
     {
-        extensions.array = malloc(extensions.count * sizeof(struct vk_extension));
+        extensions.array = calloc(extensions.count, sizeof(struct vk_extension));
 
         if(extensions.array == NULL)
         {
@@ -319,6 +320,26 @@ bool initialize_instance(void)
     {
         status = enumerate_instance_layers(&layers);
     }
+
+    for(uint32_t i = 0; i < layers.count; i++)
+    {
+        if(strncmp(layers.array[i].name, "", VK_MAX_NAME_LENGTH) == 0)
+        {
+            for(uint32_t j = 0; j < layers.extension_lists[i].count; j++)
+            {
+                printf("TEST: %s\n", layers.extension_lists[i].array[j].name);
+                if(strncmp(layers.extension_lists[i].array[j].name, "VK_EXT_debug_report", VK_MAX_NAME_LENGTH) == 0)
+                {
+                }
+            }
+
+            break;
+        }
+    }
+
+#ifdef DEBUG
+    
+#endif
 
     if(status)
     {
