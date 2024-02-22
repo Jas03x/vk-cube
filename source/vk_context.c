@@ -144,6 +144,15 @@ bool initialize_physical_device_function_pointers(void)
     return status;
 }
 
+bool initialize_logical_device_function_pointers(void)
+{
+    bool status = true;
+
+    status &= load_function_pointer(vk_ctx.h_instance, "vkGetDeviceProcAddr", &vk_ctx.get_device_proc_addr);
+
+    return status;
+}
+
 bool enumerate_instance_layers(struct layer_list* p_layers)
 {
     bool status = true;
@@ -601,6 +610,11 @@ bool initialize_device(void)
             status = false;
             printf("failed to create vulkan device\n");
         }
+    }
+
+    if(status)
+    {
+        status = initialize_logical_device_function_pointers();
     }
 
     free_gpu_info(gpu_count, p_gpu_info);

@@ -9,6 +9,7 @@ struct vk_context
     vk_device                                    h_device;
 
     pfn_vk_get_instance_proc_addr                get_instance_proc_addr;
+    pfn_vk_get_device_proc_addr                  get_device_proc_addr;
 
     // global functions
     pfn_vk_get_version                           get_version;

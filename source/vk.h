@@ -324,6 +324,7 @@ struct vk_device_creation_info
 };
 
 typedef void*    (*pfn_vk_get_instance_proc_addr)(vk_instance h_instance, const char* p_name);
+typedef void*    (*pfn_vk_get_device_proc_addr)(vk_device h_device, const char* p_name);
 
 // global functions
 typedef uint32_t (*pfn_vk_create_instance)(struct vk_instance_info* p_info, void* p_reserved, vk_instance* p_instance);
