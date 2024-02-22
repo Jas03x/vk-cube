@@ -565,14 +565,13 @@ bool initialize_device(void)
         }
     }
 
-#if 0
     if(status)
     {
-        const uint32_t MAX_QUEUES = 2;
+        enum { MAX_QUEUES = 2 };
 
         const float p_queue_priorities[MAX_QUEUES] = { 1.0f, 1.0f };
 
-        uint32_t queue_count = p_physical_device_info[device_index].p_queue_group_properties[queue_group_index].queue_count;
+        uint32_t queue_count = p_gpu_info[gpu_index].p_queue_group_properties[queue_group_index].queue_count;
 
         if(queue_count > MAX_QUEUES)
         {
@@ -591,11 +590,18 @@ bool initialize_device(void)
         device_info.p_next = NULL;
         device_info.queue_info_count = 1;
         device_info.p_queue_info_array = &queue_info;
-        device_info.
+        device_info.layer_count = 0;
+        device_info.p_layers = NULL;
+        device_info.extension_count = 0;
+        device_info.p_extensions = NULL;
+        device_info.features = NULL;
 
-        vk_ctx.create_device(p_physical_devices[device_index], )
+        if(vk_ctx.create_device(p_gpu_info[gpu_index].handle, &device_info, NULL, &vk_ctx.h_device) != vk_success)
+        {
+            status = false;
+            printf("failed to create vulkan device\n");
+        }
     }
-#endif
 
     free_gpu_info(gpu_count, p_gpu_info);
     p_gpu_info = NULL;
