@@ -9,6 +9,8 @@
 
 struct vk_context vk_ctx = { 0 };
 
+enum { INVALID_INDEX = 0xFFFFFFFF };
+
 struct gpu_info
 {
     vk_physical_device                   handle;
@@ -49,6 +51,8 @@ bool enumerate_device_extensions(vk_physical_device h_physical_device, const cha
 bool get_gpu_queue_info(vk_physical_device h_physical_device, uint32_t* p_num_queue_groups, struct vk_queue_group_properties** p_queue_group_properties);
 
 void print_gpu_info(uint32_t gpu_index, struct gpu_info* p_gpu_info);
+
+uint32_t find_extension(struct layer_list* layers, const char* layer_name, const char* extension_name);
 
 void free_layers(struct layer_list* layers);
 void free_extensions(struct extension_list* extensions);
@@ -181,7 +185,7 @@ bool enumerate_instance_layers(struct layer_list* p_layers)
 
     if(status)
     {
-        if(vk_ctx.enumerate_layers(&num_layers, layers.array) != vk_success)
+        if(vk_ctx.enumerate_layers(&num_layers, &layers.array[1]) != vk_success) // start reading at element 1 because element 0 is the vulkan implementation
         {
             status = false;
             printf("failed to get layers\n");
@@ -197,10 +201,10 @@ bool enumerate_instance_layers(struct layer_list* p_layers)
 
     if(status)
     {
-        for(uint32_t i = 0; i < num_layers; i++)
+        for(uint32_t i = 1; i <= num_layers; i++) // start at 1 because index 0 used for vulkan implementation
         {
             printf("Layer %s (0x%X, %u): %s\n", layers.array[i].name, layers.array[i].spec_version, layers.array[i].impl_version, layers.array[i].desc);
-            status = enumerate_instance_extensions(layers.array[i].name, &layers.extension_lists[i+1]); // +1 because index 0 used for vulkan implementation
+            status = enumerate_instance_extensions(layers.array[i].name, &layers.extension_lists[i]);
         }
     }
 
@@ -216,6 +220,30 @@ bool enumerate_instance_layers(struct layer_list* p_layers)
     }
 
     return status;
+}
+
+uint32_t find_extension(struct layer_list* layers, const char* layer_name, const char* extension_name)
+{
+    uint32_t index = INVALID_INDEX;
+
+    for(uint32_t i = 0; i < layers->count; i++)
+    {
+        if(strncmp(layers->array[i].name, layer_name, VK_MAX_NAME_LENGTH) == 0)
+        {
+            for(uint32_t j = 0; j < layers->extension_lists[i].count; j++)
+            {
+                if(strncmp(layers->extension_lists[i].array[j].name, extension_name, VK_MAX_NAME_LENGTH) == 0)
+                {
+                    index = j;
+                    break;
+                }
+            }
+
+            break;
+        }
+    }
+
+    return index;
 }
 
 void free_layers(struct layer_list* layers)
@@ -314,31 +342,26 @@ bool initialize_instance(void)
 {
     bool status = true;
 
+    enum { max_extensions = 16 };
+
     struct layer_list layers = { 0 };
+
+    uint32_t num_extensions = 0;
+    uint32_t index = INVALID_INDEX;
+
+    const char* extensions[max_extensions] = { 0 };    
 
     if(status)
     {
         status = enumerate_instance_layers(&layers);
     }
 
-    for(uint32_t i = 0; i < layers.count; i++)
-    {
-        if(strncmp(layers.array[i].name, "", VK_MAX_NAME_LENGTH) == 0)
-        {
-            for(uint32_t j = 0; j < layers.extension_lists[i].count; j++)
-            {
-                printf("TEST: %s\n", layers.extension_lists[i].array[j].name);
-                if(strncmp(layers.extension_lists[i].array[j].name, "VK_EXT_debug_report", VK_MAX_NAME_LENGTH) == 0)
-                {
-                }
-            }
-
-            break;
-        }
-    }
-
 #ifdef DEBUG
-    
+    index = find_extension(&layers, "", "VK_EXT_debug_report");
+    if(index != INVALID_INDEX)
+    {
+        extensions[num_extensions++] = layers.extension_lists[0].array[index].name;
+    }
 #endif
 
     if(status)
@@ -358,8 +381,8 @@ bool initialize_instance(void)
         instance_info.p_app_info = &app_info;
         instance_info.layer_count = 0;
         instance_info.p_layer_names = NULL;
-        instance_info.extension_count = 0;
-        instance_info.p_extension_names = NULL;
+        instance_info.extension_count = num_extensions;
+        instance_info.p_extension_names = extensions;
 
         if(vk_ctx.create_instance(&instance_info, NULL, &vk_ctx.h_instance) != vk_success)
         {

@@ -19,8 +19,9 @@ library_paths += -LIBPATH:"c:\libraries\sdl2\lib\x64"
 
 libraries = SDL2.lib SDL2main.lib shell32.lib
 
-debug: cflags += -Zi
-debug: lflags += -DEBUG
+debug: cflags  += -Zi
+debug: lflags  += -DEBUG
+debug: defines += -DDEBUG
 
 default:
 	$(error target not specified)
@@ -40,7 +41,7 @@ $(bin)/%.d:
 	$(gcc) -I $(src) -MM -MT "$(bin)/$*.o $(bin)/$*.d" $(src)/$*.c -MF $@ 
 
 $(bin)/%.o:
-	$(cc) $(cflags) $(include_paths) -c $(src)/$*.c -Fo:$@ -Fd:$(bin)/$(pdb)
+	$(cc) $(cflags) $(include_paths) $(defines) -c $(src)/$*.c -Fo:$@ -Fd:$(bin)/$(pdb)
 
 clean:
 	rm -f $(bin)/*.d
