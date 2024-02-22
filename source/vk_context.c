@@ -148,7 +148,7 @@ bool initialize_logical_device_function_pointers(void)
 {
     bool status = true;
 
-    status &= load_function_pointer(vk_ctx.h_instance, "vkGetDeviceProcAddr", &vk_ctx.get_device_proc_addr);
+    status &= load_function_pointer(vk_ctx.h_instance, "vkGetDeviceProcAddr", (void**) &vk_ctx.get_device_proc_addr);
 
     return status;
 }
