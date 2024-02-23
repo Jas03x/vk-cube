@@ -327,7 +327,8 @@ typedef void*    (*pfn_vk_get_instance_proc_addr)(vk_instance h_instance, const 
 typedef void*    (*pfn_vk_get_device_proc_addr)(vk_device h_device, const char* p_name);
 
 // global functions
-typedef uint32_t (*pfn_vk_create_instance)(struct vk_instance_info* p_info, void* p_reserved, vk_instance* p_instance);
+typedef uint32_t (*pfn_vk_create_instance)(struct vk_instance_info* p_info, void* reserved, vk_instance* p_instance);
+typedef void     (*pfn_vk_destroy_instance)(vk_instance h_instance, const void* reserved);
 typedef uint32_t (*pfn_vk_get_version)(uint32_t* p_version);
 typedef uint32_t (*pfn_vk_enumerate_layers)(uint32_t* p_count, struct vk_layer* p_layers);
 typedef uint32_t (*pfn_vk_enumerate_extensions)(const char* p_layer_name, uint32_t* p_count, struct vk_extension* p_extensions);
@@ -337,10 +338,12 @@ typedef uint32_t (*pfn_vk_enumerate_physical_devices)(vk_instance h_instance, ui
 typedef void     (*pfn_vk_get_physical_device_properties)(vk_physical_device h_device, struct vk_physical_device_properties* p_properties);
 typedef void     (*pfn_vk_get_physical_device_features)(vk_physical_device h_device, struct vk_physical_device_features* p_features);
 typedef void     (*pfn_vk_get_physical_queue_group_properties)(vk_physical_device h_device, uint32_t* p_count, struct vk_queue_group_properties* p_properties);
-typedef uint32_t (*pfn_vk_create_device)(vk_physical_device h_physical_device, struct vk_device_creation_info* p_info, void* p_reserved, vk_device* p_device);
+typedef uint32_t (*pfn_vk_create_device)(vk_physical_device h_physical_device, struct vk_device_creation_info* p_info, void* reserved, vk_device* p_device);
 
 // device level functions
 typedef uint32_t (*pfn_vk_enumerate_device_layers)(vk_physical_device h_device, uint32_t* p_count, struct vk_layer* p_layers);
 typedef uint32_t (*pfn_vk_enumerate_device_extensions)(vk_physical_device h_device, const char* p_layer_name, uint32_t* p_count, struct vk_extension* p_extensions);
+typedef uint32_t (*pfn_vk_wait_for_device_idle)(vk_device h_device);
+typedef void     (*pfn_vk_destroy_device)(vk_device h_device, const void* reserved);
 
 #endif // VK_H

@@ -12,8 +12,9 @@ struct vk_context
     pfn_vk_get_device_proc_addr                  get_device_proc_addr;
 
     // global functions
-    pfn_vk_get_version                           get_version;
     pfn_vk_create_instance                       create_instance;
+    pfn_vk_destroy_instance                      destroy_instance;
+    pfn_vk_get_version                           get_version;
     pfn_vk_enumerate_layers                      enumerate_layers;
     pfn_vk_enumerate_extensions                  enumerate_extensions;
 
@@ -23,6 +24,8 @@ struct vk_context
     pfn_vk_get_physical_device_features          get_physical_device_features;
     pfn_vk_get_physical_queue_group_properties   get_physical_queue_group_properties;
     pfn_vk_create_device                         create_device;
+    pfn_vk_destroy_device                        destroy_device;
+    pfn_vk_wait_for_device_idle                  wait_for_device_idle;
 
     // device level functions
     pfn_vk_enumerate_device_layers               enumerate_device_layers;

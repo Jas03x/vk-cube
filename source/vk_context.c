@@ -87,6 +87,16 @@ bool initialize_vulkan_context(pfn_vk_get_instance_proc_addr pfn_get_instance_pr
     return status;
 }
 
+void uninitialize_vulkan_context(void)
+{
+    vk_ctx.wait_for_device_idle(vk_ctx.h_device);
+    vk_ctx.destroy_device(vk_ctx.h_device, NULL);
+    vk_ctx.h_device = NULL;
+
+    vk_ctx.destroy_instance(vk_ctx.h_instance, NULL);
+    vk_ctx.h_instance = NULL;
+}
+
 bool load_function_pointer(vk_instance h_instance, const char* p_name, void** p_pfn)
 {
     bool status = true;
@@ -114,6 +124,7 @@ bool initialize_global_function_pointers(void)
     bool status = true;
 
     status &= load_function_pointer(NULL, "vkCreateInstance", (void**) &vk_ctx.create_instance);
+    status &= load_function_pointer(NULL, "vkDestroyInstance", (void**) &vk_ctx.destroy_instance);
     status &= load_function_pointer(NULL, "vkEnumerateInstanceVersion", (void**) &vk_ctx.get_version);
     status &= load_function_pointer(NULL, "vkEnumerateInstanceLayerProperties", (void**) &vk_ctx.enumerate_layers);
     status &= load_function_pointer(NULL, "vkEnumerateInstanceExtensionProperties", (void**) &vk_ctx.enumerate_extensions);
@@ -130,6 +141,8 @@ bool initialize_instance_function_pointers(void)
     status &= load_function_pointer(vk_ctx.h_instance, "vkGetPhysicalDeviceFeatures", (void**) &vk_ctx.get_physical_device_features);
     status &= load_function_pointer(vk_ctx.h_instance, "vkGetPhysicalDeviceQueueFamilyProperties", (void**) &vk_ctx.get_physical_queue_group_properties);
     status &= load_function_pointer(vk_ctx.h_instance, "vkCreateDevice", (void**) &vk_ctx.create_device);
+    status &= load_function_pointer(vk_ctx.h_instance, "vkDestroyDevice", (void**) &vk_ctx.destroy_device);
+    status &= load_function_pointer(vk_ctx.h_instance, "vkDeviceWaitIdle", (void**) &vk_ctx.wait_for_device_idle);
 
     return status;
 }
@@ -867,3 +880,4 @@ bool enumerate_device_extensions(vk_physical_device h_physical_device, const cha
 
     return status;
 }
+
