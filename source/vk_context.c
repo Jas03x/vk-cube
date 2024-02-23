@@ -76,11 +76,6 @@ bool initialize_vulkan_context(pfn_vk_get_instance_proc_addr pfn_get_instance_pr
 
     if(status)
     {
-        status = initialize_instance_function_pointers();
-    }
-
-    if(status)
-    {
         status = initialize_device();
     }
 
@@ -124,7 +119,6 @@ bool initialize_global_function_pointers(void)
     bool status = true;
 
     status &= load_function_pointer(NULL, "vkCreateInstance", (void**) &vk_ctx.create_instance);
-    status &= load_function_pointer(NULL, "vkDestroyInstance", (void**) &vk_ctx.destroy_instance);
     status &= load_function_pointer(NULL, "vkEnumerateInstanceVersion", (void**) &vk_ctx.get_version);
     status &= load_function_pointer(NULL, "vkEnumerateInstanceLayerProperties", (void**) &vk_ctx.enumerate_layers);
     status &= load_function_pointer(NULL, "vkEnumerateInstanceExtensionProperties", (void**) &vk_ctx.enumerate_extensions);
@@ -136,6 +130,7 @@ bool initialize_instance_function_pointers(void)
 {
     bool status = true;
 
+    status &= load_function_pointer(vk_ctx.h_instance, "vkDestroyInstance", (void**) &vk_ctx.destroy_instance);
     status &= load_function_pointer(vk_ctx.h_instance, "vkEnumeratePhysicalDevices", (void**) &vk_ctx.enumerate_devices);
     status &= load_function_pointer(vk_ctx.h_instance, "vkGetPhysicalDeviceProperties", (void**) &vk_ctx.get_physical_device_properties);
     status &= load_function_pointer(vk_ctx.h_instance, "vkGetPhysicalDeviceFeatures", (void**) &vk_ctx.get_physical_device_features);
@@ -411,6 +406,11 @@ bool initialize_instance(void)
             status = false;
             printf("failed to create vulkan instance\n");
         }
+    }
+
+    if(status)
+    {
+        status = initialize_instance_function_pointers();
     }
 
     free_layers(&layers);
