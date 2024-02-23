@@ -46,6 +46,8 @@ bool initialize(void)
 
 void uninitialize(void)
 {
+    uninitialize_vulkan_context();
+
     SDL_Vulkan_UnloadLibrary();
     SDL_Quit();
 }
