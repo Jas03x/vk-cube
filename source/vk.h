@@ -11,6 +11,7 @@
 typedef void* vk_instance;
 typedef void* vk_physical_device;
 typedef void* vk_device;
+typedef void* vk_debug_callback;
 
 enum
 {
@@ -28,7 +29,8 @@ enum vk_structure_type
     vk_application_info   = 0,
     vk_instance_info      = 1,
     vk_queue_create_info  = 2,
-    vk_device_create_info = 3
+    vk_device_create_info = 3,
+    vk_structure_type_debug_report_callback_info = 1000011000
 };
 
 enum vk_device_type
@@ -78,6 +80,27 @@ struct vk_extension
 {
     char                                 name[VK_MAX_NAME_LENGTH];
     uint32_t                             spec_version;
+};
+
+typedef uint32_t (*vk_pfn_debug_callback)(uint32_t flags, uint32_t object_type, uint64_t object, uint32_t location, int32_t message_code, const char* layer_prefix, const char* message, void* user_data);
+
+typedef enum vk_debug_callback_flag
+{
+    vk_debug_callback_information_bit         = 0x01,
+    vk_debug_callback_warning_bit             = 0x02,
+    vk_debug_callback_performance_warning_bit = 0x04,
+    vk_debug_callback_error_bit               = 0x08,
+    vk_debug_callback_debug_bit               = 0x10,
+    vk_debug_callback_all_bits                = 0x1F 
+};
+
+struct vk_debug_callback_info
+{
+    uint32_t                             s_type;
+    const void*                          p_next;
+    uint32_t                             flags;
+    vk_pfn_debug_callback                pfn_callback;
+    void*                                user_data;
 };
 
 struct vk_device_limits
@@ -339,6 +362,7 @@ typedef void     (*pfn_vk_get_physical_device_properties)(vk_physical_device h_d
 typedef void     (*pfn_vk_get_physical_device_features)(vk_physical_device h_device, struct vk_physical_device_features* p_features);
 typedef void     (*pfn_vk_get_physical_queue_group_properties)(vk_physical_device h_device, uint32_t* p_count, struct vk_queue_group_properties* p_properties);
 typedef uint32_t (*pfn_vk_create_device)(vk_physical_device h_physical_device, struct vk_device_creation_info* p_info, void* reserved, vk_device* p_device);
+typedef uint32_t (*pfn_vk_register_debug_callback)(vk_instance h_instance, struct vk_debug_callback_info* p_info, void* reserved, vk_debug_callback* p_callback);
 
 // device level functions
 typedef uint32_t (*pfn_vk_enumerate_device_layers)(vk_physical_device h_device, uint32_t* p_count, struct vk_layer* p_layers);

@@ -7,6 +7,8 @@ struct vk_context
 {
     vk_instance                                  h_instance;
     vk_device                                    h_device;
+    
+    vk_debug_callback                            h_debug_callback;
 
     pfn_vk_get_instance_proc_addr                get_instance_proc_addr;
     pfn_vk_get_device_proc_addr                  get_device_proc_addr;
@@ -26,6 +28,7 @@ struct vk_context
     pfn_vk_create_device                         create_device;
     pfn_vk_destroy_device                        destroy_device;
     pfn_vk_wait_for_device_idle                  wait_for_device_idle;
+    pfn_vk_register_debug_callback               register_debug_callback;
 
     // device level functions
     pfn_vk_enumerate_device_layers               enumerate_device_layers;

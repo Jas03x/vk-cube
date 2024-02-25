@@ -41,6 +41,7 @@ bool initialize_physical_device_function_pointers(void);
 
 bool initialize_instance(void);
 bool initialize_device(void);
+bool initialize_debug_layer(void);
 
 bool enumerate_instance_layers(struct layer_list* p_layers);
 bool enumerate_instance_extensions(const char* p_layer, struct extension_list* p_extensions);
@@ -57,6 +58,11 @@ uint32_t find_extension(struct layer_list* layers, const char* layer_name, const
 void free_layers(struct layer_list* layers);
 void free_extensions(struct extension_list* extensions);
 void free_gpu_info(uint32_t gpu_count, struct gpu_info* p_gpu_info_array);
+
+uint32_t debug_callback(uint32_t flags, uint32_t object_type, uint64_t object, uint32_t location, int32_t message_code, const char* layer_prefix, const char* message, void* user_data)
+{
+    return vk_true;
+}
 
 bool initialize_vulkan_context(pfn_vk_get_instance_proc_addr pfn_get_instance_proc_addr)
 {
@@ -138,6 +144,7 @@ bool initialize_instance_function_pointers(void)
     status &= load_function_pointer(vk_ctx.h_instance, "vkCreateDevice", (void**) &vk_ctx.create_device);
     status &= load_function_pointer(vk_ctx.h_instance, "vkDestroyDevice", (void**) &vk_ctx.destroy_device);
     status &= load_function_pointer(vk_ctx.h_instance, "vkDeviceWaitIdle", (void**) &vk_ctx.wait_for_device_idle);
+    status &= load_function_pointer(vk_ctx.h_instance, "vkCreateDebugReportCallbackEXT", (void**) &vk_ctx.register_debug_callback);
 
     return status;
 }
@@ -413,8 +420,35 @@ bool initialize_instance(void)
         status = initialize_instance_function_pointers();
     }
 
+#ifdef DEBUG
+    if(status)
+    {
+        status = initialize_debug_layer();
+    }
+#endif
+
     free_layers(&layers);
     
+    return status;
+}
+
+bool initialize_debug_layer(void)
+{
+    bool status = true;
+
+    struct vk_debug_callback_info callback_info;
+    callback_info.s_type = vk_structure_type_debug_report_callback_info;
+    callback_info.p_next = NULL;
+    callback_info.flags = vk_debug_callback_all_bits;
+    callback_info.pfn_callback = debug_callback;
+    callback_info.user_data = NULL;
+
+    if(vk_ctx.register_debug_callback(vk_ctx.h_instance, &callback_info, NULL, &vk_ctx.h_debug_callback) != vk_success)
+    {
+        printf("error: failed to register debug callback\n");
+        status = false;
+    }
+
     return status;
 }
 
@@ -880,4 +914,3 @@ bool enumerate_device_extensions(vk_physical_device h_physical_device, const cha
 
     return status;
 }
-
