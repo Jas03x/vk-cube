@@ -84,7 +84,7 @@ struct vk_extension
 
 typedef uint32_t (*vk_pfn_debug_callback)(uint32_t flags, uint32_t object_type, uint64_t object, uint32_t location, int32_t message_code, const char* layer_prefix, const char* message, void* user_data);
 
-typedef enum vk_debug_callback_flag
+enum vk_debug_callback_flag
 {
     vk_debug_callback_information_bit         = 0x01,
     vk_debug_callback_warning_bit             = 0x02,
@@ -92,6 +92,45 @@ typedef enum vk_debug_callback_flag
     vk_debug_callback_error_bit               = 0x08,
     vk_debug_callback_debug_bit               = 0x10,
     vk_debug_callback_all_bits                = 0x1F 
+};
+
+enum vk_debug_callback_object_type
+{
+    vk_debug_callback_object_type__unknown = 0,
+    vk_debug_callback_object_type__instance = 1,
+    vk_debug_callback_object_type__physical_device = 2,
+    vk_debug_callback_object_type__device = 3,
+    vk_debug_callback_object_type__queue = 4,
+    vk_debug_callback_object_type__semaphore = 5,
+    vk_debug_callback_object_type__command_buffer = 6,
+    vk_debug_callback_object_type__fence = 7,
+    vk_debug_callback_object_type__device_memory = 8,
+    vk_debug_callback_object_type__buffer = 9,
+    vk_debug_callback_object_type__image = 10,
+    vk_debug_callback_object_type__event = 11,
+    vk_debug_callback_object_type__query_pool = 12,
+    vk_debug_callback_object_type__buffer_view = 13,
+    vk_debug_callback_object_type__image_view = 14,
+    vk_debug_callback_object_type__shader_module = 15,
+    vk_debug_callback_object_type__pipeline_cache = 16,
+    vk_debug_callback_object_type__pipeline_layout = 17,
+    vk_debug_callback_object_type__render_pass = 18,
+    vk_debug_callback_object_type__pipeline = 19,
+    vk_debug_callback_object_type__descriptor_set_layout = 20,
+    vk_debug_callback_object_type__sampler = 21,
+    vk_debug_callback_object_type__descriptor_pool = 22,
+    vk_debug_callback_object_type__descriptor_set = 23,
+    vk_debug_callback_object_type__framebuffer = 24,
+    vk_debug_callback_object_type__command_pool = 25,
+    vk_debug_callback_object_type__surface = 26,
+    vk_debug_callback_object_type__swapchain = 27,
+    vk_debug_callback_object_type__debug_report = 28,
+    vk_debug_callback_object_type__display = 29,
+    vk_debug_callback_object_type__display_mode = 30,
+    vk_debug_callback_object_type__validation_cache = 33,
+    vk_debug_callback_object_type__sampler_ycbcr_conversion = 1000156000,
+    vk_debug_callback_object_type__descriptor_update_template = 1000085000,
+    vk_debug_callback_object_type__max = 0x7FFFFFFF
 };
 
 struct vk_debug_callback_info
@@ -363,6 +402,7 @@ typedef void     (*pfn_vk_get_physical_device_features)(vk_physical_device h_dev
 typedef void     (*pfn_vk_get_physical_queue_group_properties)(vk_physical_device h_device, uint32_t* p_count, struct vk_queue_group_properties* p_properties);
 typedef uint32_t (*pfn_vk_create_device)(vk_physical_device h_physical_device, struct vk_device_creation_info* p_info, void* reserved, vk_device* p_device);
 typedef uint32_t (*pfn_vk_register_debug_callback)(vk_instance h_instance, struct vk_debug_callback_info* p_info, void* reserved, vk_debug_callback* p_callback);
+typedef void     (*pfn_vk_unregister_debug_callback)(vk_instance instance, vk_debug_callback* callback, const void* reserved);
 
 // device level functions
 typedef uint32_t (*pfn_vk_enumerate_device_layers)(vk_physical_device h_device, uint32_t* p_count, struct vk_layer* p_layers);

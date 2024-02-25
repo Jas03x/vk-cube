@@ -29,6 +29,7 @@ struct vk_context
     pfn_vk_destroy_device                        destroy_device;
     pfn_vk_wait_for_device_idle                  wait_for_device_idle;
     pfn_vk_register_debug_callback               register_debug_callback;
+    pfn_vk_unregister_debug_callback             unregister_debug_callback;
 
     // device level functions
     pfn_vk_enumerate_device_layers               enumerate_device_layers;
