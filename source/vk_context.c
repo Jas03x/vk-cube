@@ -61,152 +61,178 @@ void free_gpu_info(uint32_t gpu_count, struct gpu_info* p_gpu_info_array);
 
 uint32_t debug_callback(uint32_t flags, uint32_t object_type, uint64_t object, uint32_t location, int32_t message_code, const char* layer_prefix, const char* message, void* user_data)
 {
-    enum { buffer_size = 256 };
+    bool status = true;
+    
+    enum { buffer_size = 512 };
 
     uint32_t index = 0;
     char buffer[buffer_size] = { 0 };
 
-    if(flags & vk_debug_callback_information_bit)
+    if(status && (index < buffer_size))
     {
-        buffer[index++] = 'i';
+        if(flags == vk_debug_callback_information_bit)
+        {
+            index += snprintf(buffer + index, buffer_size - index, "Information: ");
+        }
+        else if(flags == vk_debug_callback_warning_bit)
+        {
+            index += snprintf(buffer + index, buffer_size - index, "Warning: ");
+        }
+        else if(flags == vk_debug_callback_performance_warning_bit)
+        {
+            index += snprintf(buffer + index, buffer_size - index, "Performance Warning: ");
+        }
+        else if(flags == vk_debug_callback_error_bit)
+        {
+            index += snprintf(buffer + index, buffer_size - index, "Error: ");
+        }
+        else if(flags == vk_debug_callback_debug_bit)
+        {
+            index += snprintf(buffer + index, buffer_size - index, "Debug: ");
+        }
+        else
+        {
+            index += snprintf(buffer + index, buffer_size - index, "Unknown: ");
+        }
+    }
+    else
+    {
+        status = false;
     }
 
-    if(flags & vk_debug_callback_warning_bit)
+    if(status && (index < buffer_size))
     {
-        buffer[index++] = 'w';
+        switch(object_type)
+        {
+            case vk_debug_callback_object_type__instance:
+                index += snprintf(buffer + index, buffer_size - index, "ObjectType:Instance ");
+                break;
+            case vk_debug_callback_object_type__physical_device:
+                index += snprintf(buffer + index, buffer_size - index, "ObjectType:PhysicalDevice ");
+                break;
+            case vk_debug_callback_object_type__device:
+                index += snprintf(buffer + index, buffer_size - index, "ObjectType:Device ");
+                break;
+            case vk_debug_callback_object_type__queue:
+                index += snprintf(buffer + index, buffer_size - index, "ObjectType:Queue ");
+                break;
+            case vk_debug_callback_object_type__semaphore:
+                index += snprintf(buffer + index, buffer_size - index, "ObjectType:Semaphore ");
+                break;
+            case vk_debug_callback_object_type__command_buffer:
+                index += snprintf(buffer + index, buffer_size - index, "ObjectType:CommandBuffer ");
+                break;
+            case vk_debug_callback_object_type__fence:
+                index += snprintf(buffer + index, buffer_size - index, "ObjectType:Fence ");
+                break;
+            case vk_debug_callback_object_type__device_memory:
+                index += snprintf(buffer + index, buffer_size - index, "ObjectType:DeviceMemory ");
+                break;
+            case vk_debug_callback_object_type__buffer:
+                index += snprintf(buffer + index, buffer_size - index, "ObjectType:Buffer ");
+                break;
+            case vk_debug_callback_object_type__image:
+                index += snprintf(buffer + index, buffer_size - index, "ObjectType:Image ");
+                break;
+            case vk_debug_callback_object_type__event:
+                index += snprintf(buffer + index, buffer_size - index, "ObjectType:Event ");
+                break;
+            case vk_debug_callback_object_type__query_pool:
+                index += snprintf(buffer + index, buffer_size - index, "ObjectType:QueryPool ");
+                break;
+            case vk_debug_callback_object_type__buffer_view:
+                index += snprintf(buffer + index, buffer_size - index, "ObjectType:BufferView ");
+                break;
+            case vk_debug_callback_object_type__image_view:
+                index += snprintf(buffer + index, buffer_size - index, "ObjectType:ImageView ");
+                break;
+            case vk_debug_callback_object_type__shader_module:
+                index += snprintf(buffer + index, buffer_size - index, "ObjectType:ShaderModule ");
+                break;
+            case vk_debug_callback_object_type__pipeline_cache:
+                index += snprintf(buffer + index, buffer_size - index, "ObjectType:PipelineCache ");
+                break;
+            case vk_debug_callback_object_type__pipeline_layout:
+                index += snprintf(buffer + index, buffer_size - index, "ObjectType:PipelineLayout ");
+                break;
+            case vk_debug_callback_object_type__render_pass:
+                index += snprintf(buffer + index, buffer_size - index, "ObjectType:RenderPass ");
+                break;
+            case vk_debug_callback_object_type__pipeline:
+                index += snprintf(buffer + index, buffer_size - index, "ObjectType:Pipeline ");
+                break;
+            case vk_debug_callback_object_type__descriptor_set_layout:
+                index += snprintf(buffer + index, buffer_size - index, "ObjectType:DescriptorSetLayout ");
+                break;
+            case vk_debug_callback_object_type__sampler:
+                index += snprintf(buffer + index, buffer_size - index, "ObjectType:Sampler ");
+                break;
+            case vk_debug_callback_object_type__descriptor_pool:
+                index += snprintf(buffer + index, buffer_size - index, "ObjectType:DescriptorPool ");
+                break;
+            case vk_debug_callback_object_type__descriptor_set:
+                index += snprintf(buffer + index, buffer_size - index, "ObjectType:DescriptorSet ");
+                break;
+            case vk_debug_callback_object_type__framebuffer:
+                index += snprintf(buffer + index, buffer_size - index, "ObjectType:Framebuffer ");
+                break;
+            case vk_debug_callback_object_type__command_pool:
+                index += snprintf(buffer + index, buffer_size - index, "ObjectType:CommandPool ");
+                break;
+            case vk_debug_callback_object_type__surface:
+                index += snprintf(buffer + index, buffer_size - index, "ObjectType:Surface ");
+                break;
+            case vk_debug_callback_object_type__swapchain:
+                index += snprintf(buffer + index, buffer_size - index, "ObjectType:Swapchain ");
+                break;
+            case vk_debug_callback_object_type__debug_report:
+                index += snprintf(buffer + index, buffer_size - index, "ObjectType:DebugReport ");
+                break;
+            case vk_debug_callback_object_type__display:
+                index += snprintf(buffer + index, buffer_size - index, "ObjectType:Display ");
+                break;
+            case vk_debug_callback_object_type__display_mode:
+                index += snprintf(buffer + index, buffer_size - index, "ObjectType:DisplayMode ");
+                break;
+            case vk_debug_callback_object_type__validation_cache:
+                index += snprintf(buffer + index, buffer_size - index, "ObjectType:ValidationCache ");
+                break;
+            case vk_debug_callback_object_type__sampler_ycbcr_conversion:
+                index += snprintf(buffer + index, buffer_size - index, "ObjectType:Conversion ");
+                break;
+            case vk_debug_callback_object_type__descriptor_update_template:
+                index += snprintf(buffer + index, buffer_size - index, "ObjectType:DescriptorUpdateTemplate ");
+                break;
+            default:
+                index += snprintf(buffer + index, buffer_size - index, "ObjectType:0x%X ", object_type);
+                break;
+        }
+    }
+    else
+    {
+        status = false;
     }
 
-    if(flags & vk_debug_callback_performance_warning_bit)
+    if(status && (index < buffer_size)) { index += snprintf(buffer + index, buffer_size - index, "Object:0x%llX ", object); } else { status = false; }
+    if(status && (index < buffer_size)) { index += snprintf(buffer + index, buffer_size - index, "Location:0x%X ", location); } else { status = false; }
+    if(status && (index < buffer_size)) { index += snprintf(buffer + index, buffer_size - index, "MessageCode:0x%X ", message_code); } else { status = false; }
+    if(status && (index < buffer_size)) { index += snprintf(buffer + index, buffer_size - index, "Layer:%s ", layer_prefix); } else { status = false; }
+    if(status && (index < buffer_size)) { index += snprintf(buffer + index, buffer_size - index, "UserData:0x%llX\n", (uint64_t) user_data); } else { status = false; }
+    if(status && (index < buffer_size)) { index += snprintf(buffer + index, buffer_size - index, "\t%s\n", message); } else { status = false; }
+
+    if (index >= buffer_size)
     {
-        buffer[index++] = 'p';
+        status = false; // ran out of buffer space
     }
 
-    if(flags & vk_debug_callback_error_bit)
+    if(status)
     {
-        buffer[index++] = 'E';
+        printf("%s\n", buffer);
     }
-
-    if(flags & vk_debug_callback_debug_bit)
+    else
     {
-        buffer[index++] = 'D';
+        printf("error: could not parse debug report message\n");
     }
-
-    buffer[index++] = ':';
-
-    switch(object_type)
-    {
-        case vk_debug_callback_object_type__instance:
-            index += snprintf(&buffer[index], buffer_size - index, "instance");
-            break;
-        case vk_debug_callback_object_type__physical_device:
-            index += snprintf(&buffer[index], buffer_size - index, "physical_device");
-            break;
-        case vk_debug_callback_object_type__device:
-            index += snprintf(&buffer[index], buffer_size - index, "device");
-            break;
-        case vk_debug_callback_object_type__queue:
-            index += snprintf(&buffer[index], buffer_size - index, "queue");
-            break;
-        case vk_debug_callback_object_type__semaphore:
-            index += snprintf(&buffer[index], buffer_size - index, "semaphore");
-            break;
-        case vk_debug_callback_object_type__command_buffer:
-            index += snprintf(&buffer[index], buffer_size - index, "command_buffer");
-            break;
-        case vk_debug_callback_object_type__fence:
-            index += snprintf(&buffer[index], buffer_size - index, "fence");
-            break;
-        case vk_debug_callback_object_type__device_memory:
-            index += snprintf(&buffer[index], buffer_size - index, "device_memory");
-            break;
-        case vk_debug_callback_object_type__buffer:
-            index += snprintf(&buffer[index], buffer_size - index, "buffer");
-            break;
-        case vk_debug_callback_object_type__image:
-            index += snprintf(&buffer[index], buffer_size - index, "image");
-            break;
-        case vk_debug_callback_object_type__event:
-            index += snprintf(&buffer[index], buffer_size - index, "event");
-            break;
-        case vk_debug_callback_object_type__query_pool:
-            index += snprintf(&buffer[index], buffer_size - index, "query_pool");
-            break;
-        case vk_debug_callback_object_type__buffer_view:
-            index += snprintf(&buffer[index], buffer_size - index, "buffer_view");
-            break;
-        case vk_debug_callback_object_type__image_view:
-            index += snprintf(&buffer[index], buffer_size - index, "image_view");
-            break;
-        case vk_debug_callback_object_type__shader_module:
-            index += snprintf(&buffer[index], buffer_size - index, "shader_module");
-            break;
-        case vk_debug_callback_object_type__pipeline_cache:
-            index += snprintf(&buffer[index], buffer_size - index, "pipeline_cache");
-            break;
-        case vk_debug_callback_object_type__pipeline_layout:
-            index += snprintf(&buffer[index], buffer_size - index, "pipeline_layout");
-            break;
-        case vk_debug_callback_object_type__render_pass:
-            index += snprintf(&buffer[index], buffer_size - index, "render_pass");
-            break;
-        case vk_debug_callback_object_type__pipeline:
-            index += snprintf(&buffer[index], buffer_size - index, "pipeline");
-            break;
-        case vk_debug_callback_object_type__descriptor_set_layout:
-            index += snprintf(&buffer[index], buffer_size - index, "descriptor_set_layout");
-            break;
-        case vk_debug_callback_object_type__sampler:
-            index += snprintf(&buffer[index], buffer_size - index, "sampler");
-            break;
-        case vk_debug_callback_object_type__descriptor_pool:
-            index += snprintf(&buffer[index], buffer_size - index, "descriptor_pool");
-            break;
-        case vk_debug_callback_object_type__descriptor_set:
-            index += snprintf(&buffer[index], buffer_size - index, "descriptor_set");
-            break;
-        case vk_debug_callback_object_type__framebuffer:
-            index += snprintf(&buffer[index], buffer_size - index, "framebuffer");
-            break;
-        case vk_debug_callback_object_type__command_pool:
-            index += snprintf(&buffer[index], buffer_size - index, "command_pool");
-            break;
-        case vk_debug_callback_object_type__surface:
-            index += snprintf(&buffer[index], buffer_size - index, "surface");
-            break;
-        case vk_debug_callback_object_type__swapchain:
-            index += snprintf(&buffer[index], buffer_size - index, "swapchain");
-            break;
-        case vk_debug_callback_object_type__debug_report:
-            index += snprintf(&buffer[index], buffer_size - index, "debug_report");
-            break;
-        case vk_debug_callback_object_type__display:
-            index += snprintf(&buffer[index], buffer_size - index, "display");
-            break;
-        case vk_debug_callback_object_type__display_mode:
-            index += snprintf(&buffer[index], buffer_size - index, "display_mode");
-            break;
-        case vk_debug_callback_object_type__validation_cache:
-            index += snprintf(&buffer[index], buffer_size - index, "validation_cache");
-            break;
-        case vk_debug_callback_object_type__sampler_ycbcr_conversion:
-            index += snprintf(&buffer[index], buffer_size - index, "conversion");
-            break;
-        case vk_debug_callback_object_type__descriptor_update_template:
-            index += snprintf(&buffer[index], buffer_size - index, "descriptor_update_template");
-            break;
-        default:
-            index += snprintf(&buffer[index], buffer_size - index, "0x%X", object_type);
-            break;
-    }
-
-    index += snprintf(&buffer[index], buffer_size - index, " 0x%llX ", object);
-    index += snprintf(&buffer[index], buffer_size - index, " 0x%X ", location);
-    index += snprintf(&buffer[index], buffer_size - index, " 0x%X ", message_code);
-    index += snprintf(&buffer[index], buffer_size - index, " %s ", layer_prefix);
-    index += snprintf(&buffer[index], buffer_size - index, " %s ", message);
-    index += snprintf(&buffer[index], buffer_size - index, " 0x%llX ", (uint64_t) user_data);
-
-    printf("%s\n", buffer);
 
     return vk_true;
 }
@@ -730,7 +756,7 @@ bool initialize_device(void)
         {
             if(p_gpu_info[gpu_index].properties.device_type == vk_device_type__discrete_gpu)
             {
-                printf("use device %u\n", gpu_index);
+                printf("Use device %u\n", gpu_index);
                 break;
             }
 
@@ -760,7 +786,7 @@ bool initialize_device(void)
         {
             if(p_gpu_info[gpu_index].p_queue_group_properties[queue_group_index].queue_flags.graphics)
             {
-                printf("use queue group %u\n", queue_group_index);
+                printf("Use queue group %u\n", queue_group_index);
                 break;
             }
 

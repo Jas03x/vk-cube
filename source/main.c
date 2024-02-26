@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
 
     uninitialize();
 
-    printf("exit with code 0x%X\n", status);
+    printf("Exit with code 0x%X\n", status);
 
     return status;
 }
