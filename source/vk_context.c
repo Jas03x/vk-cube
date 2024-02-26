@@ -218,7 +218,7 @@ uint32_t debug_callback(uint32_t flags, uint32_t object_type, uint64_t object, u
     if(status && (index < buffer_size)) { index += snprintf(buffer + index, buffer_size - index, "MessageCode:0x%X ", message_code); } else { status = false; }
     if(status && (index < buffer_size)) { index += snprintf(buffer + index, buffer_size - index, "Layer:%s ", layer_prefix); } else { status = false; }
     if(status && (index < buffer_size)) { index += snprintf(buffer + index, buffer_size - index, "UserData:0x%llX\n", (uint64_t) user_data); } else { status = false; }
-    if(status && (index < buffer_size)) { index += snprintf(buffer + index, buffer_size - index, "\t%s\n", message); } else { status = false; }
+    if(status && (index < buffer_size)) { index += snprintf(buffer + index, buffer_size - index, "\t%s", message); } else { status = false; }
 
     if (index >= buffer_size)
     {
