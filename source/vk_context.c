@@ -876,8 +876,8 @@ void print_gpu_info(uint32_t gpu_index, struct gpu_info* p_gpu_info)
 
     printf("\tVendor: 0x%X\n", p_gpu_info->properties.vendor_id);
     printf("\tDevice ID: 0x%X\n", p_gpu_info->properties.device_id);
-    printf("\tDriver Version:0x%X\n", p_gpu_info->properties.driver_version);
-    printf("\tAPI Version:0x%X\n", p_gpu_info->properties.api_version);
+    printf("\tDriver Version: 0x%X\n", p_gpu_info->properties.driver_version);
+    printf("\tAPI Version: 0x%X\n", p_gpu_info->properties.api_version);
 
     printf("\tFeatures:\n");
     if(p_gpu_info->features.robust_buffer_access) { printf("\t\tRobust buffer access\n"); }
