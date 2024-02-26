@@ -7,7 +7,7 @@ struct vk_context
 {
     vk_instance                                  h_instance;
     vk_device                                    h_device;
-    
+
     vk_debug_callback                            h_debug_callback;
 
     pfn_vk_get_instance_proc_addr                get_instance_proc_addr;

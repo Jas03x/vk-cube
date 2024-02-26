@@ -199,12 +199,12 @@ uint32_t debug_callback(uint32_t flags, uint32_t object_type, uint64_t object, u
             break;
     }
 
-    index += snprintf(&buffer[index], buffer_size - index, "0x%llX", object);
-    index += snprintf(&buffer[index], buffer_size - index, "0x%X", location);
-    index += snprintf(&buffer[index], buffer_size - index, "0x%X", message_code);
-    index += snprintf(&buffer[index], buffer_size - index, "%s", layer_prefix);
-    index += snprintf(&buffer[index], buffer_size - index, "%s", message);
-    index += snprintf(&buffer[index], buffer_size - index, "0x%llX", (uint64_t) user_data);
+    index += snprintf(&buffer[index], buffer_size - index, " 0x%llX ", object);
+    index += snprintf(&buffer[index], buffer_size - index, " 0x%X ", location);
+    index += snprintf(&buffer[index], buffer_size - index, " 0x%X ", message_code);
+    index += snprintf(&buffer[index], buffer_size - index, " %s ", layer_prefix);
+    index += snprintf(&buffer[index], buffer_size - index, " %s ", message);
+    index += snprintf(&buffer[index], buffer_size - index, " 0x%llX ", (uint64_t) user_data);
 
     printf("%s\n", buffer);
 
