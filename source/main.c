@@ -20,7 +20,7 @@ bool initialize(void)
     if(SDL_Init(SDL_INIT_EVERYTHING) != 0)
     {
         status = false;
-        printf("error: could not initialize sdl\n");
+        printf("Error: Could not initialize SDL\n");
     }
 
     if(status)
@@ -35,7 +35,7 @@ bool initialize(void)
         if (g_window == NULL)
         {
             status = false;
-            printf("error: could not create sdl window\n");
+            printf("Error: Could not create SDL window\n");
         }
     }
 

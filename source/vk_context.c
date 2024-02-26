@@ -231,7 +231,7 @@ uint32_t debug_callback(uint32_t flags, uint32_t object_type, uint64_t object, u
     }
     else
     {
-        printf("error: could not parse debug report message\n");
+        printf("Error: Could not parse debug report message\n");
     }
 
     return vk_true;
@@ -287,7 +287,7 @@ bool load_function_pointer(vk_instance h_instance, const char* p_name, void** p_
         if((*p_pfn) == NULL)
         {
             status = false;
-            printf("error: failed to load function pointer %s\n", p_name);
+            printf("Failed to load function pointer %s\n", p_name);
         }
     }
     else
@@ -361,7 +361,7 @@ bool enumerate_instance_layers(struct layer_list* p_layers)
     else
     {
         status = false;
-        printf("failed to get number of layers\n");
+        printf("Failed to get number of layers\n");
     }
 
     if(status)
@@ -371,7 +371,7 @@ bool enumerate_instance_layers(struct layer_list* p_layers)
         if(layers.array == NULL)
         {
             status = false;
-            printf("failed to allocate memory\n");
+            printf("Failed to allocate memory\n");
         }
     }
 
@@ -382,7 +382,7 @@ bool enumerate_instance_layers(struct layer_list* p_layers)
         if(layers.extension_lists == NULL)
         {
             status = false;
-            printf("failed to allocate memory\n");
+            printf("Failed to allocate memory\n");
         }
     }
 
@@ -391,14 +391,14 @@ bool enumerate_instance_layers(struct layer_list* p_layers)
         if(vk_ctx.enumerate_layers(&num_layers, &layers.array[1]) != vk_success) // start reading at element 1 because element 0 is the vulkan implementation
         {
             status = false;
-            printf("failed to get layers\n");
+            printf("Failed to get layers\n");
         }
     }
 
     if(status)
     {
         // enumerate the extensions provided by the vulkan implementation
-        printf("Layer: Vulkan implementation\n");
+        printf("Layer: Vulkan Implementation\n");
         status = enumerate_instance_extensions(NULL, &layers.extension_lists[0]);
     }
 
@@ -497,7 +497,7 @@ bool enumerate_instance_extensions(const char* p_layer, struct extension_list* p
     if(vk_ctx.enumerate_extensions(p_layer, &extensions.count, NULL) != vk_success)
     {
         status = false;
-        printf("failed to get number of extensions\n");
+        printf("Failed to get number of extensions\n");
     }
 
     if(status)
@@ -507,7 +507,7 @@ bool enumerate_instance_extensions(const char* p_layer, struct extension_list* p
         if(extensions.array == NULL)
         {
             status = false;
-            printf("failed to allocate memory\n");
+            printf("Failed to allocate memory\n");
         }
     }
 
@@ -516,7 +516,7 @@ bool enumerate_instance_extensions(const char* p_layer, struct extension_list* p
         if(vk_ctx.enumerate_extensions(p_layer, &extensions.count, extensions.array) != vk_success)
         {
             status = false;
-            printf("failed to get extensions\n");
+            printf("Failed to get extensions\n");
         }
     }
 
@@ -590,7 +590,7 @@ bool initialize_instance(void)
         if(vk_ctx.create_instance(&instance_info, NULL, &vk_ctx.h_instance) != vk_success)
         {
             status = false;
-            printf("failed to create vulkan instance\n");
+            printf("Failed to create vulkan instance\n");
         }
     }
 
@@ -624,7 +624,7 @@ bool initialize_debug_layer(void)
 
     if(vk_ctx.register_debug_callback(vk_ctx.h_instance, &callback_info, NULL, &vk_ctx.h_debug_callback) != vk_success)
     {
-        printf("error: failed to register debug callback\n");
+        printf("Failed to register debug callback\n");
         status = false;
     }
 
@@ -644,7 +644,7 @@ bool enumerate_gpus(uint32_t* p_gpu_count, struct gpu_info** p_gpu_info_array)
     if(vk_ctx.enumerate_devices(vk_ctx.h_instance, &num_physical_devices, NULL) != vk_success)
     {
         status = false;
-        printf("failed to get number of devices\n");
+        printf("Failed to get number of devices\n");
     }
 
     if(status)
@@ -654,7 +654,7 @@ bool enumerate_gpus(uint32_t* p_gpu_count, struct gpu_info** p_gpu_info_array)
         if(p_physical_device_handles == NULL)
         {
             status = false;
-            printf("failed to allocate memory\n");
+            printf("Failed to allocate memory\n");
         }
     }
 
@@ -663,7 +663,7 @@ bool enumerate_gpus(uint32_t* p_gpu_count, struct gpu_info** p_gpu_info_array)
         if(vk_ctx.enumerate_devices(vk_ctx.h_instance, &num_physical_devices, p_physical_device_handles) != vk_success)
         {
             status = false;
-            printf("failed to get devices\n");
+            printf("Failed to get devices\n");
         }
     }
 
@@ -674,7 +674,7 @@ bool enumerate_gpus(uint32_t* p_gpu_count, struct gpu_info** p_gpu_info_array)
         if(p_info_array == NULL)
         {
             status = false;
-            printf("failed to allocate memory\n");
+            printf("Failed to allocate memory\n");
         }
     }
 
@@ -766,7 +766,7 @@ bool initialize_device(void)
         if(gpu_index >= gpu_count)
         {
             status = false;
-            printf("error: could not find discrete gpu\n");
+            printf("Could not find discrete gpu\n");
         }
     }
 
@@ -796,7 +796,7 @@ bool initialize_device(void)
         if(queue_group_index >= p_gpu_info[gpu_index].queue_group_count)
         {
             status = false;
-            printf("error: could not find queue group\n");
+            printf("Could not find queue group\n");
         }
     }
 
@@ -834,7 +834,7 @@ bool initialize_device(void)
         if(vk_ctx.create_device(p_gpu_info[gpu_index].handle, &device_info, NULL, &vk_ctx.h_device) != vk_success)
         {
             status = false;
-            printf("failed to create vulkan device\n");
+            printf("Failed to create vulkan device\n");
         }
     }
 
@@ -852,32 +852,32 @@ bool initialize_device(void)
 
 void print_gpu_info(uint32_t gpu_index, struct gpu_info* p_gpu_info)
 {
-    printf("device %u: %s\n", gpu_index, p_gpu_info->properties.device_name);
+    printf("Device %u: %s\n", gpu_index, p_gpu_info->properties.device_name);
 
-    const char* type = "unknown";
+    const char* type = "Unknown";
     switch(p_gpu_info->properties.device_type)
     {
         case vk_device_type__integrated_gpu:
-            type = "integrated gpu";
+            type = "Integrated GPU";
             break;
         case vk_device_type__discrete_gpu:
-            type = "discrete gpu";
+            type = "Discrete GPU";
             break;
         case vk_device_type__virtual_gpu:
-            type = "virtual gpu";
+            type = "Virtual GPU";
             break;
         case vk_device_type__cpu:
-            type = "cpu";
+            type = "CPU";
             break;
         default:
             break;
     }
-    printf("\ttype: %s\n", type);
+    printf("\tType: %s\n", type);
 
-    printf("\tvendor: 0x%X\n", p_gpu_info->properties.vendor_id);
-    printf("\tdevice id: 0x%X\n", p_gpu_info->properties.device_id);
-    printf("\tdriver version:0x%X\n", p_gpu_info->properties.driver_version);
-    printf("\tapi version version:0x%X\n", p_gpu_info->properties.api_version);
+    printf("\tVendor: 0x%X\n", p_gpu_info->properties.vendor_id);
+    printf("\tDevice ID: 0x%X\n", p_gpu_info->properties.device_id);
+    printf("\tDriver Version:0x%X\n", p_gpu_info->properties.driver_version);
+    printf("\tAPI Version:0x%X\n", p_gpu_info->properties.api_version);
 
     printf("\tFeatures:\n");
     if(p_gpu_info->features.robust_buffer_access) { printf("\t\tRobust buffer access\n"); }
@@ -938,17 +938,17 @@ void print_gpu_info(uint32_t gpu_index, struct gpu_info* p_gpu_info)
 
     for(uint32_t i = 0; i < p_gpu_info->queue_group_count; i++)
     {
-        printf("\tqueue group %u:\n", i);
-        printf("\t\tqueue count: %u\n", p_gpu_info->p_queue_group_properties[i].queue_count);
+        printf("\tQueue group %u:\n", i);
+        printf("\t\tQueue count: %u\n", p_gpu_info->p_queue_group_properties[i].queue_count);
         
-        if(p_gpu_info->p_queue_group_properties[i].queue_flags.graphics) { printf("\t\tgraphics supported\n"); }
-        if(p_gpu_info->p_queue_group_properties[i].queue_flags.compute) { printf("\t\tcompute supported\n"); }
-        if(p_gpu_info->p_queue_group_properties[i].queue_flags.transfer) { printf("\t\ttransfer supported\n"); }
-        if(p_gpu_info->p_queue_group_properties[i].queue_flags.sparse_binding) { printf("\t\tsparse_binding supported\n"); }
-        if(p_gpu_info->p_queue_group_properties[i].queue_flags.protected_memory) { printf("\t\tprotected_memory supported\n"); }
-        if(p_gpu_info->p_queue_group_properties[i].queue_flags.video_decode) { printf("\t\tvideo_decode supported\n"); }
-        if(p_gpu_info->p_queue_group_properties[i].queue_flags.video_encode) { printf("\t\tvideo_encode supported\n"); }
-        if(p_gpu_info->p_queue_group_properties[i].queue_flags.optical_flow) { printf("\t\toptical_flow supported\n"); }
+        if(p_gpu_info->p_queue_group_properties[i].queue_flags.graphics) { printf("\t\tGraphics supported\n"); }
+        if(p_gpu_info->p_queue_group_properties[i].queue_flags.compute) { printf("\t\tCompute supported\n"); }
+        if(p_gpu_info->p_queue_group_properties[i].queue_flags.transfer) { printf("\t\tTransfer supported\n"); }
+        if(p_gpu_info->p_queue_group_properties[i].queue_flags.sparse_binding) { printf("\t\tSparse binding supported\n"); }
+        if(p_gpu_info->p_queue_group_properties[i].queue_flags.protected_memory) { printf("\t\tProtected memory supported\n"); }
+        if(p_gpu_info->p_queue_group_properties[i].queue_flags.video_decode) { printf("\t\tVideo decode supported\n"); }
+        if(p_gpu_info->p_queue_group_properties[i].queue_flags.video_encode) { printf("\t\tVideo encode supported\n"); }
+        if(p_gpu_info->p_queue_group_properties[i].queue_flags.optical_flow) { printf("\t\tOptical flow supported\n"); }
     }
 }
 
@@ -968,7 +968,7 @@ bool get_gpu_queue_info(vk_physical_device h_physical_device, uint32_t* p_num_qu
         if(p_groups == NULL)
         {
             status = false;
-            printf("failed to allocate memory\n");
+            printf("Failed to allocate memory\n");
         }
     }
 
@@ -996,7 +996,7 @@ bool enumerate_device_layers_and_extensions(vk_physical_device h_physical_device
     if(vk_ctx.enumerate_device_layers(h_physical_device, &num_layers, NULL) != vk_success)
     {
         status = false;
-        printf("failed to get number of layers\n");
+        printf("Failed to get number of layers\n");
     }
 
     if(status)
@@ -1006,7 +1006,7 @@ bool enumerate_device_layers_and_extensions(vk_physical_device h_physical_device
         if (p_layers == NULL)
         {
             status = false;
-            printf("failed to allocate memory\n");
+            printf("Failed to allocate memory\n");
         }
     }
 
@@ -1015,14 +1015,14 @@ bool enumerate_device_layers_and_extensions(vk_physical_device h_physical_device
         if(vk_ctx.enumerate_device_layers(h_physical_device, &num_layers, p_layers) != vk_success)
         {
             status = false;
-            printf("failed to get layers\n");
+            printf("Failed to get layers\n");
         }
     }
 
     if(status)
     {
         // enumerate the extensions provided by the vulkan implementation
-        printf("Device layer: Vulkan implementation\n");
+        printf("Device layer: Vulkan Implementation\n");
         status = enumerate_device_extensions(h_physical_device, NULL);
     }
 
@@ -1054,7 +1054,7 @@ bool enumerate_device_extensions(vk_physical_device h_physical_device, const cha
     if(vk_ctx.enumerate_device_extensions(h_physical_device, p_layer, &num_extensions, NULL) != vk_success)
     {
         status = false;
-        printf("failed to get number of extensions\n");
+        printf("Failed to get number of extensions\n");
     }
 
     if(status)
@@ -1064,7 +1064,7 @@ bool enumerate_device_extensions(vk_physical_device h_physical_device, const cha
         if(p_extensions == NULL)
         {
             status = false;
-            printf("failed to allocate memory\n");
+            printf("Failed to allocate memory\n");
         }
     }
 
@@ -1073,7 +1073,7 @@ bool enumerate_device_extensions(vk_physical_device h_physical_device, const cha
         if(vk_ctx.enumerate_device_extensions(h_physical_device, p_layer, &num_extensions, p_extensions) != vk_success)
         {
             status = false;
-            printf("failed to get extensions\n");
+            printf("Failed to get extensions\n");
         }
     }
 
