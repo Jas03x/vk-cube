@@ -213,11 +213,11 @@ uint32_t debug_callback(uint32_t flags, uint32_t object_type, uint64_t object, u
         status = false;
     }
 
-    if(status && (index < buffer_size)) { index += snprintf(buffer + index, buffer_size - index, "Object:0x%llX ", object); } else { status = false; }
+    if(status && (index < buffer_size)) { index += snprintf(buffer + index, buffer_size - index, "Object:0x%lX ", object); } else { status = false; }
     if(status && (index < buffer_size)) { index += snprintf(buffer + index, buffer_size - index, "Location:0x%X ", location); } else { status = false; }
     if(status && (index < buffer_size)) { index += snprintf(buffer + index, buffer_size - index, "MessageCode:0x%X ", message_code); } else { status = false; }
     if(status && (index < buffer_size)) { index += snprintf(buffer + index, buffer_size - index, "Layer:%s ", layer_prefix); } else { status = false; }
-    if(status && (index < buffer_size)) { index += snprintf(buffer + index, buffer_size - index, "UserData:0x%llX\n", (uint64_t) user_data); } else { status = false; }
+    if(status && (index < buffer_size)) { index += snprintf(buffer + index, buffer_size - index, "UserData:0x%lX\n", (uint64_t) user_data); } else { status = false; }
     if(status && (index < buffer_size)) { index += snprintf(buffer + index, buffer_size - index, "\t%s", message); } else { status = false; }
 
     if (index >= buffer_size)
