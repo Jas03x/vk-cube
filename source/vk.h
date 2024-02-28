@@ -12,6 +12,7 @@ typedef void* vk_instance;
 typedef void* vk_physical_device;
 typedef void* vk_device;
 typedef void* vk_debug_callback;
+typedef void* vk_surface;
 
 enum
 {

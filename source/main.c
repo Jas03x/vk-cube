@@ -22,13 +22,17 @@ bool initialize(void)
 
     if(SDL_Init(SDL_INIT_EVERYTHING) != 0)
     {
-        status = false;
         printf("Could not initialize SDL\n");
+        status = false;
     }
 
     if(status)
     {
-        SDL_Vulkan_LoadLibrary(NULL);
+        if(SDL_Vulkan_LoadLibrary(NULL) != 0)
+        {
+            printf("Could not load the vulkan library\n");
+            status = false;
+        }
     }
 
     if(status)
@@ -80,7 +84,20 @@ bool initialize(void)
         }
     }
 
-    status = initialize_vulkan_context(SDL_Vulkan_GetVkGetInstanceProcAddr(), ext_count, ext_array);
+    if(status)
+    {
+        status = initialize_vulkan_context(SDL_Vulkan_GetVkGetInstanceProcAddr(), ext_count, ext_array);
+    }
+
+    if(status)
+    {
+        vk_surface surface;
+        if(SDL_Vulkan_CreateSurface(g_window, vk_ctx.h_instance, &surface) != SDL_TRUE)
+        {
+            printf("Could not create vulkan surface\n");
+            status = false;
+        }
+    }
 
     if(ext_array != NULL)
     {
