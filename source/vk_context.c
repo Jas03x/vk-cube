@@ -322,8 +322,11 @@ bool initialize_instance_function_pointers(void)
     status &= load_function_pointer(vk_ctx.h_instance, "vkCreateDevice", (void**) &vk_ctx.create_device);
     status &= load_function_pointer(vk_ctx.h_instance, "vkDestroyDevice", (void**) &vk_ctx.destroy_device);
     status &= load_function_pointer(vk_ctx.h_instance, "vkDeviceWaitIdle", (void**) &vk_ctx.wait_for_device_idle);
+
+#ifdef DEBUG
     status &= load_function_pointer(vk_ctx.h_instance, "vkCreateDebugReportCallbackEXT", (void**) &vk_ctx.register_debug_callback);
     status &= load_function_pointer(vk_ctx.h_instance, "vkDestroyDebugReportCallbackEXT", (void*) &vk_ctx.unregister_debug_callback);
+#endif
 
     return status;
 }
@@ -550,7 +553,6 @@ bool initialize_instance(void)
     struct layer_list layers = { 0 };
 
     uint32_t num_extensions = 0;
-    uint32_t index = INVALID_INDEX;
 
     const char* extensions[max_extensions] = { 0 };    
 
@@ -560,10 +562,13 @@ bool initialize_instance(void)
     }
 
 #ifdef DEBUG
-    index = find_extension(&layers, "", "VK_EXT_debug_report");
-    if(index != INVALID_INDEX)
+    if(status)
     {
-        extensions[num_extensions++] = layers.extension_lists[0].array[index].name;
+        uint32_t index = find_extension(&layers, "", "VK_EXT_debug_report");
+        if(index != INVALID_INDEX)
+        {
+            extensions[num_extensions++] = layers.extension_lists[0].array[index].name;
+        }
     }
 #endif
 
