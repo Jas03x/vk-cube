@@ -38,7 +38,7 @@ struct vk_context
 
 extern struct vk_context vk_ctx;
 
-bool initialize_vulkan_context(pfn_vk_get_instance_proc_addr pfn_get_instance_proc_addr);
+bool initialize_vulkan_context(pfn_vk_get_instance_proc_addr pfn_get_instance_proc_addr, uint32_t ext_count, const char** ext_array);
 void uninitialize_vulkan_context(void);
 
 #endif // VK_INTERFACE_H

@@ -17,10 +17,13 @@ bool initialize(void)
 {
     bool status = true;
 
+    uint32_t ext_count = 0;
+    const char** ext_array = NULL;
+
     if(SDL_Init(SDL_INIT_EVERYTHING) != 0)
     {
         status = false;
-        printf("Error: Could not initialize SDL\n");
+        printf("Could not initialize SDL\n");
     }
 
     if(status)
@@ -35,11 +38,55 @@ bool initialize(void)
         if (g_window == NULL)
         {
             status = false;
-            printf("Error: Could not create SDL window\n");
+            printf("Could not create SDL window\n");
         }
     }
 
-    status = initialize_vulkan_context(SDL_Vulkan_GetVkGetInstanceProcAddr());
+    if(status)
+    {
+        if(SDL_Vulkan_GetInstanceExtensions(g_window, &ext_count, NULL) != SDL_TRUE)
+        {
+            status = false;
+            printf("Could not get required SDL extension count\n");
+        }
+    }
+
+    if(status)
+    {
+        ext_array = malloc(ext_count * sizeof(char*));
+
+        if(ext_array == NULL)
+        {
+            status = false;
+            printf("Failed to allocate memory\n");
+        }
+    }
+
+    if(status)
+    {
+        if(SDL_Vulkan_GetInstanceExtensions(g_window, &ext_count, ext_array) != SDL_TRUE)
+        {
+            status = false;
+            printf("Could not get required SDL extension count\n");
+        }
+    }
+
+    if(status && (ext_count > 0))
+    {
+        printf("Required SDL extensions:\n");
+        for(uint32_t i = 0; i < ext_count; i++)
+        {
+            printf("\t%s\n", ext_array[i]);
+        }
+    }
+
+    status = initialize_vulkan_context(SDL_Vulkan_GetVkGetInstanceProcAddr(), ext_count, ext_array);
+
+    if(ext_array != NULL)
+    {
+        free(ext_array);
+        ext_array = NULL;
+    }
 
     return status;
 }

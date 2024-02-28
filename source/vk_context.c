@@ -39,7 +39,7 @@ bool initialize_global_function_pointers(void);
 bool initialize_instance_function_pointers(void);
 bool initialize_physical_device_function_pointers(void);
 
-bool initialize_instance(void);
+bool initialize_instance(uint32_t ext_count, const char** ext_array);
 bool initialize_device(void);
 bool initialize_debug_layer(void);
 
@@ -53,7 +53,7 @@ bool get_gpu_queue_info(vk_physical_device h_physical_device, uint32_t* p_num_qu
 
 void print_gpu_info(uint32_t gpu_index, struct gpu_info* p_gpu_info);
 
-uint32_t find_extension(struct layer_list* layers, const char* layer_name, const char* extension_name);
+uint32_t find_extension(struct extension_list* extension_list, const char* extension_name);
 
 void free_layers(struct layer_list* layers);
 void free_extensions(struct extension_list* extensions);
@@ -237,7 +237,7 @@ uint32_t debug_callback(uint32_t flags, uint32_t object_type, uint64_t object, u
     return vk_true;
 }
 
-bool initialize_vulkan_context(pfn_vk_get_instance_proc_addr pfn_get_instance_proc_addr)
+bool initialize_vulkan_context(pfn_vk_get_instance_proc_addr pfn_get_instance_proc_addr, uint32_t ext_count, const char** ext_array)
 {
     bool status = true;
 
@@ -250,7 +250,7 @@ bool initialize_vulkan_context(pfn_vk_get_instance_proc_addr pfn_get_instance_pr
 
     if(status)
     {
-        status = initialize_instance();
+        status = initialize_instance(ext_count, ext_array);
     }
 
     if(status)
@@ -428,24 +428,15 @@ bool enumerate_instance_layers(struct layer_list* p_layers)
     return status;
 }
 
-uint32_t find_extension(struct layer_list* layers, const char* layer_name, const char* extension_name)
+uint32_t find_extension(struct extension_list* extension_list, const char* extension_name)
 {
     uint32_t index = INVALID_INDEX;
 
-    for(uint32_t i = 0; i < layers->count; i++)
+    for(uint32_t i = 0; i < extension_list->count; i++)
     {
-        if(strncmp(layers->array[i].name, layer_name, VK_MAX_NAME_LENGTH) == 0)
+        if(strncmp(extension_list->array[i].name, extension_name, VK_MAX_NAME_LENGTH) == 0)
         {
-            for(uint32_t j = 0; j < layers->extension_lists[i].count; j++)
-            {
-                if(strncmp(layers->extension_lists[i].array[j].name, extension_name, VK_MAX_NAME_LENGTH) == 0)
-                {
-                    index = j;
-                    break;
-                }
-            }
-
-            break;
+            index = i;
         }
     }
 
@@ -544,7 +535,7 @@ bool enumerate_instance_extensions(const char* p_layer, struct extension_list* p
     return status;
 }
 
-bool initialize_instance(void)
+bool initialize_instance(uint32_t ext_count, const char** ext_array)
 {
     bool status = true;
 
@@ -561,13 +552,47 @@ bool initialize_instance(void)
         status = enumerate_instance_layers(&layers);
     }
 
+    if(status)
+    {
+        if(ext_count <= max_extensions)
+        {
+            for(uint32_t i = 0; i < ext_count; i++)
+            {
+                uint32_t index = find_extension(&layers.extension_lists[0], ext_array[i]);
+                
+                if(index != INVALID_INDEX)
+                {
+                    extensions[num_extensions++] = ext_array[i];
+                }
+                else
+                {
+                    printf("Could not find extension %s\n", ext_array[i]);
+                    status = false;
+                }
+            }
+        }
+        else
+        {
+            printf("Could not enable all required extensions\n");
+            status = false;
+        }
+    }
+
 #ifdef DEBUG
     if(status)
     {
-        uint32_t index = find_extension(&layers, "", "VK_EXT_debug_report");
-        if(index != INVALID_INDEX)
+        if(num_extensions + 1 <= max_extensions)
         {
-            extensions[num_extensions++] = layers.extension_lists[0].array[index].name;
+            uint32_t index = find_extension(&layers.extension_lists[0], "VK_EXT_debug_report");
+            if(index != INVALID_INDEX)
+            {
+                extensions[num_extensions++] = layers.extension_lists[0].array[index].name;
+            }
+        }
+        else
+        {
+            printf("Could not enable debug report extension\n");
+            status = false;
         }
     }
 #endif
