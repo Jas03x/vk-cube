@@ -38,6 +38,7 @@ struct vk_context
     // device level functions
     pfn_vk_enumerate_device_layers               enumerate_device_layers;
     pfn_vk_enumerate_device_extensions           enumerate_device_extensions;
+    pfn_vk_create_semaphore                      create_semaphore;
 };
 
 extern struct vk_context vk_ctx;

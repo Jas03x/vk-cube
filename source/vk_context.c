@@ -38,7 +38,7 @@ struct layer_list
 
 bool     initialize_global_function_pointers(void);
 bool     initialize_instance_function_pointers(void);
-bool     initialize_physical_device_function_pointers(void);
+bool     initialize_device_function_pointers(void);
 
 bool     initialize_instance(uint32_t ext_count, const char** ext_array);
 bool     initialize_device(void);
@@ -349,6 +349,9 @@ bool initialize_instance_function_pointers(void)
     status &= load_function_pointer(vk_ctx.h_instance, "vkDestroyDevice", (void**) &vk_ctx.destroy_device);
     status &= load_function_pointer(vk_ctx.h_instance, "vkDeviceWaitIdle", (void**) &vk_ctx.wait_for_device_idle);
     status &= load_function_pointer(vk_ctx.h_instance, "vkGetPhysicalDeviceSurfaceSupportKHR", (void**) &vk_ctx.get_physical_device_surface_support);
+    status &= load_function_pointer(vk_ctx.h_instance, "vkEnumerateDeviceLayerProperties", (void**) &vk_ctx.enumerate_device_layers);
+    status &= load_function_pointer(vk_ctx.h_instance, "vkEnumerateDeviceExtensionProperties", (void**) &vk_ctx.enumerate_device_extensions);
+    status &= load_function_pointer(vk_ctx.h_instance, "vkCreateSemaphore", (void**) &vk_ctx.create_semaphore);
 
 #ifdef DEBUG
     status &= load_function_pointer(vk_ctx.h_instance, "vkCreateDebugReportCallbackEXT", (void**) &vk_ctx.register_debug_callback);
@@ -358,17 +361,7 @@ bool initialize_instance_function_pointers(void)
     return status;
 }
 
-bool initialize_physical_device_function_pointers(void)
-{
-    bool status = true;
-
-    status &= load_function_pointer(vk_ctx.h_instance, "vkEnumerateDeviceLayerProperties", (void**) &vk_ctx.enumerate_device_layers);
-    status &= load_function_pointer(vk_ctx.h_instance, "vkEnumerateDeviceExtensionProperties", (void**) &vk_ctx.enumerate_device_extensions);
-
-    return status;
-}
-
-bool initialize_logical_device_function_pointers(void)
+bool initialize_device_function_pointers(void)
 {
     bool status = true;
 
@@ -838,11 +831,6 @@ bool initialize_device(void)
 
     if(status)
     {
-        status = initialize_physical_device_function_pointers();
-    }
-
-    if(status)
-    {
         status = enumerate_device_layers_and_extensions(vk_ctx.h_physical_device, &layers);
     }
 
@@ -917,7 +905,7 @@ bool initialize_device(void)
 
     if(status)
     {
-        status = initialize_logical_device_function_pointers();
+        status = initialize_device_function_pointers();
     }
 
     free_layers(&layers);
