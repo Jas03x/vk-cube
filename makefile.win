@@ -38,7 +38,7 @@ ifneq (,$(filter debug release, $(MAKECMDGOALS)))
 endif
 
 $(bin)/%.d:
-	$(gcc) -I $(src) -MM -MT "$(bin)/$*.o $(bin)/$*.d" $(src)/$*.c -MF $@ 
+	$(gcc) -I $(src) -MM -MT "$(bin)/$*.o $(bin)/$*.d" $(src)/$*.c -MF $@
 
 $(bin)/%.o:
 	$(cc) $(cflags) $(include_paths) $(defines) -c $(src)/$*.c -Fo:$@ -Fd:$(bin)/$(pdb)
