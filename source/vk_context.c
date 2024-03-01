@@ -824,6 +824,23 @@ bool initialize_device(void)
 
     if(status)
     {
+        if(num_extensions + 1 <= MAX_EXTENSIONS)
+        {
+            uint32_t index = find_extension(&layers.extension_lists[0], "VK_KHR_swapchain");
+            if(index != INVALID_INDEX)
+            {
+                extensions[num_extensions++] = layers.extension_lists[0].array[index].name;
+            }
+        }
+        else
+        {
+            printf("Could not enable swapchain extension\n");
+            status = false;
+        }
+    }
+
+    if(status)
+    {
         while(queue_group_index < p_gpu_info[gpu_index].queue_group_count)
         {
             if(p_gpu_info[gpu_index].p_queue_group_properties[queue_group_index].queue_flags.graphics)
@@ -869,8 +886,8 @@ bool initialize_device(void)
         device_info.p_queue_info_array = &queue_info;
         device_info.layer_count = 0;
         device_info.p_layers = NULL;
-        device_info.extension_count = 0;
-        device_info.p_extensions = NULL;
+        device_info.extension_count = num_extensions;
+        device_info.p_extensions = extensions;
         device_info.features = NULL;
 
         if(vk_ctx.create_device(p_gpu_info[gpu_index].handle, &device_info, NULL, &vk_ctx.h_device) != vk_success)
@@ -892,7 +909,6 @@ bool initialize_device(void)
 
     return status;
 }
-
 
 void print_gpu_info(uint32_t gpu_index, struct gpu_info* p_gpu_info)
 {
