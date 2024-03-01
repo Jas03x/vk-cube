@@ -282,7 +282,22 @@ bool initialize_swapchain(vk_surface surface)
 {
     bool status = true;
 
+    uint32_t supported = vk_false;
 
+    if(vk_ctx.get_physical_device_surface_support(vk_ctx.h_physical_device, vk_ctx.graphics_queue_family, surface, &supported) != vk_success)
+    {
+        printf("Failed to check device surface support\n");
+        status = false;
+    }
+
+    if(status)
+    {
+        if(supported != vk_true)
+        {
+            printf("Device/graphics queue family does not support surface\n");
+            status = false;
+        }
+    }
 
     return status;
 }
@@ -333,6 +348,7 @@ bool initialize_instance_function_pointers(void)
     status &= load_function_pointer(vk_ctx.h_instance, "vkCreateDevice", (void**) &vk_ctx.create_device);
     status &= load_function_pointer(vk_ctx.h_instance, "vkDestroyDevice", (void**) &vk_ctx.destroy_device);
     status &= load_function_pointer(vk_ctx.h_instance, "vkDeviceWaitIdle", (void**) &vk_ctx.wait_for_device_idle);
+    status &= load_function_pointer(vk_ctx.h_instance, "vkGetPhysicalDeviceSurfaceSupportKHR", (void**) &vk_ctx.get_physical_device_surface_support);
 
 #ifdef DEBUG
     status &= load_function_pointer(vk_ctx.h_instance, "vkCreateDebugReportCallbackEXT", (void**) &vk_ctx.register_debug_callback);
@@ -784,7 +800,6 @@ bool initialize_device(void)
 
     uint32_t gpu_count = 0;
     uint32_t gpu_index = 0;
-    uint32_t queue_group_index = 0;
     struct gpu_info* p_gpu_info = NULL;
 
     struct layer_list layers = { 0 };
@@ -810,7 +825,11 @@ bool initialize_device(void)
             gpu_index++;
         }
 
-        if(gpu_index >= gpu_count)
+        if(gpu_index < gpu_count)
+        {
+            vk_ctx.h_physical_device = p_gpu_info[gpu_index].handle;
+        }
+        else
         {
             status = false;
             printf("Could not find discrete gpu\n");
@@ -824,7 +843,7 @@ bool initialize_device(void)
 
     if(status)
     {
-        status = enumerate_device_layers_and_extensions(p_gpu_info[gpu_index].handle, &layers);
+        status = enumerate_device_layers_and_extensions(vk_ctx.h_physical_device, &layers);
     }
 
     if(status)
@@ -834,6 +853,8 @@ bool initialize_device(void)
 
     if(status)
     {
+        uint32_t queue_group_index = 0;
+
         while(queue_group_index < p_gpu_info[gpu_index].queue_group_count)
         {
             if(p_gpu_info[gpu_index].p_queue_group_properties[queue_group_index].queue_flags.graphics)
@@ -845,7 +866,11 @@ bool initialize_device(void)
             queue_group_index++;
         }
 
-        if(queue_group_index >= p_gpu_info[gpu_index].queue_group_count)
+        if(queue_group_index < p_gpu_info[gpu_index].queue_group_count)
+        {
+            vk_ctx.graphics_queue_family = queue_group_index;
+        }
+        else
         {
             status = false;
             printf("Could not find queue group\n");
@@ -858,7 +883,7 @@ bool initialize_device(void)
 
         const float p_queue_priorities[MAX_QUEUES] = { 1.0f, 1.0f };
 
-        uint32_t queue_count = p_gpu_info[gpu_index].p_queue_group_properties[queue_group_index].queue_count;
+        uint32_t queue_count = p_gpu_info[gpu_index].p_queue_group_properties[vk_ctx.graphics_queue_family].queue_count;
 
         if(queue_count > MAX_QUEUES)
         {
@@ -868,7 +893,7 @@ bool initialize_device(void)
         struct vk_queue_creation_info queue_info = { 0 };
         queue_info.s_type = vk_queue_create_info;
         queue_info.p_next = NULL;
-        queue_info.queue_group_index = queue_group_index;
+        queue_info.queue_group_index = vk_ctx.graphics_queue_family;
         queue_info.queue_count = queue_count;
         queue_info.p_queue_priorities = p_queue_priorities;
 
@@ -883,7 +908,7 @@ bool initialize_device(void)
         device_info.p_extensions = extensions;
         device_info.features = NULL;
 
-        if(vk_ctx.create_device(p_gpu_info[gpu_index].handle, &device_info, NULL, &vk_ctx.h_device) != vk_success)
+        if(vk_ctx.create_device(vk_ctx.h_physical_device, &device_info, NULL, &vk_ctx.h_device) != vk_success)
         {
             status = false;
             printf("Failed to create vulkan device\n");

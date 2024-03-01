@@ -6,7 +6,10 @@
 struct vk_context
 {
     vk_instance                                  h_instance;
-    vk_device                                    h_device;
+    vk_device                                    h_device; // logical device
+    vk_physical_device                           h_physical_device;
+
+    uint32_t                                     graphics_queue_family;
 
     vk_debug_callback                            h_debug_callback;
 
@@ -30,6 +33,7 @@ struct vk_context
     pfn_vk_wait_for_device_idle                  wait_for_device_idle;
     pfn_vk_register_debug_callback               register_debug_callback;
     pfn_vk_unregister_debug_callback             unregister_debug_callback;
+    pfn_vk_get_physical_device_surface_support   get_physical_device_surface_support;
 
     // device level functions
     pfn_vk_enumerate_device_layers               enumerate_device_layers;

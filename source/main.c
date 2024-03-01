@@ -20,6 +20,8 @@ bool initialize(void)
     uint32_t ext_count = 0;
     const char** ext_array = NULL;
 
+    vk_surface surface = NULL;
+
     if(SDL_Init(SDL_INIT_EVERYTHING) != 0)
     {
         printf("Could not initialize SDL\n");
@@ -91,12 +93,16 @@ bool initialize(void)
 
     if(status)
     {
-        vk_surface surface;
         if(SDL_Vulkan_CreateSurface(g_window, vk_ctx.h_instance, (VkSurfaceKHR*) &surface) != SDL_TRUE)
         {
             printf("Could not create vulkan surface\n");
             status = false;
         }
+    }
+
+    if(status)
+    {
+        status = initialize_swapchain(surface);
     }
 
     if(ext_array != NULL)
