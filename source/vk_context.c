@@ -36,29 +36,30 @@ struct layer_list
     struct extension_list* extension_lists;
 };
 
-bool initialize_global_function_pointers(void);
-bool initialize_instance_function_pointers(void);
-bool initialize_physical_device_function_pointers(void);
+bool     initialize_global_function_pointers(void);
+bool     initialize_instance_function_pointers(void);
+bool     initialize_physical_device_function_pointers(void);
 
-bool initialize_instance(uint32_t ext_count, const char** ext_array);
-bool initialize_device(void);
-bool initialize_debug_layer(void);
+bool     initialize_instance(uint32_t ext_count, const char** ext_array);
+bool     initialize_device(void);
+bool     initialize_debug_layer(void);
 
-bool enumerate_instance_layers(struct layer_list* p_layers);
-bool enumerate_instance_extensions(const char* p_layer, struct extension_list* p_extensions);
-bool enumerate_gpus(uint32_t* p_gpu_count, struct gpu_info** p_gpu_info_array);
-bool enumerate_device_layers_and_extensions(vk_physical_device h_physical_device, struct layer_list* p_layers);
-bool enumerate_device_extensions(vk_physical_device h_physical_device, const char* p_layer, struct extension_list* p_extensions);
+bool     enumerate_instance_layers(struct layer_list* p_layers);
+bool     enumerate_instance_extensions(const char* p_layer, struct extension_list* p_extensions);
+bool     enumerate_gpus(uint32_t* p_gpu_count, struct gpu_info** p_gpu_info_array);
+bool     enumerate_device_layers_and_extensions(vk_physical_device h_physical_device, struct layer_list* p_layers);
+bool     enumerate_device_extensions(vk_physical_device h_physical_device, const char* p_layer, struct extension_list* p_extensions);
 
-bool get_gpu_queue_info(vk_physical_device h_physical_device, uint32_t* p_num_queue_groups, struct vk_queue_group_properties** p_queue_group_properties);
+bool     get_gpu_queue_info(vk_physical_device h_physical_device, uint32_t* p_num_queue_groups, struct vk_queue_group_properties** p_queue_group_properties);
 
-void print_gpu_info(uint32_t gpu_index, struct gpu_info* p_gpu_info);
+void     print_gpu_info(uint32_t gpu_index, struct gpu_info* p_gpu_info);
 
 uint32_t find_extension(struct extension_list* extension_list, const char* extension_name);
+bool     add_extension(struct extension_list* extensions, const char** ext_array, uint32_t* ext_count, const char* ext_name);
 
-void free_layers(struct layer_list* layers);
-void free_extensions(struct extension_list* extensions);
-void free_gpu_info(uint32_t gpu_count, struct gpu_info* p_gpu_info_array);
+void     free_layers(struct layer_list* layers);
+void     free_extensions(struct extension_list* extensions);
+void     free_gpu_info(uint32_t gpu_count, struct gpu_info* p_gpu_info_array);
 
 uint32_t debug_callback(uint32_t flags, uint32_t object_type, uint64_t object, uint32_t location, int32_t message_code, const char* layer_prefix, const char* message, void* user_data)
 {
@@ -453,6 +454,34 @@ uint32_t find_extension(struct extension_list* extension_list, const char* exten
     return index;
 }
 
+bool add_extension(struct extension_list* extensions, const char** ext_array, uint32_t* ext_count, const char* ext_name)
+{
+    bool status = true;
+    uint32_t index = INVALID_INDEX;
+
+    if((*ext_count) + 1 <= MAX_EXTENSIONS)
+    {
+        index = find_extension(extensions, ext_name);
+
+        if(index != INVALID_INDEX)
+        {
+            ext_array[*ext_count] = extensions->array[index].name;
+            (*ext_count)++;
+        }
+        else
+        {
+            printf("Could not find extension %s\n", ext_name);
+        }
+    }
+    else
+    {
+        printf("Extension list out of room\n");
+        status = false;
+    }
+
+    return status;
+}
+
 void free_layers(struct layer_list* layers)
 {
     if(layers != NULL)
@@ -561,24 +590,12 @@ bool initialize_instance(uint32_t ext_count, const char** ext_array)
 
     if(status)
     {
-        if(ext_count <= MAX_EXTENSIONS)
+        for(uint32_t i = 0; status && (i < ext_count); i++)
         {
-            for(uint32_t i = 0; i < ext_count; i++)
-            {
-                uint32_t index = find_extension(&layers.extension_lists[0], ext_array[i]);
-                
-                if(index != INVALID_INDEX)
-                {
-                    extensions[num_extensions++] = ext_array[i];
-                }
-                else
-                {
-                    printf("Could not find extension %s\n", ext_array[i]);
-                    status = false;
-                }
-            }
+            status = add_extension(&layers.extension_lists[0], extensions, &num_extensions, ext_array[i]);
         }
-        else
+
+        if(!status)
         {
             printf("Could not enable all required extensions\n");
             status = false;
@@ -588,19 +605,7 @@ bool initialize_instance(uint32_t ext_count, const char** ext_array)
 #ifdef DEBUG
     if(status)
     {
-        if(num_extensions + 1 <= MAX_EXTENSIONS)
-        {
-            uint32_t index = find_extension(&layers.extension_lists[0], "VK_EXT_debug_report");
-            if(index != INVALID_INDEX)
-            {
-                extensions[num_extensions++] = layers.extension_lists[0].array[index].name;
-            }
-        }
-        else
-        {
-            printf("Could not enable debug report extension\n");
-            status = false;
-        }
+        status = add_extension(&layers.extension_lists[0], extensions, &num_extensions, "VK_EXT_debug_report");
     }
 #endif
 
@@ -824,19 +829,7 @@ bool initialize_device(void)
 
     if(status)
     {
-        if(num_extensions + 1 <= MAX_EXTENSIONS)
-        {
-            uint32_t index = find_extension(&layers.extension_lists[0], "VK_KHR_swapchain");
-            if(index != INVALID_INDEX)
-            {
-                extensions[num_extensions++] = layers.extension_lists[0].array[index].name;
-            }
-        }
-        else
-        {
-            printf("Could not enable swapchain extension\n");
-            status = false;
-        }
+        status = add_extension(&layers.extension_lists[0], extensions, &num_extensions, "VK_KHR_swapchain");
     }
 
     if(status)
