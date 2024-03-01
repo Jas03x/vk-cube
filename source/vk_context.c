@@ -824,10 +824,6 @@ bool initialize_device(void)
 
     if(status)
     {
-    }
-
-    if(status)
-    {
         while(queue_group_index < p_gpu_info[gpu_index].queue_group_count)
         {
             if(p_gpu_info[gpu_index].p_queue_group_properties[queue_group_index].queue_flags.graphics)
@@ -888,6 +884,8 @@ bool initialize_device(void)
     {
         status = initialize_logical_device_function_pointers();
     }
+
+    free_layers(&layers);
 
     free_gpu_info(gpu_count, p_gpu_info);
     p_gpu_info = NULL;
@@ -1054,6 +1052,17 @@ bool enumerate_device_layers_and_extensions(vk_physical_device h_physical_device
         layers.array = calloc(layers.count, sizeof(struct vk_layer));
 
         if (layers.array == NULL)
+        {
+            status = false;
+            printf("Failed to allocate memory\n");
+        }
+    }
+
+    if(status)
+    {
+        layers.extension_lists = calloc(layers.count, sizeof(struct extension_list));
+
+        if(layers.extension_lists == NULL)
         {
             status = false;
             printf("Failed to allocate memory\n");
