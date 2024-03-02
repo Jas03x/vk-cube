@@ -7,7 +7,8 @@
 
 #include "vk_context.h"
 
-struct vk_context vk_ctx = { 0 };
+struct vk_context  g_vk_ctx = { 0 };
+struct vk_context* vk_ctx   = &g_vk_ctx;
 
 enum { MAX_EXTENSIONS = 16 };
 enum { INVALID_INDEX  = 0xFFFFFFFF };
@@ -243,7 +244,7 @@ bool initialize_vulkan_context(pfn_vk_get_instance_proc_addr pfn_get_instance_pr
 {
     bool status = true;
 
-    vk_ctx.get_instance_proc_addr = pfn_get_instance_proc_addr;
+    g_vk_ctx.get_instance_proc_addr = pfn_get_instance_proc_addr;
 
     if(status)
     {
@@ -265,17 +266,17 @@ bool initialize_vulkan_context(pfn_vk_get_instance_proc_addr pfn_get_instance_pr
 
 void uninitialize_vulkan_context(void)
 {
-    vk_ctx.wait_for_device_idle(vk_ctx.h_device);
-    //vk_ctx.destroy_device(vk_ctx.h_device, NULL);
-    //vk_ctx.h_device = NULL;
+    g_vk_ctx.wait_for_device_idle(g_vk_ctx.h_device);
+    //g_vk_ctx.destroy_device(g_vk_ctx.h_device, NULL);
+    //g_vk_ctx.h_device = NULL;
 
-    if(vk_ctx.h_debug_callback != NULL)
+    if(g_vk_ctx.h_debug_callback != NULL)
     {
-        vk_ctx.unregister_debug_callback(vk_ctx.h_instance, vk_ctx.h_debug_callback, NULL);
+        g_vk_ctx.unregister_debug_callback(g_vk_ctx.h_instance, g_vk_ctx.h_debug_callback, NULL);
     }
 
-    vk_ctx.destroy_instance(vk_ctx.h_instance, NULL);
-    vk_ctx.h_instance = NULL;
+    g_vk_ctx.destroy_instance(g_vk_ctx.h_instance, NULL);
+    g_vk_ctx.h_instance = NULL;
 }
 
 bool initialize_swapchain(vk_surface surface)
@@ -284,7 +285,7 @@ bool initialize_swapchain(vk_surface surface)
 
     uint32_t supported = vk_false;
 
-    if(vk_ctx.get_physical_device_surface_support(vk_ctx.h_physical_device, vk_ctx.graphics_queue_family, surface, &supported) != vk_success)
+    if(g_vk_ctx.get_physical_device_surface_support(g_vk_ctx.h_physical_device, g_vk_ctx.graphics_queue_family, surface, &supported) != vk_success)
     {
         printf("Failed to check device surface support\n");
         status = false;
@@ -308,7 +309,7 @@ bool load_function_pointer(vk_instance h_instance, const char* p_name, void** p_
 
     if(p_pfn != NULL)
     {
-        (*p_pfn) = vk_ctx.get_instance_proc_addr(h_instance, p_name);
+        (*p_pfn) = g_vk_ctx.get_instance_proc_addr(h_instance, p_name);
 
         if((*p_pfn) == NULL)
         {
@@ -328,10 +329,10 @@ bool initialize_global_function_pointers(void)
 {
     bool status = true;
 
-    status &= load_function_pointer(NULL, "vkCreateInstance", (void**) &vk_ctx.create_instance);
-    status &= load_function_pointer(NULL, "vkEnumerateInstanceVersion", (void**) &vk_ctx.get_version);
-    status &= load_function_pointer(NULL, "vkEnumerateInstanceLayerProperties", (void**) &vk_ctx.enumerate_layers);
-    status &= load_function_pointer(NULL, "vkEnumerateInstanceExtensionProperties", (void**) &vk_ctx.enumerate_extensions);
+    status &= load_function_pointer(NULL, "vkCreateInstance", (void**) &g_vk_ctx.create_instance);
+    status &= load_function_pointer(NULL, "vkEnumerateInstanceVersion", (void**) &g_vk_ctx.get_version);
+    status &= load_function_pointer(NULL, "vkEnumerateInstanceLayerProperties", (void**) &g_vk_ctx.enumerate_layers);
+    status &= load_function_pointer(NULL, "vkEnumerateInstanceExtensionProperties", (void**) &g_vk_ctx.enumerate_extensions);
 
     return status;
 }
@@ -340,22 +341,24 @@ bool initialize_instance_function_pointers(void)
 {
     bool status = true;
 
-    status &= load_function_pointer(vk_ctx.h_instance, "vkDestroyInstance", (void**) &vk_ctx.destroy_instance);
-    status &= load_function_pointer(vk_ctx.h_instance, "vkEnumeratePhysicalDevices", (void**) &vk_ctx.enumerate_devices);
-    status &= load_function_pointer(vk_ctx.h_instance, "vkGetPhysicalDeviceProperties", (void**) &vk_ctx.get_physical_device_properties);
-    status &= load_function_pointer(vk_ctx.h_instance, "vkGetPhysicalDeviceFeatures", (void**) &vk_ctx.get_physical_device_features);
-    status &= load_function_pointer(vk_ctx.h_instance, "vkGetPhysicalDeviceQueueFamilyProperties", (void**) &vk_ctx.get_physical_queue_group_properties);
-    status &= load_function_pointer(vk_ctx.h_instance, "vkCreateDevice", (void**) &vk_ctx.create_device);
-    status &= load_function_pointer(vk_ctx.h_instance, "vkDestroyDevice", (void**) &vk_ctx.destroy_device);
-    status &= load_function_pointer(vk_ctx.h_instance, "vkDeviceWaitIdle", (void**) &vk_ctx.wait_for_device_idle);
-    status &= load_function_pointer(vk_ctx.h_instance, "vkGetPhysicalDeviceSurfaceSupportKHR", (void**) &vk_ctx.get_physical_device_surface_support);
-    status &= load_function_pointer(vk_ctx.h_instance, "vkEnumerateDeviceLayerProperties", (void**) &vk_ctx.enumerate_device_layers);
-    status &= load_function_pointer(vk_ctx.h_instance, "vkEnumerateDeviceExtensionProperties", (void**) &vk_ctx.enumerate_device_extensions);
-    status &= load_function_pointer(vk_ctx.h_instance, "vkCreateSemaphore", (void**) &vk_ctx.create_semaphore);
+    status &= load_function_pointer(g_vk_ctx.h_instance, "vkDestroyInstance", (void**) &g_vk_ctx.destroy_instance);
+    status &= load_function_pointer(g_vk_ctx.h_instance, "vkEnumeratePhysicalDevices", (void**) &g_vk_ctx.enumerate_devices);
+    status &= load_function_pointer(g_vk_ctx.h_instance, "vkGetPhysicalDeviceProperties", (void**) &g_vk_ctx.get_physical_device_properties);
+    status &= load_function_pointer(g_vk_ctx.h_instance, "vkGetPhysicalDeviceFeatures", (void**) &g_vk_ctx.get_physical_device_features);
+    status &= load_function_pointer(g_vk_ctx.h_instance, "vkGetPhysicalDeviceQueueFamilyProperties", (void**) &g_vk_ctx.get_physical_queue_group_properties);
+    status &= load_function_pointer(g_vk_ctx.h_instance, "vkCreateDevice", (void**) &g_vk_ctx.create_device);
+    status &= load_function_pointer(g_vk_ctx.h_instance, "vkDestroyDevice", (void**) &g_vk_ctx.destroy_device);
+    status &= load_function_pointer(g_vk_ctx.h_instance, "vkDeviceWaitIdle", (void**) &g_vk_ctx.wait_for_device_idle);
+    status &= load_function_pointer(g_vk_ctx.h_instance, "vkGetPhysicalDeviceSurfaceSupportKHR", (void**) &g_vk_ctx.get_physical_device_surface_support);
+    status &= load_function_pointer(g_vk_ctx.h_instance, "vkEnumerateDeviceLayerProperties", (void**) &g_vk_ctx.enumerate_device_layers);
+    status &= load_function_pointer(g_vk_ctx.h_instance, "vkEnumerateDeviceExtensionProperties", (void**) &g_vk_ctx.enumerate_device_extensions);
+    status &= load_function_pointer(g_vk_ctx.h_instance, "vkCreateSemaphore", (void**) &g_vk_ctx.create_semaphore);
+    status &= load_function_pointer(g_vk_ctx.h_instance, "vkGetPhysicalDeviceSurfaceCapabilitiesKHR", (void**) &g_vk_ctx.get_physical_device_surface_capabilities);
+    status &= load_function_pointer(g_vk_ctx.h_instance, "vkGetPhysicalDeviceSurfacePresentModesKHR", (void**) &g_vk_ctx.get_physical_device_surface_present_modes);
 
 #ifdef DEBUG
-    status &= load_function_pointer(vk_ctx.h_instance, "vkCreateDebugReportCallbackEXT", (void**) &vk_ctx.register_debug_callback);
-    status &= load_function_pointer(vk_ctx.h_instance, "vkDestroyDebugReportCallbackEXT", (void*) &vk_ctx.unregister_debug_callback);
+    status &= load_function_pointer(g_vk_ctx.h_instance, "vkCreateDebugReportCallbackEXT", (void**) &g_vk_ctx.register_debug_callback);
+    status &= load_function_pointer(g_vk_ctx.h_instance, "vkDestroyDebugReportCallbackEXT", (void*) &g_vk_ctx.unregister_debug_callback);
 #endif
 
     return status;
@@ -365,7 +368,7 @@ bool initialize_device_function_pointers(void)
 {
     bool status = true;
 
-    status &= load_function_pointer(vk_ctx.h_instance, "vkGetDeviceProcAddr", (void**) &vk_ctx.get_device_proc_addr);
+    status &= load_function_pointer(g_vk_ctx.h_instance, "vkGetDeviceProcAddr", (void**) &g_vk_ctx.get_device_proc_addr);
 
     return status;
 }
@@ -377,7 +380,7 @@ bool enumerate_instance_layers(struct layer_list* p_layers)
     uint32_t num_layers = 0;
     struct layer_list layers = { 0 };
 
-    if(vk_ctx.enumerate_layers(&num_layers, NULL) == vk_success)
+    if(g_vk_ctx.enumerate_layers(&num_layers, NULL) == vk_success)
     {
         layers.count = num_layers + 1; // +1 for vulkan implementation
     }
@@ -418,7 +421,7 @@ bool enumerate_instance_layers(struct layer_list* p_layers)
 
     if(status)
     {
-        if(vk_ctx.enumerate_layers(&num_layers, &layers.array[1]) != vk_success) // start reading at element 1 because element 0 is the vulkan implementation
+        if(g_vk_ctx.enumerate_layers(&num_layers, &layers.array[1]) != vk_success) // start reading at element 1 because element 0 is the vulkan implementation
         {
             status = false;
             printf("Failed to get layers\n");
@@ -536,7 +539,7 @@ bool enumerate_instance_extensions(const char* p_layer, struct extension_list* p
 
     struct extension_list extensions = { 0 };
 
-    if(vk_ctx.enumerate_extensions(p_layer, &extensions.count, NULL) != vk_success)
+    if(g_vk_ctx.enumerate_extensions(p_layer, &extensions.count, NULL) != vk_success)
     {
         status = false;
         printf("Failed to get number of extensions\n");
@@ -555,7 +558,7 @@ bool enumerate_instance_extensions(const char* p_layer, struct extension_list* p
 
     if(status)
     {
-        if(vk_ctx.enumerate_extensions(p_layer, &extensions.count, extensions.array) != vk_success)
+        if(g_vk_ctx.enumerate_extensions(p_layer, &extensions.count, extensions.array) != vk_success)
         {
             status = false;
             printf("Failed to get extensions\n");
@@ -638,7 +641,7 @@ bool initialize_instance(uint32_t ext_count, const char** ext_array)
         instance_info.extension_count = num_extensions;
         instance_info.p_extension_names = extensions;
 
-        if(vk_ctx.create_instance(&instance_info, NULL, &vk_ctx.h_instance) != vk_success)
+        if(g_vk_ctx.create_instance(&instance_info, NULL, &g_vk_ctx.h_instance) != vk_success)
         {
             status = false;
             printf("Failed to create vulkan instance\n");
@@ -673,7 +676,7 @@ bool initialize_debug_layer(void)
     callback_info.pfn_callback = debug_callback;
     callback_info.user_data = NULL;
 
-    if(vk_ctx.register_debug_callback(vk_ctx.h_instance, &callback_info, NULL, &vk_ctx.h_debug_callback) != vk_success)
+    if(g_vk_ctx.register_debug_callback(g_vk_ctx.h_instance, &callback_info, NULL, &g_vk_ctx.h_debug_callback) != vk_success)
     {
         printf("Failed to register debug callback\n");
         status = false;
@@ -692,7 +695,7 @@ bool enumerate_gpus(uint32_t* p_gpu_count, struct gpu_info** p_gpu_info_array)
 
     struct gpu_info* p_info_array = NULL;
 
-    if(vk_ctx.enumerate_devices(vk_ctx.h_instance, &num_physical_devices, NULL) != vk_success)
+    if(g_vk_ctx.enumerate_devices(g_vk_ctx.h_instance, &num_physical_devices, NULL) != vk_success)
     {
         status = false;
         printf("Failed to get number of devices\n");
@@ -711,7 +714,7 @@ bool enumerate_gpus(uint32_t* p_gpu_count, struct gpu_info** p_gpu_info_array)
 
     if(status)
     {
-        if(vk_ctx.enumerate_devices(vk_ctx.h_instance, &num_physical_devices, p_physical_device_handles) != vk_success)
+        if(g_vk_ctx.enumerate_devices(g_vk_ctx.h_instance, &num_physical_devices, p_physical_device_handles) != vk_success)
         {
             status = false;
             printf("Failed to get devices\n");
@@ -734,8 +737,8 @@ bool enumerate_gpus(uint32_t* p_gpu_count, struct gpu_info** p_gpu_info_array)
         for(uint32_t i = 0; status && (i < num_physical_devices); i++)
         {
             p_info_array[i].handle = p_physical_device_handles[i];
-            vk_ctx.get_physical_device_properties(p_physical_device_handles[i], &p_info_array[i].properties);
-            vk_ctx.get_physical_device_features(p_physical_device_handles[i], &p_info_array[i].features);
+            g_vk_ctx.get_physical_device_properties(p_physical_device_handles[i], &p_info_array[i].properties);
+            g_vk_ctx.get_physical_device_features(p_physical_device_handles[i], &p_info_array[i].features);
             
             status = get_gpu_queue_info(p_physical_device_handles[i], &p_info_array[i].queue_group_count, &p_info_array[i].p_queue_group_properties);
         }
@@ -820,7 +823,7 @@ bool initialize_device(void)
 
         if(gpu_index < gpu_count)
         {
-            vk_ctx.h_physical_device = p_gpu_info[gpu_index].handle;
+            g_vk_ctx.h_physical_device = p_gpu_info[gpu_index].handle;
         }
         else
         {
@@ -831,7 +834,7 @@ bool initialize_device(void)
 
     if(status)
     {
-        status = enumerate_device_layers_and_extensions(vk_ctx.h_physical_device, &layers);
+        status = enumerate_device_layers_and_extensions(g_vk_ctx.h_physical_device, &layers);
     }
 
     if(status)
@@ -856,7 +859,7 @@ bool initialize_device(void)
 
         if(queue_group_index < p_gpu_info[gpu_index].queue_group_count)
         {
-            vk_ctx.graphics_queue_family = queue_group_index;
+            g_vk_ctx.graphics_queue_family = queue_group_index;
         }
         else
         {
@@ -871,7 +874,7 @@ bool initialize_device(void)
 
         const float p_queue_priorities[MAX_QUEUES] = { 1.0f, 1.0f };
 
-        uint32_t queue_count = p_gpu_info[gpu_index].p_queue_group_properties[vk_ctx.graphics_queue_family].queue_count;
+        uint32_t queue_count = p_gpu_info[gpu_index].p_queue_group_properties[g_vk_ctx.graphics_queue_family].queue_count;
 
         if(queue_count > MAX_QUEUES)
         {
@@ -881,7 +884,7 @@ bool initialize_device(void)
         struct vk_queue_creation_info queue_info = { 0 };
         queue_info.s_type = vk_queue_create_info;
         queue_info.p_next = NULL;
-        queue_info.queue_group_index = vk_ctx.graphics_queue_family;
+        queue_info.queue_group_index = g_vk_ctx.graphics_queue_family;
         queue_info.queue_count = queue_count;
         queue_info.p_queue_priorities = p_queue_priorities;
 
@@ -896,7 +899,7 @@ bool initialize_device(void)
         device_info.p_extensions = extensions;
         device_info.features = NULL;
 
-        if(vk_ctx.create_device(vk_ctx.h_physical_device, &device_info, NULL, &vk_ctx.h_device) != vk_success)
+        if(g_vk_ctx.create_device(g_vk_ctx.h_physical_device, &device_info, NULL, &g_vk_ctx.h_device) != vk_success)
         {
             status = false;
             printf("Failed to create vulkan device\n");
@@ -1025,7 +1028,7 @@ bool get_gpu_queue_info(vk_physical_device h_physical_device, uint32_t* p_num_qu
     uint32_t num_groups = 0;
     struct vk_queue_group_properties* p_groups = NULL;
 
-    vk_ctx.get_physical_queue_group_properties(h_physical_device, &num_groups, NULL);
+    g_vk_ctx.get_physical_queue_group_properties(h_physical_device, &num_groups, NULL);
 
     if(num_groups > 0)
     {
@@ -1042,7 +1045,7 @@ bool get_gpu_queue_info(vk_physical_device h_physical_device, uint32_t* p_num_qu
     {
         if(num_groups > 0)
         {
-            vk_ctx.get_physical_queue_group_properties(h_physical_device, &num_groups, p_groups);
+            g_vk_ctx.get_physical_queue_group_properties(h_physical_device, &num_groups, p_groups);
         }
 
         *p_num_queue_groups = num_groups;
@@ -1059,7 +1062,7 @@ bool enumerate_device_layers_and_extensions(vk_physical_device h_physical_device
     uint32_t num_layers = 0;
     struct layer_list layers = { 0 };
 
-    if(vk_ctx.enumerate_device_layers(h_physical_device, &num_layers, NULL) == vk_success)
+    if(g_vk_ctx.enumerate_device_layers(h_physical_device, &num_layers, NULL) == vk_success)
     {
         layers.count = num_layers + 1; // +1 for vulkan implementation
     }
@@ -1100,7 +1103,7 @@ bool enumerate_device_layers_and_extensions(vk_physical_device h_physical_device
 
     if(status)
     {
-        if(vk_ctx.enumerate_device_layers(h_physical_device, &num_layers, &layers.array[1]) != vk_success)
+        if(g_vk_ctx.enumerate_device_layers(h_physical_device, &num_layers, &layers.array[1]) != vk_success)
         {
             status = false;
             printf("Failed to get layers\n");
@@ -1136,7 +1139,7 @@ bool enumerate_device_extensions(vk_physical_device h_physical_device, const cha
 
     struct extension_list extensions = { 0 };
 
-    if(vk_ctx.enumerate_device_extensions(h_physical_device, p_layer, &extensions.count, NULL) != vk_success)
+    if(g_vk_ctx.enumerate_device_extensions(h_physical_device, p_layer, &extensions.count, NULL) != vk_success)
     {
         status = false;
         printf("Failed to get number of extensions\n");
@@ -1155,7 +1158,7 @@ bool enumerate_device_extensions(vk_physical_device h_physical_device, const cha
 
     if(status)
     {
-        if(vk_ctx.enumerate_device_extensions(h_physical_device, p_layer, &extensions.count, extensions.array) != vk_success)
+        if(g_vk_ctx.enumerate_device_extensions(h_physical_device, p_layer, &extensions.count, extensions.array) != vk_success)
         {
             status = false;
             printf("Failed to get extensions\n");

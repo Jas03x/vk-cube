@@ -394,6 +394,46 @@ struct vk_semaphore_creation_info
     uint32_t                             flags;
 };
 
+struct vk_surface_capabilities
+{
+    uint32_t                             min_image_count;
+    uint32_t                             max_image_count;
+
+    struct
+    {
+        uint32_t                         width;
+        uint32_t                         height;
+    } current_extent;
+
+    struct
+    {
+        uint32_t                         width;
+        uint32_t                         height;
+    } min_image_extent;
+
+    struct
+    {
+        uint32_t                         width;
+        uint32_t                         height;
+    } max_image_extent;
+
+    uint32_t                             max_image_array_layers;
+    uint32_t                             supported_transforms;
+    uint32_t                             current_transform;
+    uint32_t                             supported_composite_alpha;
+    uint32_t                             supported_usage_flags;
+};
+
+enum vk_present_mode
+{
+    vk_present_mode__immediate                 = 0,
+    vk_present_mode__mailbox                   = 1,
+    vk_present_mode__fifo                      = 2,
+    vk_present_mode__fifo_relaxed              = 3,
+    vk_present_mode__shared_demand_refresh     = 4,
+    vk_present_mode__shared_continuous_refresh = 5
+};
+
 typedef void*    (*pfn_vk_get_instance_proc_addr)(vk_instance h_instance, const char* p_name);
 typedef void*    (*pfn_vk_get_device_proc_addr)(vk_device h_device, const char* p_name);
 
@@ -418,6 +458,8 @@ typedef void     (*pfn_vk_destroy_device)(vk_device h_device, const void* reserv
 typedef uint32_t (*pfn_vk_enumerate_device_layers)(vk_physical_device h_device, uint32_t* p_count, struct vk_layer* p_layers);
 typedef uint32_t (*pfn_vk_enumerate_device_extensions)(vk_physical_device h_device, const char* p_layer_name, uint32_t* p_count, struct vk_extension* p_extensions);
 typedef uint32_t (*pfn_vk_create_semaphore)(vk_device h_device, struct vk_semaphore_creation_info* p_info);
+typedef uint32_t (*pfn_vk_get_physical_device_surface_capabilities)(vk_physical_device h_device, vk_surface surface, struct vk_surface_capabilities* p_capabilities);
+typedef uint32_t (*pfn_vk_get_physical_device_surface_present_modes)(vk_physical_device h_device, vk_surface surface, uint32_t* p_present_mode_count, uint32_t* p_present_mode_array);
 
 // device level functions
 
