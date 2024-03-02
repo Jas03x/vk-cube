@@ -284,6 +284,10 @@ bool initialize_swapchain(vk_surface surface)
     bool status = true;
 
     uint32_t supported = vk_false;
+    uint32_t present_mode_count = 0;
+    uint32_t* present_mode_array = NULL;
+
+    struct vk_surface_capabilities surface_capabilities = { 0 };
 
     if(g_vk_ctx.get_physical_device_surface_support(g_vk_ctx.h_physical_device, g_vk_ctx.graphics_queue_family, surface, &supported) != vk_success)
     {
@@ -297,6 +301,88 @@ bool initialize_swapchain(vk_surface surface)
         {
             printf("Device/graphics queue family does not support surface\n");
             status = false;
+        }
+    }
+
+    if(status)
+    {
+        if(g_vk_ctx.get_physical_device_surface_capabilities(g_vk_ctx.h_physical_device, surface, &surface_capabilities) != vk_success)
+        {
+            printf("Could not get surface capabilities\n");
+            status = false;
+        }
+    }
+
+    if(status)
+    {
+        if(g_vk_ctx.get_physical_device_surface_present_modes(g_vk_ctx.h_physical_device, surface, &present_mode_count, NULL) != vk_success)
+        {
+            printf("Could not get present mode count\n");
+            status = false;
+        }
+    }
+
+    if(status)
+    {
+        present_mode_array = (uint32_t*) malloc(present_mode_count * sizeof(uint32_t));
+        if(present_mode_array == NULL)
+        {
+            printf("Failed to allocate memory for present mode array\n");
+            status = false;
+        }
+    }
+
+    if(status)
+    {
+        if(g_vk_ctx.get_physical_device_surface_present_modes(g_vk_ctx.h_physical_device, surface, &present_mode_count, present_mode_array) != vk_success)
+        {
+            printf("Could not get present mode count\n");
+            status = false;
+        }
+    }
+
+    if(status)
+    {
+        printf("Surface capabilities:\n");
+        printf("\tMinimum image count: %u\n", surface_capabilities.min_image_count);
+        printf("\tMaximum image count: %u\n", surface_capabilities.max_image_count);
+        printf("\tCurrent extent: %ux%u\n", surface_capabilities.current_extent.width, surface_capabilities.current_extent.height);
+        printf("\tMinimum extent: %ux%u\n", surface_capabilities.min_image_extent.width, surface_capabilities.min_image_extent.height);
+        printf("\tMaximum extent: %ux%u\n", surface_capabilities.max_image_extent.width, surface_capabilities.max_image_extent.height);
+        printf("\tMaximum array image array layers: %u\n", surface_capabilities.max_image_array_layers);
+        printf("\tSupported transforms: %u\n", surface_capabilities.supported_transforms);
+        printf("\tCurrent transform: %u\n", surface_capabilities.current_transform);
+        printf("\tSupported composite alpha: %u\n", surface_capabilities.supported_composite_alpha);
+        printf("\tSupported usage flags: %u\n", surface_capabilities.supported_usage_flags);
+
+        printf("Surface supported present modes:\n");
+        for(uint32_t i = 0; i < present_mode_count; i++)
+        {
+            const char* mode = "Unknown";
+            switch(present_mode_array[i])
+            {
+                case vk_present_mode__immediate:
+                    mode = "Immediate";
+                    break;
+                case vk_present_mode__mailbox:
+                    mode = "Mailbox";
+                    break;
+                case vk_present_mode__fifo:
+                    mode = "FIFO";
+                    break;
+                case vk_present_mode__fifo_relaxed:
+                    mode = "FIFO_Relaxed";
+                    break;
+                case vk_present_mode__shared_demand_refresh:
+                    mode = "Demand refresh";
+                    break;
+                case vk_present_mode__shared_continuous_refresh:
+                    mode = "Continuous refresh";
+                    break;
+                default:
+                    break;
+            }
+            printf("\t%s\n", mode);
         }
     }
 

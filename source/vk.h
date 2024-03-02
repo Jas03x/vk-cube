@@ -430,8 +430,8 @@ enum vk_present_mode
     vk_present_mode__mailbox                   = 1,
     vk_present_mode__fifo                      = 2,
     vk_present_mode__fifo_relaxed              = 3,
-    vk_present_mode__shared_demand_refresh     = 4,
-    vk_present_mode__shared_continuous_refresh = 5
+    vk_present_mode__shared_demand_refresh     = 1000111000,
+    vk_present_mode__shared_continuous_refresh = 1000111001
 };
 
 typedef void*    (*pfn_vk_get_instance_proc_addr)(vk_instance h_instance, const char* p_name);
