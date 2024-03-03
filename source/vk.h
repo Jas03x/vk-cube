@@ -512,17 +512,17 @@ typedef uint32_t (*pfn_vk_create_device)(vk_physical_device h_physical_device, s
 typedef uint32_t (*pfn_vk_register_debug_callback)(vk_instance h_instance, struct vk_debug_callback_info* p_info, void* reserved, vk_debug_callback* p_callback);
 typedef void     (*pfn_vk_unregister_debug_callback)(vk_instance instance, vk_debug_callback* callback, const void* reserved);
 typedef uint32_t (*pfn_vk_get_physical_device_surface_support)(vk_physical_device h_device, uint32_t queue_family, vk_surface surface, uint32_t* p_supported);
-typedef uint32_t (*pfn_vk_wait_for_device_idle)(vk_device h_device);
-typedef void     (*pfn_vk_destroy_device)(vk_device h_device, const void* reserved);
 typedef uint32_t (*pfn_vk_enumerate_device_layers)(vk_physical_device h_device, uint32_t* p_count, struct vk_layer* p_layers);
 typedef uint32_t (*pfn_vk_enumerate_device_extensions)(vk_physical_device h_device, const char* p_layer_name, uint32_t* p_count, struct vk_extension* p_extensions);
-typedef uint32_t (*pfn_vk_create_semaphore)(vk_device h_device, struct vk_semaphore_create_params* params, const void* reserved, vk_semaphore* p_semaphore);
 typedef uint32_t (*pfn_vk_get_physical_device_surface_capabilities)(vk_physical_device h_device, vk_surface surface, struct vk_surface_capabilities* p_capabilities);
 typedef uint32_t (*pfn_vk_get_physical_device_surface_present_modes)(vk_physical_device h_device, vk_surface surface, uint32_t* p_present_mode_count, uint32_t* p_present_mode_array);
 typedef uint32_t (*pfn_vk_get_physical_device_surface_formats)(vk_physical_device h_device, vk_surface surface, uint32_t* p_format_count, struct vk_surface_format* p_format_array);
-typedef uint32_t (*pfn_vk_create_swapchain)(vk_device h_device, const struct vk_swapchain_create_params* params, const void* reserved, vk_swapchain* p_swapchain);
 
 // device level functions
+typedef uint32_t (*pfn_vk_create_semaphore)(vk_device h_device, struct vk_semaphore_create_params* params, const void* reserved, vk_semaphore* p_semaphore);
+typedef uint32_t (*pfn_vk_create_swapchain)(vk_device h_device, const struct vk_swapchain_create_params* params, const void* reserved, vk_swapchain* p_swapchain);
 typedef uint32_t (*pfn_vk_acquire_next_image)(vk_device h_device, vk_swapchain swapchain, uint64_t timeout, vk_semaphore semaphore, vk_fence fence, uint32_t* p_index);
+typedef uint32_t (*pfn_vk_wait_for_device_idle)(vk_device h_device);
+typedef void     (*pfn_vk_destroy_device)(vk_device h_device, const void* reserved);
 
 #endif // VK_H

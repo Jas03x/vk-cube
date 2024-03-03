@@ -547,16 +547,12 @@ bool initialize_instance_function_pointers(void)
     status &= load_function_pointer(g_vk_ctx.h_instance, "vkGetPhysicalDeviceFeatures", (void**) &g_vk_ctx.get_physical_device_features);
     status &= load_function_pointer(g_vk_ctx.h_instance, "vkGetPhysicalDeviceQueueFamilyProperties", (void**) &g_vk_ctx.get_physical_queue_group_properties);
     status &= load_function_pointer(g_vk_ctx.h_instance, "vkCreateDevice", (void**) &g_vk_ctx.create_device);
-    status &= load_function_pointer(g_vk_ctx.h_instance, "vkDestroyDevice", (void**) &g_vk_ctx.destroy_device);
-    status &= load_function_pointer(g_vk_ctx.h_instance, "vkDeviceWaitIdle", (void**) &g_vk_ctx.wait_for_device_idle);
     status &= load_function_pointer(g_vk_ctx.h_instance, "vkGetPhysicalDeviceSurfaceSupportKHR", (void**) &g_vk_ctx.get_physical_device_surface_support);
     status &= load_function_pointer(g_vk_ctx.h_instance, "vkEnumerateDeviceLayerProperties", (void**) &g_vk_ctx.enumerate_device_layers);
     status &= load_function_pointer(g_vk_ctx.h_instance, "vkEnumerateDeviceExtensionProperties", (void**) &g_vk_ctx.enumerate_device_extensions);
-    status &= load_function_pointer(g_vk_ctx.h_instance, "vkCreateSemaphore", (void**) &g_vk_ctx.create_semaphore);
     status &= load_function_pointer(g_vk_ctx.h_instance, "vkGetPhysicalDeviceSurfaceCapabilitiesKHR", (void**) &g_vk_ctx.get_physical_device_surface_capabilities);
     status &= load_function_pointer(g_vk_ctx.h_instance, "vkGetPhysicalDeviceSurfacePresentModesKHR", (void**) &g_vk_ctx.get_physical_device_surface_present_modes);
     status &= load_function_pointer(g_vk_ctx.h_instance, "vkGetPhysicalDeviceSurfaceFormatsKHR", (void**) &g_vk_ctx.get_physical_device_surface_formats);
-    status &= load_function_pointer(g_vk_ctx.h_instance, "vkCreateSwapchainKHR", (void**) &g_vk_ctx.create_swapchain);
 
 #ifdef DEBUG
     status &= load_function_pointer(g_vk_ctx.h_instance, "vkCreateDebugReportCallbackEXT", (void**) &g_vk_ctx.register_debug_callback);
@@ -572,7 +568,11 @@ bool initialize_device_function_pointers(void)
 
     status &= load_function_pointer(g_vk_ctx.h_instance, "vkGetDeviceProcAddr", (void**) &g_vk_ctx.get_device_proc_addr);
 
+    status &= load_device_function_pointer(g_vk_ctx.h_device, "vkCreateSemaphore", (void**) &g_vk_ctx.create_semaphore);
+    status &= load_device_function_pointer(g_vk_ctx.h_device, "vkCreateSwapchainKHR", (void**) &g_vk_ctx.create_swapchain);
     status &= load_device_function_pointer(g_vk_ctx.h_device, "vkAcquireNextImageKHR", (void**) &g_vk_ctx.acquire_next_image);
+    status &= load_device_function_pointer(g_vk_ctx.h_device, "vkDeviceWaitIdle", (void**) &g_vk_ctx.wait_for_device_idle);
+    status &= load_device_function_pointer(g_vk_ctx.h_device, "vkDestroyDevice", (void**) &g_vk_ctx.destroy_device);
 
     return status;
 }
