@@ -8,6 +8,7 @@ struct vk_context
     vk_instance                                      h_instance;
     vk_device                                        h_device; // logical device
     vk_physical_device                               h_physical_device;
+    vk_swapchain                                     h_swapchain;
 
     uint32_t                                         graphics_queue_family;
 
@@ -37,6 +38,7 @@ struct vk_context
     pfn_vk_get_physical_device_surface_capabilities  get_physical_device_surface_capabilities;
     pfn_vk_get_physical_device_surface_present_modes get_physical_device_surface_present_modes;
     pfn_vk_get_physical_device_surface_formats       get_physical_device_surface_formats;
+    pfn_vk_create_swapchain                          create_swapchain;
 
     // device level functions
     pfn_vk_enumerate_device_layers                   enumerate_device_layers;

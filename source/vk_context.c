@@ -286,6 +286,8 @@ bool initialize_swapchain(vk_surface surface)
     uint32_t supported = vk_false;
     uint32_t format_count = 0;
     uint32_t present_mode_count = 0;
+    uint32_t format_index = INVALID_INDEX;
+    
     uint32_t* present_mode_array = NULL;
     struct vk_surface_format* format_array = NULL;
 
@@ -373,8 +375,6 @@ bool initialize_swapchain(vk_surface surface)
 
     if(status)
     {
-        uint32_t format_index = 0;
-
         for(uint32_t i = 0; i < format_count; i++)
         {
             if(format_array[i].format == vk_format__unorm_r8g8b8a8)
@@ -436,7 +436,35 @@ bool initialize_swapchain(vk_surface surface)
         }
     }
 
+    if(status)
+    {
+        struct vk_swapchain_create_params params;
+        params.s_type = vk_swapchain_create_info;
+        params.p_next = NULL;
+        params.flags = 0;
+        params.surface = surface;
+        params.minimum_image_count = 2;
+        params.surface_format = format_array[format_index].format;
+        params.surface_colorspace = format_array[format_index].colorspace;
+        params.surface_extent.width = surface_capabilities.current_extent.width;
+        params.surface_extent.height = surface_capabilities.current_extent.height;
+        params.image_array_layers = 1;
+        params.image_usage_flags = 0;
+        params.image_sharing_mode = vk_sharing_mode__exclusive;
+        params.queue_family_index_count = 0;
+        params.queue_family_index_array = NULL;
+        params.pre_transform = vk_transform__identity;
+        params.composite_alpha = vk_composite_alpha_flag__opaque;
+        params.present_mode = vk_present_mode__fifo;
+        params.clipped = vk_true;
+        params.old_swapchain = NULL;
 
+        if(g_vk_ctx.create_swapchain(g_vk_ctx.h_device, &params, NULL, &g_vk_ctx.h_swapchain) != vk_success)
+        {
+            printf("Could not create swapchain\n");
+            status = false;
+        }
+    }
 
     if(format_array != NULL)
     {
@@ -506,6 +534,7 @@ bool initialize_instance_function_pointers(void)
     status &= load_function_pointer(g_vk_ctx.h_instance, "vkGetPhysicalDeviceSurfaceCapabilitiesKHR", (void**) &g_vk_ctx.get_physical_device_surface_capabilities);
     status &= load_function_pointer(g_vk_ctx.h_instance, "vkGetPhysicalDeviceSurfacePresentModesKHR", (void**) &g_vk_ctx.get_physical_device_surface_present_modes);
     status &= load_function_pointer(g_vk_ctx.h_instance, "vkGetPhysicalDeviceSurfaceFormatsKHR", (void**) &g_vk_ctx.get_physical_device_surface_formats);
+    status &= load_function_pointer(g_vk_ctx.h_instance, "vkCreateSwapchainKHR", (void**) &g_vk_ctx.create_swapchain);
 
 #ifdef DEBUG
     status &= load_function_pointer(g_vk_ctx.h_instance, "vkCreateDebugReportCallbackEXT", (void**) &g_vk_ctx.register_debug_callback);
@@ -1032,14 +1061,14 @@ bool initialize_device(void)
             queue_count = MAX_QUEUES;
         }
 
-        struct vk_queue_create_params queue_params = { 0 };
+        struct vk_queue_create_params queue_params;
         queue_params.s_type = vk_queue_create_info;
         queue_params.p_next = NULL;
         queue_params.queue_group_index = g_vk_ctx.graphics_queue_family;
         queue_params.queue_count = queue_count;
         queue_params.p_queue_priorities = p_queue_priorities;
 
-        struct vk_device_create_params device_params = { 0 };
+        struct vk_device_create_params device_params;
         device_params.s_type = vk_device_create_info;
         device_params.p_next = NULL;
         device_params.queue_info_count = 1;

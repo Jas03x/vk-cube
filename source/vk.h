@@ -14,6 +14,7 @@ typedef void* vk_device;
 typedef void* vk_debug_callback;
 typedef void* vk_semaphore;
 typedef void* vk_surface;
+typedef void* vk_swapchain;
 
 enum
 {
@@ -32,6 +33,7 @@ enum vk_structure_type
     vk_instance_info      = 1,
     vk_queue_create_info  = 2,
     vk_device_create_info = 3,
+    vk_swapchain_create_info = 1000001000,
     vk_structure_type_debug_report_callback_info = 1000011000
 };
 
@@ -394,6 +396,19 @@ struct vk_semaphore_create_params
     uint32_t                             flags;
 };
 
+enum vk_transform
+{
+    vk_transform__identity = 1
+};
+
+enum vk_composite_alpha_flags
+{
+    vk_composite_alpha_flag__opaque = 1,
+    vk_composite_alpha_flag__pre_multiplied = 2,
+    vk_composite_alpha_flag__post_multiplied = 4,
+    vk_composite_alpha_flag__inherit = 8
+};
+
 struct vk_surface_capabilities
 {
     uint32_t                             min_image_count;
@@ -445,6 +460,38 @@ enum vk_format
     vk_format__unorm_r8g8b8a8 = 37 // unsigned normalized 8-bit rgba packed into a uint32_t
 };
 
+enum vk_sharing_mode
+{
+    vk_sharing_mode__exclusive  = 0,
+    vk_sharing_mode__concurrent = 1
+};
+
+struct vk_swapchain_create_params
+{
+    uint32_t                             s_type;
+    const void*                          p_next;
+    uint32_t                             flags;
+    vk_surface                           surface;
+    uint32_t                             minimum_image_count;
+    uint32_t                             surface_format;
+    uint32_t                             surface_colorspace;
+    struct
+    {
+        uint32_t                         width;
+        uint32_t                         height;
+    } surface_extent;
+    uint32_t                             image_array_layers;
+    uint32_t                             image_usage_flags;
+    uint32_t                             image_sharing_mode;
+    uint32_t                             queue_family_index_count;
+    const uint32_t*                      queue_family_index_array;
+    uint32_t                             pre_transform;
+    uint32_t                             composite_alpha;
+    uint32_t                             present_mode;
+    uint32_t                             clipped;
+    vk_swapchain                         old_swapchain;
+};
+
 typedef void*    (*pfn_vk_get_instance_proc_addr)(vk_instance h_instance, const char* p_name);
 typedef void*    (*pfn_vk_get_device_proc_addr)(vk_device h_device, const char* p_name);
 
@@ -460,7 +507,7 @@ typedef uint32_t (*pfn_vk_enumerate_physical_devices)(vk_instance h_instance, ui
 typedef void     (*pfn_vk_get_physical_device_properties)(vk_physical_device h_device, struct vk_physical_device_properties* p_properties);
 typedef void     (*pfn_vk_get_physical_device_features)(vk_physical_device h_device, struct vk_physical_device_features* p_features);
 typedef void     (*pfn_vk_get_physical_queue_group_properties)(vk_physical_device h_device, uint32_t* p_count, struct vk_queue_group_properties* p_properties);
-typedef uint32_t (*pfn_vk_create_device)(vk_physical_device h_physical_device, struct vk_device_create_params* p_info, void* reserved, vk_device* p_device);
+typedef uint32_t (*pfn_vk_create_device)(vk_physical_device h_physical_device, struct vk_device_create_params* params, void* reserved, vk_device* p_device);
 typedef uint32_t (*pfn_vk_register_debug_callback)(vk_instance h_instance, struct vk_debug_callback_info* p_info, void* reserved, vk_debug_callback* p_callback);
 typedef void     (*pfn_vk_unregister_debug_callback)(vk_instance instance, vk_debug_callback* callback, const void* reserved);
 typedef uint32_t (*pfn_vk_get_physical_device_surface_support)(vk_physical_device h_device, uint32_t queue_family, vk_surface surface, uint32_t* p_supported);
@@ -468,10 +515,11 @@ typedef uint32_t (*pfn_vk_wait_for_device_idle)(vk_device h_device);
 typedef void     (*pfn_vk_destroy_device)(vk_device h_device, const void* reserved);
 typedef uint32_t (*pfn_vk_enumerate_device_layers)(vk_physical_device h_device, uint32_t* p_count, struct vk_layer* p_layers);
 typedef uint32_t (*pfn_vk_enumerate_device_extensions)(vk_physical_device h_device, const char* p_layer_name, uint32_t* p_count, struct vk_extension* p_extensions);
-typedef uint32_t (*pfn_vk_create_semaphore)(vk_device h_device, struct vk_semaphore_create_params* p_info);
+typedef uint32_t (*pfn_vk_create_semaphore)(vk_device h_device, struct vk_semaphore_create_params* params, const void* reserved, vk_semaphore* p_semaphore);
 typedef uint32_t (*pfn_vk_get_physical_device_surface_capabilities)(vk_physical_device h_device, vk_surface surface, struct vk_surface_capabilities* p_capabilities);
 typedef uint32_t (*pfn_vk_get_physical_device_surface_present_modes)(vk_physical_device h_device, vk_surface surface, uint32_t* p_present_mode_count, uint32_t* p_present_mode_array);
 typedef uint32_t (*pfn_vk_get_physical_device_surface_formats)(vk_physical_device h_device, vk_surface surface, uint32_t* p_format_count, struct vk_surface_format* p_format_array);
+typedef uint32_t (*pfn_vk_create_swapchain)(vk_device h_device, const struct vk_swapchain_create_params* params, const void* reserved, vk_swapchain* p_swapchain);
 
 // device level functions
 
