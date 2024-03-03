@@ -137,7 +137,7 @@ bool run(void)
 
     while(status)
     {
-        while(SDL_PollEvent(&event) != 0)
+        while(status && (SDL_PollEvent(&event) != 0))
         {
             switch(event.type)
             {
@@ -155,7 +155,12 @@ bool run(void)
 
         if(!exit)
         {
-            render();
+            status = render();
+
+            if(status)
+            {
+                status = present();
+            }
         }
         else
         {

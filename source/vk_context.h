@@ -39,11 +39,12 @@ struct vk_context
     pfn_vk_get_physical_device_surface_present_modes get_physical_device_surface_present_modes;
     pfn_vk_get_physical_device_surface_formats       get_physical_device_surface_formats;
     pfn_vk_create_swapchain                          create_swapchain;
-
-    // device level functions
     pfn_vk_enumerate_device_layers                   enumerate_device_layers;
     pfn_vk_enumerate_device_extensions               enumerate_device_extensions;
     pfn_vk_create_semaphore                          create_semaphore;
+
+    // device level functions
+    pfn_vk_acquire_next_image                        acquire_next_image;
 };
 
 extern struct vk_context* vk_ctx;
@@ -52,5 +53,7 @@ bool initialize_vulkan_context(pfn_vk_get_instance_proc_addr pfn_get_instance_pr
 void uninitialize_vulkan_context(void);
 
 bool initialize_swapchain(vk_surface surface);
+
+bool present(void);
 
 #endif // VK_INTERFACE_H

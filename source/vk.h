@@ -8,6 +8,7 @@
 
 #define VK_VERSION(variant, major, minor, patch) ((((variant) & 0x3) << 29) | (((major) & 0x7F) << 22) | (((minor) & 0x3FF) << 12) | ((patch) & 0xFFF))
 
+typedef void* vk_fence;
 typedef void* vk_instance;
 typedef void* vk_physical_device;
 typedef void* vk_device;
@@ -522,5 +523,6 @@ typedef uint32_t (*pfn_vk_get_physical_device_surface_formats)(vk_physical_devic
 typedef uint32_t (*pfn_vk_create_swapchain)(vk_device h_device, const struct vk_swapchain_create_params* params, const void* reserved, vk_swapchain* p_swapchain);
 
 // device level functions
+typedef uint32_t (*pfn_vk_acquire_next_image)(vk_device h_device, vk_swapchain swapchain, uint64_t timeout, vk_semaphore semaphore, vk_fence fence, uint32_t* p_index);
 
 #endif // VK_H

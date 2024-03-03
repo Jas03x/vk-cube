@@ -503,6 +503,28 @@ bool load_function_pointer(vk_instance h_instance, const char* p_name, void** p_
     return status;
 }
 
+bool load_device_function_pointer(vk_device h_device, const char* p_name, void** p_pfn)
+{
+    bool status = true;
+
+    if(p_pfn != NULL)
+    {
+        (*p_pfn) = g_vk_ctx.get_device_proc_addr(h_device, p_name);
+
+        if((*p_pfn) == NULL)
+        {
+            status = false;
+            printf("Failed to load device function pointer %s\n", p_name);
+        }
+    }
+    else
+    {
+        status = false;
+    }
+
+    return status;
+}
+
 bool initialize_global_function_pointers(void)
 {
     bool status = true;
@@ -549,6 +571,8 @@ bool initialize_device_function_pointers(void)
     bool status = true;
 
     status &= load_function_pointer(g_vk_ctx.h_instance, "vkGetDeviceProcAddr", (void**) &g_vk_ctx.get_device_proc_addr);
+
+    status &= load_device_function_pointer(g_vk_ctx.h_device, "vkAcquireNextImageKHR", (void**) &g_vk_ctx.acquire_next_image);
 
     return status;
 }
@@ -1095,6 +1119,15 @@ bool initialize_device(void)
 
     free_gpu_info(gpu_count, p_gpu_info);
     p_gpu_info = NULL;
+
+    return status;
+}
+
+bool present(void)
+{
+    bool status = true;
+
+
 
     return status;
 }
