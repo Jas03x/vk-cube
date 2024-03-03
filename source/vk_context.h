@@ -36,6 +36,7 @@ struct vk_context
     pfn_vk_get_physical_device_surface_support       get_physical_device_surface_support;
     pfn_vk_get_physical_device_surface_capabilities  get_physical_device_surface_capabilities;
     pfn_vk_get_physical_device_surface_present_modes get_physical_device_surface_present_modes;
+    pfn_vk_get_physical_device_surface_formats       get_physical_device_surface_formats;
 
     // device level functions
     pfn_vk_enumerate_device_layers                   enumerate_device_layers;

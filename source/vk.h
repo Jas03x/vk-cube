@@ -434,6 +434,17 @@ enum vk_present_mode
     vk_present_mode__shared_continuous_refresh = 1000111001
 };
 
+struct vk_surface_format
+{
+    uint32_t                             format;
+    uint32_t                             colorspace;
+};
+
+enum vk_format
+{
+    vk_format__unorm_r8g8b8a8 = 37 // unsigned normalized 8-bit rgba packed into a uint32_t
+};
+
 typedef void*    (*pfn_vk_get_instance_proc_addr)(vk_instance h_instance, const char* p_name);
 typedef void*    (*pfn_vk_get_device_proc_addr)(vk_device h_device, const char* p_name);
 
@@ -460,6 +471,7 @@ typedef uint32_t (*pfn_vk_enumerate_device_extensions)(vk_physical_device h_devi
 typedef uint32_t (*pfn_vk_create_semaphore)(vk_device h_device, struct vk_semaphore_creation_info* p_info);
 typedef uint32_t (*pfn_vk_get_physical_device_surface_capabilities)(vk_physical_device h_device, vk_surface surface, struct vk_surface_capabilities* p_capabilities);
 typedef uint32_t (*pfn_vk_get_physical_device_surface_present_modes)(vk_physical_device h_device, vk_surface surface, uint32_t* p_present_mode_count, uint32_t* p_present_mode_array);
+typedef uint32_t (*pfn_vk_get_physical_device_surface_formats)(vk_physical_device h_device, vk_surface surface, uint32_t* p_format_count, struct vk_surface_format* p_format_array);
 
 // device level functions
 

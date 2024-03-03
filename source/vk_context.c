@@ -284,8 +284,10 @@ bool initialize_swapchain(vk_surface surface)
     bool status = true;
 
     uint32_t supported = vk_false;
+    uint32_t format_count = 0;
     uint32_t present_mode_count = 0;
     uint32_t* present_mode_array = NULL;
+    struct vk_surface_format* format_array = NULL;
 
     struct vk_surface_capabilities surface_capabilities = { 0 };
 
@@ -324,6 +326,15 @@ bool initialize_swapchain(vk_surface surface)
 
     if(status)
     {
+        if(g_vk_ctx.get_physical_device_surface_formats(g_vk_ctx.h_physical_device, surface, &format_count, NULL) != vk_success)
+        {
+            printf("Count not get format count\n");
+            status = false;
+        }
+    }
+
+    if(status)
+    {
         present_mode_array = (uint32_t*) malloc(present_mode_count * sizeof(uint32_t));
         if(present_mode_array == NULL)
         {
@@ -334,9 +345,48 @@ bool initialize_swapchain(vk_surface surface)
 
     if(status)
     {
+        format_array = (struct vk_surface_format*) malloc(format_count * sizeof(struct vk_surface_format));
+        if(format_array == NULL)
+        {
+            printf("Failed to allocate memory for format array\n");
+            status = false;
+        }
+    }
+
+    if(status)
+    {
         if(g_vk_ctx.get_physical_device_surface_present_modes(g_vk_ctx.h_physical_device, surface, &present_mode_count, present_mode_array) != vk_success)
         {
-            printf("Could not get present mode count\n");
+            printf("Could not get present mode array\n");
+            status = false;
+        }
+    }
+
+    if(status)
+    {
+        if(g_vk_ctx.get_physical_device_surface_formats(g_vk_ctx.h_physical_device, surface, &format_count, format_array) != vk_success)
+        {
+            printf("Could not get format array");
+            status = false;
+        }
+    }
+
+    if(status)
+    {
+        uint32_t format_index = 0;
+
+        for(uint32_t i = 0; i < format_count; i++)
+        {
+            if(format_array[i].format == vk_format__unorm_r8g8b8a8)
+            {
+                format_index = i;
+                break;
+            }
+        }
+
+        if(format_index >= format_count)
+        {
+            printf("Could not find supported format\n");
             status = false;
         }
     }
@@ -384,6 +434,20 @@ bool initialize_swapchain(vk_surface surface)
             }
             printf("\t%s\n", mode);
         }
+    }
+
+    
+
+    if(format_array != NULL)
+    {
+        free(format_array);
+        format_array = NULL;
+    }
+
+    if(present_mode_array != NULL)
+    {
+        free(present_mode_array);
+        present_mode_array = NULL;
     }
 
     return status;
@@ -441,6 +505,7 @@ bool initialize_instance_function_pointers(void)
     status &= load_function_pointer(g_vk_ctx.h_instance, "vkCreateSemaphore", (void**) &g_vk_ctx.create_semaphore);
     status &= load_function_pointer(g_vk_ctx.h_instance, "vkGetPhysicalDeviceSurfaceCapabilitiesKHR", (void**) &g_vk_ctx.get_physical_device_surface_capabilities);
     status &= load_function_pointer(g_vk_ctx.h_instance, "vkGetPhysicalDeviceSurfacePresentModesKHR", (void**) &g_vk_ctx.get_physical_device_surface_present_modes);
+    status &= load_function_pointer(g_vk_ctx.h_instance, "vkGetPhysicalDeviceSurfaceFormatsKHR", (void**) &g_vk_ctx.get_physical_device_surface_formats);
 
 #ifdef DEBUG
     status &= load_function_pointer(g_vk_ctx.h_instance, "vkCreateDebugReportCallbackEXT", (void**) &g_vk_ctx.register_debug_callback);
