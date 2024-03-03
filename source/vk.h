@@ -363,7 +363,7 @@ struct vk_physical_device_features
     uint32_t                             inherited_queries;
 };
 
-struct vk_queue_creation_info
+struct vk_queue_create_params
 {
     uint32_t                             s_type;
     const void*                          p_next;
@@ -373,13 +373,13 @@ struct vk_queue_creation_info
     const float*                         p_queue_priorities;
 };
 
-struct vk_device_creation_info
+struct vk_device_create_params
 {
     uint32_t                             s_type;
     const void*                          p_next;
     uint32_t                             flags;
     uint32_t                             queue_info_count;
-    const struct vk_queue_creation_info* p_queue_info_array;
+    const struct vk_queue_create_params* p_queue_info_array;
     uint32_t                             layer_count; // deprecated and ignored
     const char* const*                   p_layers; // deprecated and ignored
     uint32_t                             extension_count;
@@ -387,7 +387,7 @@ struct vk_device_creation_info
     struct vk_device_features*           features;
 };
 
-struct vk_semaphore_creation_info
+struct vk_semaphore_create_params
 {
     uint32_t                             s_type;
     const void*                          p_next;
@@ -460,7 +460,7 @@ typedef uint32_t (*pfn_vk_enumerate_physical_devices)(vk_instance h_instance, ui
 typedef void     (*pfn_vk_get_physical_device_properties)(vk_physical_device h_device, struct vk_physical_device_properties* p_properties);
 typedef void     (*pfn_vk_get_physical_device_features)(vk_physical_device h_device, struct vk_physical_device_features* p_features);
 typedef void     (*pfn_vk_get_physical_queue_group_properties)(vk_physical_device h_device, uint32_t* p_count, struct vk_queue_group_properties* p_properties);
-typedef uint32_t (*pfn_vk_create_device)(vk_physical_device h_physical_device, struct vk_device_creation_info* p_info, void* reserved, vk_device* p_device);
+typedef uint32_t (*pfn_vk_create_device)(vk_physical_device h_physical_device, struct vk_device_create_params* p_info, void* reserved, vk_device* p_device);
 typedef uint32_t (*pfn_vk_register_debug_callback)(vk_instance h_instance, struct vk_debug_callback_info* p_info, void* reserved, vk_debug_callback* p_callback);
 typedef void     (*pfn_vk_unregister_debug_callback)(vk_instance instance, vk_debug_callback* callback, const void* reserved);
 typedef uint32_t (*pfn_vk_get_physical_device_surface_support)(vk_physical_device h_device, uint32_t queue_family, vk_surface surface, uint32_t* p_supported);
@@ -468,7 +468,7 @@ typedef uint32_t (*pfn_vk_wait_for_device_idle)(vk_device h_device);
 typedef void     (*pfn_vk_destroy_device)(vk_device h_device, const void* reserved);
 typedef uint32_t (*pfn_vk_enumerate_device_layers)(vk_physical_device h_device, uint32_t* p_count, struct vk_layer* p_layers);
 typedef uint32_t (*pfn_vk_enumerate_device_extensions)(vk_physical_device h_device, const char* p_layer_name, uint32_t* p_count, struct vk_extension* p_extensions);
-typedef uint32_t (*pfn_vk_create_semaphore)(vk_device h_device, struct vk_semaphore_creation_info* p_info);
+typedef uint32_t (*pfn_vk_create_semaphore)(vk_device h_device, struct vk_semaphore_create_params* p_info);
 typedef uint32_t (*pfn_vk_get_physical_device_surface_capabilities)(vk_physical_device h_device, vk_surface surface, struct vk_surface_capabilities* p_capabilities);
 typedef uint32_t (*pfn_vk_get_physical_device_surface_present_modes)(vk_physical_device h_device, vk_surface surface, uint32_t* p_present_mode_count, uint32_t* p_present_mode_array);
 typedef uint32_t (*pfn_vk_get_physical_device_surface_formats)(vk_physical_device h_device, vk_surface surface, uint32_t* p_format_count, struct vk_surface_format* p_format_array);

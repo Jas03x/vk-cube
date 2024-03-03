@@ -421,7 +421,7 @@ bool initialize_swapchain(vk_surface surface)
                     mode = "FIFO";
                     break;
                 case vk_present_mode__fifo_relaxed:
-                    mode = "FIFO_Relaxed";
+                    mode = "FIFO relaxed";
                     break;
                 case vk_present_mode__shared_demand_refresh:
                     mode = "Demand refresh";
@@ -436,7 +436,7 @@ bool initialize_swapchain(vk_surface surface)
         }
     }
 
-    
+
 
     if(format_array != NULL)
     {
@@ -1032,25 +1032,25 @@ bool initialize_device(void)
             queue_count = MAX_QUEUES;
         }
 
-        struct vk_queue_creation_info queue_info = { 0 };
-        queue_info.s_type = vk_queue_create_info;
-        queue_info.p_next = NULL;
-        queue_info.queue_group_index = g_vk_ctx.graphics_queue_family;
-        queue_info.queue_count = queue_count;
-        queue_info.p_queue_priorities = p_queue_priorities;
+        struct vk_queue_create_params queue_params = { 0 };
+        queue_params.s_type = vk_queue_create_info;
+        queue_params.p_next = NULL;
+        queue_params.queue_group_index = g_vk_ctx.graphics_queue_family;
+        queue_params.queue_count = queue_count;
+        queue_params.p_queue_priorities = p_queue_priorities;
 
-        struct vk_device_creation_info device_info = { 0 };
-        device_info.s_type = vk_device_create_info;
-        device_info.p_next = NULL;
-        device_info.queue_info_count = 1;
-        device_info.p_queue_info_array = &queue_info;
-        device_info.layer_count = 0;
-        device_info.p_layers = NULL;
-        device_info.extension_count = num_extensions;
-        device_info.p_extensions = extensions;
-        device_info.features = NULL;
+        struct vk_device_create_params device_params = { 0 };
+        device_params.s_type = vk_device_create_info;
+        device_params.p_next = NULL;
+        device_params.queue_info_count = 1;
+        device_params.p_queue_info_array = &queue_params;
+        device_params.layer_count = 0;
+        device_params.p_layers = NULL;
+        device_params.extension_count = num_extensions;
+        device_params.p_extensions = extensions;
+        device_params.features = NULL;
 
-        if(g_vk_ctx.create_device(g_vk_ctx.h_physical_device, &device_info, NULL, &g_vk_ctx.h_device) != vk_success)
+        if(g_vk_ctx.create_device(g_vk_ctx.h_physical_device, &device_params, NULL, &g_vk_ctx.h_device) != vk_success)
         {
             status = false;
             printf("Failed to create vulkan device\n");
