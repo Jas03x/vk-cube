@@ -616,7 +616,7 @@ typedef void     (*pfn_vk_destroy_swapchain)(vk_device h_device, vk_swapchain sw
 typedef uint32_t (*pfn_vk_acquire_next_image)(vk_device h_device, vk_swapchain swapchain, uint64_t timeout, vk_semaphore semaphore, vk_fence fence, uint32_t* p_index);
 typedef uint32_t (*pfn_vk_create_command_pool)(vk_device h_device, const struct vk_command_pool_create_params* params, const void* reserved, vk_command_pool* p_command_pool);
 typedef void     (*pfn_vk_destroy_command_pool)(vk_device h_device, vk_command_pool command_pool, const void* reserved);
-typedef uint32_t (*pfn_vk_allocate_command_buffers)(vk_device h_device, const struct vk_command_buffer_allocate_params* params, const void* reserved, vk_command_buffer* p_command_buffers);
+typedef uint32_t (*pfn_vk_allocate_command_buffers)(vk_device h_device, const struct vk_command_buffer_allocate_params* params, vk_command_buffer* p_command_buffers);
 typedef void     (*pfn_vk_free_command_buffers)(vk_device h_device, vk_command_pool command_pool, uint32_t command_buffer_count, const vk_command_buffer* p_command_buffers);
 typedef uint32_t (*pfn_vk_wait_for_device_idle)(vk_device h_device);
 typedef void     (*pfn_vk_destroy_device)(vk_device h_device, const void* reserved);

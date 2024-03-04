@@ -339,7 +339,7 @@ bool initialize_queues(void)
         params.level = command_buffer_level__primary;
         params.count = 1;
 
-        if(g_vk_ctx.allocate_command_buffers(g_vk_ctx.device, &params, NULL, &g_vk_ctx.command_buffer) != vk_success)
+        if(g_vk_ctx.allocate_command_buffers(g_vk_ctx.device, &params, &g_vk_ctx.command_buffer) != vk_success)
         {
             printf("Failed to create command buffer\n");
             status = false;

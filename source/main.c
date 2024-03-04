@@ -142,6 +142,10 @@ bool render(void)
         printf("Failed to begin command buffer\n");
         status = false;
     }
+    else
+    {
+        printf("SUCCESS\n");
+    }
 
     return status;
 }
