@@ -16,6 +16,7 @@ typedef void* vk_debug_callback;
 typedef void* vk_semaphore;
 typedef void* vk_surface;
 typedef void* vk_swapchain;
+typedef void* vk_command_pool;
 
 enum
 {
@@ -30,13 +31,14 @@ enum vk_result
 
 enum vk_structure_type
 {
-    vk_structure_type__application_info      = 0,
-    vk_structure_type__instance_info         = 1,
-    vk_structure_type__queue_create_info     = 2,
-    vk_structure_type__device_create_info    = 3,
-    vk_structure_type__fence_create_info     = 8,
-    vk_structure_type__semaphore_create_info = 9,
-    vk_structure_type__swapchain_create_info = 1000001000,
+    vk_structure_type__application_info           = 0,
+    vk_structure_type__instance_info              = 1,
+    vk_structure_type__queue_create_info          = 2,
+    vk_structure_type__device_create_info         = 3,
+    vk_structure_type__fence_create_info          = 8,
+    vk_structure_type__semaphore_create_info      = 9,
+    vk_structure_type__command_pool_create_info   = 39,
+    vk_structure_type__swapchain_create_info      = 1000001000,
     vk_structure_type__debug_report_callback_info = 1000011000
 };
 
@@ -406,10 +408,10 @@ enum vk_transform
 
 enum vk_composite_alpha_flags
 {
-    vk_composite_alpha_flag__opaque = 1,
-    vk_composite_alpha_flag__pre_multiplied = 2,
-    vk_composite_alpha_flag__post_multiplied = 4,
-    vk_composite_alpha_flag__inherit = 8
+    vk_composite_alpha_flag__opaque = 0x1,
+    vk_composite_alpha_flag__pre_multiplied = 0x2,
+    vk_composite_alpha_flag__post_multiplied = 0x4,
+    vk_composite_alpha_flag__inherit = 0x8
 };
 
 struct vk_surface_capabilities
@@ -495,6 +497,21 @@ struct vk_swapchain_create_params
     vk_swapchain                         old_swapchain;
 };
 
+enum vk_command_pool_flags
+{
+    vk_command_pool_flag__transient_bit = 0x1,
+    vk_command_pool_flag__reset_bit     = 0x2,
+    vk_command_pool_flag__protected_bit = 0x4
+};
+
+struct vk_command_pool_create_params
+{
+    uint32_t                             s_type;
+    const void*                          p_next;
+    uint32_t                             flags;
+    uint32_t                             queue_family_index;
+};
+
 typedef void*    (*pfn_vk_get_instance_proc_addr)(vk_instance h_instance, const char* p_name);
 typedef void*    (*pfn_vk_get_device_proc_addr)(vk_device h_device, const char* p_name);
 
@@ -524,6 +541,7 @@ typedef uint32_t (*pfn_vk_get_physical_device_surface_formats)(vk_physical_devic
 typedef uint32_t (*pfn_vk_create_semaphore)(vk_device h_device, struct vk_semaphore_create_params* params, const void* reserved, vk_semaphore* p_semaphore);
 typedef uint32_t (*pfn_vk_create_swapchain)(vk_device h_device, const struct vk_swapchain_create_params* params, const void* reserved, vk_swapchain* p_swapchain);
 typedef uint32_t (*pfn_vk_acquire_next_image)(vk_device h_device, vk_swapchain swapchain, uint64_t timeout, vk_semaphore semaphore, vk_fence fence, uint32_t* p_index);
+typedef uint32_t (*pfn_vk_create_command_pool)(vk_device h_device, struct vk_command_pool_create_params* params, const void* reserved, vk_command_pool* p_command_pool);
 typedef uint32_t (*pfn_vk_wait_for_device_idle)(vk_device h_device);
 typedef void     (*pfn_vk_destroy_device)(vk_device h_device, const void* reserved);
 

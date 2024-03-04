@@ -279,6 +279,25 @@ void uninitialize_vulkan_context(void)
     g_vk_ctx.instance = NULL;
 }
 
+bool initialize_queues(void)
+{
+    bool status = true;
+
+    struct vk_command_pool_create_params params;
+    params.s_type = vk_structure_type__command_pool_create_info;
+    params.p_next = NULL;
+    params.flags = vk_command_pool_flag__reset_bit;
+    params.queue_family_index = g_vk_ctx.graphics_queue_family;
+
+    if(g_vk_ctx.create_command_pool(g_vk_ctx.device, &params, NULL, &g_vk_ctx.command_pool) != vk_success)
+    {
+        printf("Failed to create command pool\n");
+        status = false;
+    }
+
+    return status;
+}
+
 bool initialize_swapchain(vk_surface surface)
 {
     bool status = true;
@@ -593,6 +612,7 @@ bool initialize_device_function_pointers(void)
     status &= load_device_function_pointer(g_vk_ctx.device, "vkAcquireNextImageKHR", (void**) &g_vk_ctx.acquire_next_image);
     status &= load_device_function_pointer(g_vk_ctx.device, "vkDeviceWaitIdle", (void**) &g_vk_ctx.wait_for_device_idle);
     status &= load_device_function_pointer(g_vk_ctx.device, "vkDestroyDevice", (void**) &g_vk_ctx.destroy_device);
+    status &= load_device_function_pointer(g_vk_ctx.device, "vkCreateCommandPool", (void**) &g_vk_ctx.create_command_pool);
 
     return status;
 }
