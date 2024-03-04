@@ -20,6 +20,8 @@ typedef void* vk_command_pool;
 typedef void* vk_command_buffer;
 typedef void* vk_render_pass;
 typedef void* vk_framebuffer;
+typedef void* vk_buffer;
+typedef void* vk_image;
 
 enum
 {
@@ -43,6 +45,7 @@ enum vk_structure_type
     vk_structure_type__command_pool_create_info     = 39,
     vk_structure_type__command_buffer_allocate_info = 40,
     vk_structure_type__command_buffer_begin_info    = 42,
+    vk_structure_type__image_memory_barrier         = 45,
     vk_structure_type__swapchain_create_info        = 1000001000,
     vk_structure_type__debug_report_callback_info   = 1000011000
 };
@@ -583,6 +586,136 @@ struct vk_command_buffer_begin_params
     struct vk_command_buffer_inheritance_info* p_inheritance_info;
 };
 
+enum vk_pipeline_stage_flags
+{
+    vk_pipeline_stage_flag__none = 0, // starting version 1.3
+    vk_pipeline_stage_flag__top_of_pipe = 0x00000001,
+    vk_pipeline_stage_flag__draw_indirect_bit = 0x00000002,
+    vk_pipeline_stage_flag__vertex_input = 0x00000004,
+    vk_pipeline_stage_flag__vertex_shader = 0x00000008,
+    vk_pipeline_stage_flag__tessellation_control_shader = 0x00000010,
+    vk_pipeline_stage_flag__tessellation_evaluation_shader = 0x00000020,
+    vk_pipeline_stage_flag__geometry_shader = 0x00000040,
+    vk_pipeline_stage_flag__fragment_shader = 0x00000080,
+    vk_pipeline_stage_flag__early_fragement_tests = 0x00000100,
+    vk_pipeline_stage_flag__late_fragment_tests = 0x00000200,
+    vk_pipeline_stage_flag__color_attachment_output = 0x00000400,
+    vk_pipeline_stage_flag__compute_shader = 0x00000800,
+    vk_pipeline_stage_flag__transfer = 0x00001000,
+    vk_pipeline_stage_flag__bottom_of_pipe = 0x00002000,
+    vk_pipeline_stage_flag__stage_host = 0x00004000,
+    vk_pipeline_stage_flag__all_graphics = 0x00008000,
+    vk_pipeline_stage_flag__all_commands = 0x00010000
+};
+
+enum vk_dependency_flags
+{
+    vk_dependency_flag__by_region     = 0x00000001,
+    vk_dependency_flag__view_local    = 0x00000002, // starting version 1.1
+    vk_dependency_flag__device_group  = 0x00000004, // starting version 1.1
+    vk_dependency_flag__feedback_loop = 0x00000008,
+    vk_dependency_flag__group_bit     = vk_dependency_flag__device_group
+};
+
+enum vk_access_flags
+{
+    vk_access_flag__none = 0, // starting version 1.3
+    vk_access_flag__indirect_command_read = 0x00000001,
+    vk_access_flag__index_read = 0x00000002,
+    vk_access_flag__vertex_attribute_read = 0x00000004,
+    vk_access_flag__uniform_read = 0x00000008,
+    vk_access_flag__input_attachment_read = 0x00000010,
+    vk_access_flag__shader_read = 0x00000020,
+    vk_access_flag__shader_write = 0x00000040,
+    vk_access_flag__color_attachment_read = 0x00000080,
+    vk_access_flag__color_attachment_write = 0x00000100,
+    vk_access_flag__depth_stencil_attachment_read = 0x00000200,
+    vk_access_flag__depth_stencil_attachment_write = 0x00000400,
+    vk_access_flag__transfer_read = 0x00000800,
+    vk_access_flag__transfer_write = 0x00001000,
+    vk_access_flag__host_read = 0x00002000,
+    vk_access_flag__host_write = 0x00004000,
+    vk_access_flag__memory_read = 0x00008000,
+    vk_access_flag__memory_write = 0x00010000
+};
+
+enum vk_image_layout
+{
+    vk_image_layout__undefined = 0,
+    vk_image_layout__general = 1,
+    vk_image_layout__color_attachment_optimal = 2,
+    vk_image_layout__depth_stencil_attachment_optimal = 3,
+    vk_image_layout__depth_stencil_read_only_optimal = 4,
+    vk_image_layout__shader_read_only_optimal = 5,
+    vk_image_layout__transfer_src_optimal = 6,
+    vk_image_layout__transfer_dst_optimal = 7,
+    vk_image_layout__preinitialized = 8,
+    vk_image_layout__present_src_khr = 1000001002
+};
+
+enum vk_image_aspect_flags
+{
+    vk_image_aspect__none = 0x00000000, // starting version 1.3
+    vk_image_aspect__color = 0x00000001,
+    vk_image_aspect__depth = 0x00000002,
+    vk_image_aspect__stencil = 0x00000004,
+    vk_image_aspect__metadata = 0x00000008,
+    vk_image_aspect__plane_0 = 0x00000010, // starting version 1.1
+    vk_image_aspect__plane_1 = 0x00000020, // starting version 1.1
+    vk_image_aspect__plane_2 = 0x00000040  // starting version 1.1
+};
+
+struct vk_memory_barrier
+{
+    uint32_t                                   s_type;
+    const void*                                p_next;
+    uint32_t                                   src_access_mask;
+    uint32_t                                   dst_access_mask;
+};
+
+struct vk_buffer_memory_barrier
+{
+    uint32_t                                   s_type;
+    const void*                                p_next;
+    uint32_t                                   src_access_mask;
+    uint32_t                                   dst_access_mask;
+    uint32_t                                   src_queue_family_index;
+    uint32_t                                   dst_queue_family_index;
+    vk_buffer                                  buffer;
+    uint64_t                                   offset;
+    uint64_t                                   size;
+};
+
+struct vk_image_subresource_range
+{
+    uint32_t                                   aspect_mask;
+    uint32_t                                   base_mip_level;
+    uint32_t                                   level_count;
+    uint32_t                                   base_array_layer;
+    uint32_t                                   layer_count;
+};
+
+struct vk_image_memory_barrier
+{
+    uint32_t                                   s_type;
+    const void*                                p_next;
+    uint32_t                                   src_access_mask;
+    uint32_t                                   dst_access_mask;
+    uint32_t                                   old_layout;
+    uint32_t                                   new_layout;
+    uint32_t                                   src_queue_family_index;
+    uint32_t                                   dst_queue_family_index;
+    vk_image                                   image;
+    struct vk_image_subresource_range          subresource_range;
+};
+
+struct vk_clear_color
+{
+    float    float32[4];
+    int32_t  int32[4];
+    uint32_t uint32[4];
+};
+
 typedef void*    (*pfn_vk_get_instance_proc_addr)(vk_instance h_instance, const char* p_name);
 typedef void*    (*pfn_vk_get_device_proc_addr)(vk_device h_device, const char* p_name);
 
@@ -620,6 +753,14 @@ typedef uint32_t (*pfn_vk_allocate_command_buffers)(vk_device h_device, const st
 typedef void     (*pfn_vk_free_command_buffers)(vk_device h_device, vk_command_pool command_pool, uint32_t command_buffer_count, const vk_command_buffer* p_command_buffers);
 typedef uint32_t (*pfn_vk_wait_for_device_idle)(vk_device h_device);
 typedef void     (*pfn_vk_destroy_device)(vk_device h_device, const void* reserved);
-typedef uint32_t (*pfn_vk_begin_command_buffer)(vk_command_buffer command_buffer, const struct vk_command_buffer_begin_params* params);
+typedef uint32_t (*pfn_vk_begin_command_buffer)(vk_command_buffer h_command_buffer, const struct vk_command_buffer_begin_params* params);
+typedef uint32_t (*pfn_vk_end_command_buffer)(vk_command_buffer h_command_buffer);
+typedef uint32_t (*pfn_vk_cmd_pipeline_barrier)(vk_command_buffer h_command_buffer, uint32_t src_stage_mask, uint32_t dst_stage_mask, uint32_t dependency_flags, 
+    uint32_t memory_barrier_count, const struct vk_memory_barrier* p_memory_barriers,
+    uint32_t buffer_memory_barrier_count, const struct vk_buffer_memory_barrier* p_buffer_memory_barriers,
+    uint32_t image_memory_barrier, const struct vk_image_memory_barrier* p_image_memory_barriers
+);
+typedef uint32_t (*pfn_vk_get_swapchain_images)(vk_device h_device, vk_swapchain swapchain, uint32_t* image_count, vk_image* p_images);
+typedef void     (*pfn_vk_cmd_clear_color_image)(vk_command_buffer h_command_buffer, vk_image image, uint32_t image_layout, struct vk_clear_color* p_color, uint32_t range_count, struct vk_image_subresource_range* ranges);
 
 #endif // VK_H

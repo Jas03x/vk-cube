@@ -356,6 +356,7 @@ bool initialize_swapchain(vk_surface surface)
     uint32_t supported = vk_false;
     uint32_t format_count = 0;
     uint32_t present_mode_count = 0;
+    uint32_t num_swapchain_images = 0;
     uint32_t format_index = INVALID_INDEX;
     
     uint32_t* present_mode_array = NULL;
@@ -556,6 +557,32 @@ bool initialize_swapchain(vk_surface surface)
         g_vk_ctx.create_semaphore(g_vk_ctx.device, &params, NULL, &g_vk_ctx.rendering_finished_semaphore);
     }
 
+    if(status)
+    {
+        if(g_vk_ctx.get_swapchain_images(g_vk_ctx.device, g_vk_ctx.swapchain, &num_swapchain_images, NULL) == vk_success)
+        {
+            if(num_swapchain_images != VK_NUM_SWAPCHAIN_BUFFERS)
+            {
+                printf("Unexpected number of swapchain images\n");
+                status = false;
+            }
+        }
+        else
+        {
+            printf("Could not get swapchain image count\n");
+            status = false;
+        }
+    }
+
+    if(status)
+    {
+        if(g_vk_ctx.get_swapchain_images(g_vk_ctx.device, g_vk_ctx.swapchain, &num_swapchain_images, g_vk_ctx.swapchain_images) != vk_success)
+        {
+            printf("Could not get swapchain images\n");
+            status = false;
+        }
+    }
+
     if(format_array != NULL)
     {
         free(format_array);
@@ -670,6 +697,10 @@ bool initialize_device_function_pointers(void)
     status &= load_device_function_pointer(g_vk_ctx.device, "vkAllocateCommandBuffers", (void**) &g_vk_ctx.allocate_command_buffers);
     status &= load_device_function_pointer(g_vk_ctx.device, "vkFreeCommandBuffers", (void**) &g_vk_ctx.free_command_buffers);
     status &= load_device_function_pointer(g_vk_ctx.device, "vkBeginCommandBuffer", (void**) &g_vk_ctx.begin_command_buffer);
+    status &= load_device_function_pointer(g_vk_ctx.device, "vkEndCommandBuffer", (void**) g_vk_ctx.end_command_buffer);
+    status &= load_device_function_pointer(g_vk_ctx.device, "vkCmdPipelineBarrier", (void**) &g_vk_ctx.cmd_pipeline_barrier);
+    status &= load_device_function_pointer(g_vk_ctx.device, "vkGetSwapchainImagesKHR", (void**) &g_vk_ctx.get_swapchain_images);
+    status &= load_device_function_pointer(g_vk_ctx.device, "vkCmdClearColorImage", (void**) &g_vk_ctx.cmd_clear_color_image);
 
     return status;
 }
@@ -1216,21 +1247,6 @@ bool initialize_device(void)
 
     free_gpu_info(gpu_count, p_gpu_info);
     p_gpu_info = NULL;
-
-    return status;
-}
-
-bool present(void)
-{
-    bool status = true;
-
-    uint32_t index = INVALID_INDEX;
-
-    if(g_vk_ctx.acquire_next_image(g_vk_ctx.device, g_vk_ctx.swapchain, UINT64_MAX, g_vk_ctx.image_available_semaphore, NULL, &index) != vk_success)
-    {
-        printf("Could not get next surface image\n");
-        status = false;
-    }
 
     return status;
 }

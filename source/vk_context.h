@@ -12,6 +12,7 @@ struct vk_context
     vk_physical_device                               physical_device;
     
     vk_swapchain                                     swapchain;
+    vk_image                                         swapchain_images[VK_NUM_SWAPCHAIN_BUFFERS];
 
     vk_command_pool                                  command_pool;
     vk_command_buffer                                command_buffer;
@@ -60,7 +61,11 @@ struct vk_context
     pfn_vk_acquire_next_image                        acquire_next_image;
     pfn_vk_wait_for_device_idle                      wait_for_device_idle;
     pfn_vk_destroy_device                            destroy_device;
+    pfn_vk_get_swapchain_images                      get_swapchain_images;
     pfn_vk_begin_command_buffer                      begin_command_buffer;
+    pfn_vk_end_command_buffer                        end_command_buffer;
+    pfn_vk_cmd_pipeline_barrier                      cmd_pipeline_barrier;
+    pfn_vk_cmd_clear_color_image                     cmd_clear_color_image;
 };
 
 extern struct vk_context* vk_ctx;
@@ -70,7 +75,5 @@ void uninitialize_vulkan_context(void);
 
 bool initialize_queues(void);
 bool initialize_swapchain(vk_surface surface);
-
-bool present(void);
 
 #endif // VK_INTERFACE_H

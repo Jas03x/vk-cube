@@ -131,20 +131,107 @@ bool render(void)
 {
     bool status = true;
 
-    struct vk_command_buffer_begin_params params;
-    params.s_type = vk_structure_type__command_buffer_begin_info;
-    params.p_next = NULL;
-    params.usage_flags = vk_command_buffer_usage_flag__one_time_submit;
-    params.p_inheritance_info = NULL;
+    uint32_t swapchain_index = 0;
 
-    if(vk_ctx->begin_command_buffer(vk_ctx->command_buffer, &params) != vk_success)
+    if(status)
     {
-        printf("Failed to begin command buffer\n");
-        status = false;
+        if(vk_ctx->acquire_next_image(vk_ctx->device, vk_ctx->swapchain, UINT64_MAX, vk_ctx->image_available_semaphore, NULL, &swapchain_index) != vk_success)
+        {
+            printf("Could not get next surface image\n");
+            status = false;
+        }
     }
-    else
+
+    if(status)
     {
-        printf("SUCCESS\n");
+        struct vk_command_buffer_begin_params params;
+        params.s_type = vk_structure_type__command_buffer_begin_info;
+        params.p_next = NULL;
+        params.usage_flags = vk_command_buffer_usage_flag__one_time_submit;
+        params.p_inheritance_info = NULL;
+
+        if(vk_ctx->begin_command_buffer(vk_ctx->command_buffer, &params) != vk_success)
+        {
+            printf("Failed to begin command buffer\n");
+            status = false;
+        }
+    }
+
+    if(status)
+    {
+        struct vk_image_memory_barrier barrier;
+        barrier.s_type = vk_structure_type__image_memory_barrier;
+        barrier.p_next = NULL;
+        barrier.src_access_mask = vk_access_flag__memory_read;
+        barrier.dst_access_mask = vk_access_flag__transfer_write;
+        barrier.old_layout = vk_image_layout__undefined;
+        barrier.new_layout = vk_image_layout__transfer_dst_optimal;
+        barrier.src_queue_family_index = vk_ctx->graphics_queue_family;
+        barrier.dst_queue_family_index = vk_ctx->graphics_queue_family;
+        barrier.image = vk_ctx->swapchain_images[swapchain_index];
+        barrier.subresource_range.aspect_mask = vk_image_aspect__color;
+        barrier.subresource_range.base_mip_level = 0;
+        barrier.subresource_range.level_count = 1;
+        barrier.subresource_range.base_array_layer = 0,
+        barrier.subresource_range.layer_count = 1;
+
+        if(vk_ctx->cmd_pipeline_barrier(vk_ctx->command_buffer, vk_pipeline_stage_flag__transfer, vk_pipeline_stage_flag__transfer, 0, 0, NULL, 0, NULL, 1, &barrier) != vk_success)
+        {
+            printf("Failed to insert barrier command\n");
+            status = false;
+        }
+    }
+
+    if(status)
+    {
+        struct vk_clear_color color;
+        color.float32[0] = 0.0f;
+        color.float32[1] = 0.0f;
+        color.float32[2] = 1.0f;
+        color.float32[3] = 0.0f;
+
+        struct vk_image_subresource_range subresource_range;
+        subresource_range.aspect_mask = vk_image_aspect__color;
+        subresource_range.base_mip_level = 0;
+        subresource_range.level_count = 1;
+        subresource_range.base_array_layer = 0,
+        subresource_range.layer_count = 1;
+
+        vk_ctx->cmd_clear_color_image(vk_ctx->command_buffer, vk_ctx->swapchain_images[swapchain_index], vk_image_layout__transfer_dst_optimal, &color, 1, &subresource_range);
+    }
+
+    if(status)
+    {
+        struct vk_image_memory_barrier barrier;
+        barrier.s_type = vk_structure_type__image_memory_barrier;
+        barrier.p_next = NULL;
+        barrier.src_access_mask = vk_access_flag__transfer_write;
+        barrier.dst_access_mask = vk_access_flag__memory_read;
+        barrier.old_layout = vk_image_layout__transfer_dst_optimal;
+        barrier.new_layout = vk_image_layout__present_src_khr;
+        barrier.src_queue_family_index = vk_ctx->graphics_queue_family;
+        barrier.dst_queue_family_index = vk_ctx->graphics_queue_family;
+        barrier.image = vk_ctx->swapchain_images[swapchain_index];
+        barrier.subresource_range.aspect_mask = vk_image_aspect__color;
+        barrier.subresource_range.base_mip_level = 0;
+        barrier.subresource_range.level_count = 1;
+        barrier.subresource_range.base_array_layer = 0,
+        barrier.subresource_range.layer_count = 1;
+
+        if(vk_ctx->cmd_pipeline_barrier(vk_ctx->command_buffer, vk_pipeline_stage_flag__transfer, vk_pipeline_stage_flag__transfer, 0, 0, NULL, 0, NULL, 1, &barrier) != vk_success)
+        {
+            printf("Failed to insert barrier command\n");
+            status = false;
+        }
+    }
+
+    if(status)
+    {
+        if(vk_ctx->end_command_buffer(vk_ctx->command_buffer) != vk_success)
+        {
+            printf("Failed to end command buffer\n");
+            status = false;
+        }
     }
 
     return status;
@@ -178,10 +265,12 @@ bool run(void)
         {
             status = render();
 
+            /*
             if(status)
             {
                 status = present();
             }
+            */
         }
         else
         {
