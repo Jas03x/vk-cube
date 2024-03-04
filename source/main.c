@@ -93,7 +93,7 @@ bool initialize(void)
 
     if(status)
     {
-        if(SDL_Vulkan_CreateSurface(g_window, vk_ctx->h_instance, (VkSurfaceKHR*) &surface) != SDL_TRUE)
+        if(SDL_Vulkan_CreateSurface(g_window, vk_ctx->instance, (VkSurfaceKHR*) &surface) != SDL_TRUE)
         {
             printf("Could not create vulkan surface\n");
             status = false;

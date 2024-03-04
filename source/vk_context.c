@@ -73,23 +73,23 @@ uint32_t debug_callback(uint32_t flags, uint32_t object_type, uint64_t object, u
 
     if(status && (index < buffer_size))
     {
-        if(flags == vk_debug_callback_information_bit)
+        if(flags == vk_debug_callback_flag__information_bit)
         {
             index += snprintf(buffer + index, buffer_size - index, "Information: ");
         }
-        else if(flags == vk_debug_callback_warning_bit)
+        else if(flags == vk_debug_callback_flag__warning_bit)
         {
             index += snprintf(buffer + index, buffer_size - index, "Warning: ");
         }
-        else if(flags == vk_debug_callback_performance_warning_bit)
+        else if(flags == vk_debug_callback_flag__performance_warning_bit)
         {
             index += snprintf(buffer + index, buffer_size - index, "Performance Warning: ");
         }
-        else if(flags == vk_debug_callback_error_bit)
+        else if(flags == vk_debug_callback_flag__error_bit)
         {
             index += snprintf(buffer + index, buffer_size - index, "Error: ");
         }
-        else if(flags == vk_debug_callback_debug_bit)
+        else if(flags == vk_debug_callback_flag__debug_bit)
         {
             index += snprintf(buffer + index, buffer_size - index, "Debug: ");
         }
@@ -266,17 +266,17 @@ bool initialize_vulkan_context(pfn_vk_get_instance_proc_addr pfn_get_instance_pr
 
 void uninitialize_vulkan_context(void)
 {
-    g_vk_ctx.wait_for_device_idle(g_vk_ctx.h_device);
+    g_vk_ctx.wait_for_device_idle(g_vk_ctx.device);
     //g_vk_ctx.destroy_device(g_vk_ctx.h_device, NULL);
     //g_vk_ctx.h_device = NULL;
 
     if(g_vk_ctx.h_debug_callback != NULL)
     {
-        g_vk_ctx.unregister_debug_callback(g_vk_ctx.h_instance, g_vk_ctx.h_debug_callback, NULL);
+        g_vk_ctx.unregister_debug_callback(g_vk_ctx.instance, g_vk_ctx.h_debug_callback, NULL);
     }
 
-    g_vk_ctx.destroy_instance(g_vk_ctx.h_instance, NULL);
-    g_vk_ctx.h_instance = NULL;
+    g_vk_ctx.destroy_instance(g_vk_ctx.instance, NULL);
+    g_vk_ctx.instance = NULL;
 }
 
 bool initialize_swapchain(vk_surface surface)
@@ -293,7 +293,7 @@ bool initialize_swapchain(vk_surface surface)
 
     struct vk_surface_capabilities surface_capabilities = { 0 };
 
-    if(g_vk_ctx.get_physical_device_surface_support(g_vk_ctx.h_physical_device, g_vk_ctx.graphics_queue_family, surface, &supported) != vk_success)
+    if(g_vk_ctx.get_physical_device_surface_support(g_vk_ctx.physical_device, g_vk_ctx.graphics_queue_family, surface, &supported) != vk_success)
     {
         printf("Failed to check device surface support\n");
         status = false;
@@ -310,7 +310,7 @@ bool initialize_swapchain(vk_surface surface)
 
     if(status)
     {
-        if(g_vk_ctx.get_physical_device_surface_capabilities(g_vk_ctx.h_physical_device, surface, &surface_capabilities) != vk_success)
+        if(g_vk_ctx.get_physical_device_surface_capabilities(g_vk_ctx.physical_device, surface, &surface_capabilities) != vk_success)
         {
             printf("Could not get surface capabilities\n");
             status = false;
@@ -319,7 +319,7 @@ bool initialize_swapchain(vk_surface surface)
 
     if(status)
     {
-        if(g_vk_ctx.get_physical_device_surface_present_modes(g_vk_ctx.h_physical_device, surface, &present_mode_count, NULL) != vk_success)
+        if(g_vk_ctx.get_physical_device_surface_present_modes(g_vk_ctx.physical_device, surface, &present_mode_count, NULL) != vk_success)
         {
             printf("Could not get present mode count\n");
             status = false;
@@ -328,7 +328,7 @@ bool initialize_swapchain(vk_surface surface)
 
     if(status)
     {
-        if(g_vk_ctx.get_physical_device_surface_formats(g_vk_ctx.h_physical_device, surface, &format_count, NULL) != vk_success)
+        if(g_vk_ctx.get_physical_device_surface_formats(g_vk_ctx.physical_device, surface, &format_count, NULL) != vk_success)
         {
             printf("Count not get format count\n");
             status = false;
@@ -357,7 +357,7 @@ bool initialize_swapchain(vk_surface surface)
 
     if(status)
     {
-        if(g_vk_ctx.get_physical_device_surface_present_modes(g_vk_ctx.h_physical_device, surface, &present_mode_count, present_mode_array) != vk_success)
+        if(g_vk_ctx.get_physical_device_surface_present_modes(g_vk_ctx.physical_device, surface, &present_mode_count, present_mode_array) != vk_success)
         {
             printf("Could not get present mode array\n");
             status = false;
@@ -366,7 +366,7 @@ bool initialize_swapchain(vk_surface surface)
 
     if(status)
     {
-        if(g_vk_ctx.get_physical_device_surface_formats(g_vk_ctx.h_physical_device, surface, &format_count, format_array) != vk_success)
+        if(g_vk_ctx.get_physical_device_surface_formats(g_vk_ctx.physical_device, surface, &format_count, format_array) != vk_success)
         {
             printf("Could not get format array");
             status = false;
@@ -439,7 +439,7 @@ bool initialize_swapchain(vk_surface surface)
     if(status)
     {
         struct vk_swapchain_create_params params;
-        params.s_type = vk_swapchain_create_info;
+        params.s_type = vk_structure_type__swapchain_create_info;
         params.p_next = NULL;
         params.flags = 0;
         params.surface = surface;
@@ -459,11 +459,31 @@ bool initialize_swapchain(vk_surface surface)
         params.clipped = vk_true;
         params.old_swapchain = NULL;
 
-        if(g_vk_ctx.create_swapchain(g_vk_ctx.h_device, &params, NULL, &g_vk_ctx.h_swapchain) != vk_success)
+        if(g_vk_ctx.create_swapchain(g_vk_ctx.device, &params, NULL, &g_vk_ctx.swapchain) != vk_success)
         {
             printf("Could not create swapchain\n");
             status = false;
         }
+    }
+
+    if(status)
+    {
+        struct vk_semaphore_create_params params;
+        params.s_type = vk_structure_type__semaphore_create_info;
+        params.p_next = NULL;
+        params.flags = 0;
+
+        g_vk_ctx.create_semaphore(g_vk_ctx.device, &params, NULL, &g_vk_ctx.image_available_semaphore);
+    }
+
+    if(status)
+    {
+        struct vk_semaphore_create_params params;
+        params.s_type = vk_structure_type__semaphore_create_info;
+        params.p_next = NULL;
+        params.flags = 0;
+
+        g_vk_ctx.create_semaphore(g_vk_ctx.device, &params, NULL, &g_vk_ctx.rendering_finished_semaphore);
     }
 
     if(format_array != NULL)
@@ -541,22 +561,22 @@ bool initialize_instance_function_pointers(void)
 {
     bool status = true;
 
-    status &= load_function_pointer(g_vk_ctx.h_instance, "vkDestroyInstance", (void**) &g_vk_ctx.destroy_instance);
-    status &= load_function_pointer(g_vk_ctx.h_instance, "vkEnumeratePhysicalDevices", (void**) &g_vk_ctx.enumerate_devices);
-    status &= load_function_pointer(g_vk_ctx.h_instance, "vkGetPhysicalDeviceProperties", (void**) &g_vk_ctx.get_physical_device_properties);
-    status &= load_function_pointer(g_vk_ctx.h_instance, "vkGetPhysicalDeviceFeatures", (void**) &g_vk_ctx.get_physical_device_features);
-    status &= load_function_pointer(g_vk_ctx.h_instance, "vkGetPhysicalDeviceQueueFamilyProperties", (void**) &g_vk_ctx.get_physical_queue_group_properties);
-    status &= load_function_pointer(g_vk_ctx.h_instance, "vkCreateDevice", (void**) &g_vk_ctx.create_device);
-    status &= load_function_pointer(g_vk_ctx.h_instance, "vkGetPhysicalDeviceSurfaceSupportKHR", (void**) &g_vk_ctx.get_physical_device_surface_support);
-    status &= load_function_pointer(g_vk_ctx.h_instance, "vkEnumerateDeviceLayerProperties", (void**) &g_vk_ctx.enumerate_device_layers);
-    status &= load_function_pointer(g_vk_ctx.h_instance, "vkEnumerateDeviceExtensionProperties", (void**) &g_vk_ctx.enumerate_device_extensions);
-    status &= load_function_pointer(g_vk_ctx.h_instance, "vkGetPhysicalDeviceSurfaceCapabilitiesKHR", (void**) &g_vk_ctx.get_physical_device_surface_capabilities);
-    status &= load_function_pointer(g_vk_ctx.h_instance, "vkGetPhysicalDeviceSurfacePresentModesKHR", (void**) &g_vk_ctx.get_physical_device_surface_present_modes);
-    status &= load_function_pointer(g_vk_ctx.h_instance, "vkGetPhysicalDeviceSurfaceFormatsKHR", (void**) &g_vk_ctx.get_physical_device_surface_formats);
+    status &= load_function_pointer(g_vk_ctx.instance, "vkDestroyInstance", (void**) &g_vk_ctx.destroy_instance);
+    status &= load_function_pointer(g_vk_ctx.instance, "vkEnumeratePhysicalDevices", (void**) &g_vk_ctx.enumerate_devices);
+    status &= load_function_pointer(g_vk_ctx.instance, "vkGetPhysicalDeviceProperties", (void**) &g_vk_ctx.get_physical_device_properties);
+    status &= load_function_pointer(g_vk_ctx.instance, "vkGetPhysicalDeviceFeatures", (void**) &g_vk_ctx.get_physical_device_features);
+    status &= load_function_pointer(g_vk_ctx.instance, "vkGetPhysicalDeviceQueueFamilyProperties", (void**) &g_vk_ctx.get_physical_queue_group_properties);
+    status &= load_function_pointer(g_vk_ctx.instance, "vkCreateDevice", (void**) &g_vk_ctx.create_device);
+    status &= load_function_pointer(g_vk_ctx.instance, "vkGetPhysicalDeviceSurfaceSupportKHR", (void**) &g_vk_ctx.get_physical_device_surface_support);
+    status &= load_function_pointer(g_vk_ctx.instance, "vkEnumerateDeviceLayerProperties", (void**) &g_vk_ctx.enumerate_device_layers);
+    status &= load_function_pointer(g_vk_ctx.instance, "vkEnumerateDeviceExtensionProperties", (void**) &g_vk_ctx.enumerate_device_extensions);
+    status &= load_function_pointer(g_vk_ctx.instance, "vkGetPhysicalDeviceSurfaceCapabilitiesKHR", (void**) &g_vk_ctx.get_physical_device_surface_capabilities);
+    status &= load_function_pointer(g_vk_ctx.instance, "vkGetPhysicalDeviceSurfacePresentModesKHR", (void**) &g_vk_ctx.get_physical_device_surface_present_modes);
+    status &= load_function_pointer(g_vk_ctx.instance, "vkGetPhysicalDeviceSurfaceFormatsKHR", (void**) &g_vk_ctx.get_physical_device_surface_formats);
 
 #ifdef DEBUG
-    status &= load_function_pointer(g_vk_ctx.h_instance, "vkCreateDebugReportCallbackEXT", (void**) &g_vk_ctx.register_debug_callback);
-    status &= load_function_pointer(g_vk_ctx.h_instance, "vkDestroyDebugReportCallbackEXT", (void*) &g_vk_ctx.unregister_debug_callback);
+    status &= load_function_pointer(g_vk_ctx.instance, "vkCreateDebugReportCallbackEXT", (void**) &g_vk_ctx.register_debug_callback);
+    status &= load_function_pointer(g_vk_ctx.instance, "vkDestroyDebugReportCallbackEXT", (void*) &g_vk_ctx.unregister_debug_callback);
 #endif
 
     return status;
@@ -566,13 +586,13 @@ bool initialize_device_function_pointers(void)
 {
     bool status = true;
 
-    status &= load_function_pointer(g_vk_ctx.h_instance, "vkGetDeviceProcAddr", (void**) &g_vk_ctx.get_device_proc_addr);
+    status &= load_function_pointer(g_vk_ctx.instance, "vkGetDeviceProcAddr", (void**) &g_vk_ctx.get_device_proc_addr);
 
-    status &= load_device_function_pointer(g_vk_ctx.h_device, "vkCreateSemaphore", (void**) &g_vk_ctx.create_semaphore);
-    status &= load_device_function_pointer(g_vk_ctx.h_device, "vkCreateSwapchainKHR", (void**) &g_vk_ctx.create_swapchain);
-    status &= load_device_function_pointer(g_vk_ctx.h_device, "vkAcquireNextImageKHR", (void**) &g_vk_ctx.acquire_next_image);
-    status &= load_device_function_pointer(g_vk_ctx.h_device, "vkDeviceWaitIdle", (void**) &g_vk_ctx.wait_for_device_idle);
-    status &= load_device_function_pointer(g_vk_ctx.h_device, "vkDestroyDevice", (void**) &g_vk_ctx.destroy_device);
+    status &= load_device_function_pointer(g_vk_ctx.device, "vkCreateSemaphore", (void**) &g_vk_ctx.create_semaphore);
+    status &= load_device_function_pointer(g_vk_ctx.device, "vkCreateSwapchainKHR", (void**) &g_vk_ctx.create_swapchain);
+    status &= load_device_function_pointer(g_vk_ctx.device, "vkAcquireNextImageKHR", (void**) &g_vk_ctx.acquire_next_image);
+    status &= load_device_function_pointer(g_vk_ctx.device, "vkDeviceWaitIdle", (void**) &g_vk_ctx.wait_for_device_idle);
+    status &= load_device_function_pointer(g_vk_ctx.device, "vkDestroyDevice", (void**) &g_vk_ctx.destroy_device);
 
     return status;
 }
@@ -828,7 +848,7 @@ bool initialize_instance(uint32_t ext_count, const char** ext_array)
     if(status)
     {
         struct vk_application_info app_info = { 0 };
-        app_info.s_type = vk_application_info;
+        app_info.s_type = vk_structure_type__application_info;
         app_info.p_next = NULL;
         app_info.p_app_name = "vk-cube";
         app_info.app_version = 1;
@@ -837,7 +857,7 @@ bool initialize_instance(uint32_t ext_count, const char** ext_array)
         app_info.api_version = VK_VERSION(0, 1, 0, 0);
 
         struct vk_instance_info instance_info = { 0 };
-        instance_info.s_type = vk_instance_info;
+        instance_info.s_type = vk_structure_type__instance_info;
         instance_info.p_next = NULL;
         instance_info.p_app_info = &app_info;
         instance_info.layer_count = 0;
@@ -845,7 +865,7 @@ bool initialize_instance(uint32_t ext_count, const char** ext_array)
         instance_info.extension_count = num_extensions;
         instance_info.p_extension_names = extensions;
 
-        if(g_vk_ctx.create_instance(&instance_info, NULL, &g_vk_ctx.h_instance) != vk_success)
+        if(g_vk_ctx.create_instance(&instance_info, NULL, &g_vk_ctx.instance) != vk_success)
         {
             status = false;
             printf("Failed to create vulkan instance\n");
@@ -874,13 +894,13 @@ bool initialize_debug_layer(void)
     bool status = true;
 
     struct vk_debug_callback_info callback_info;
-    callback_info.s_type = vk_structure_type_debug_report_callback_info;
+    callback_info.s_type = vk_structure_type__debug_report_callback_info;
     callback_info.p_next = NULL;
-    callback_info.flags = vk_debug_callback_all_bits;
+    callback_info.flags = vk_debug_callback_flag__all_bits;
     callback_info.pfn_callback = debug_callback;
     callback_info.user_data = NULL;
 
-    if(g_vk_ctx.register_debug_callback(g_vk_ctx.h_instance, &callback_info, NULL, &g_vk_ctx.h_debug_callback) != vk_success)
+    if(g_vk_ctx.register_debug_callback(g_vk_ctx.instance, &callback_info, NULL, &g_vk_ctx.h_debug_callback) != vk_success)
     {
         printf("Failed to register debug callback\n");
         status = false;
@@ -899,7 +919,7 @@ bool enumerate_gpus(uint32_t* p_gpu_count, struct gpu_info** p_gpu_info_array)
 
     struct gpu_info* p_info_array = NULL;
 
-    if(g_vk_ctx.enumerate_devices(g_vk_ctx.h_instance, &num_physical_devices, NULL) != vk_success)
+    if(g_vk_ctx.enumerate_devices(g_vk_ctx.instance, &num_physical_devices, NULL) != vk_success)
     {
         status = false;
         printf("Failed to get number of devices\n");
@@ -918,7 +938,7 @@ bool enumerate_gpus(uint32_t* p_gpu_count, struct gpu_info** p_gpu_info_array)
 
     if(status)
     {
-        if(g_vk_ctx.enumerate_devices(g_vk_ctx.h_instance, &num_physical_devices, p_physical_device_handles) != vk_success)
+        if(g_vk_ctx.enumerate_devices(g_vk_ctx.instance, &num_physical_devices, p_physical_device_handles) != vk_success)
         {
             status = false;
             printf("Failed to get devices\n");
@@ -1027,7 +1047,7 @@ bool initialize_device(void)
 
         if(gpu_index < gpu_count)
         {
-            g_vk_ctx.h_physical_device = p_gpu_info[gpu_index].handle;
+            g_vk_ctx.physical_device = p_gpu_info[gpu_index].handle;
         }
         else
         {
@@ -1038,7 +1058,7 @@ bool initialize_device(void)
 
     if(status)
     {
-        status = enumerate_device_layers_and_extensions(g_vk_ctx.h_physical_device, &layers);
+        status = enumerate_device_layers_and_extensions(g_vk_ctx.physical_device, &layers);
     }
 
     if(status)
@@ -1086,14 +1106,14 @@ bool initialize_device(void)
         }
 
         struct vk_queue_create_params queue_params;
-        queue_params.s_type = vk_queue_create_info;
+        queue_params.s_type = vk_structure_type__queue_create_info;
         queue_params.p_next = NULL;
         queue_params.queue_group_index = g_vk_ctx.graphics_queue_family;
         queue_params.queue_count = queue_count;
         queue_params.p_queue_priorities = p_queue_priorities;
 
         struct vk_device_create_params device_params;
-        device_params.s_type = vk_device_create_info;
+        device_params.s_type = vk_structure_type__device_create_info;
         device_params.p_next = NULL;
         device_params.queue_info_count = 1;
         device_params.p_queue_info_array = &queue_params;
@@ -1103,7 +1123,7 @@ bool initialize_device(void)
         device_params.p_extensions = extensions;
         device_params.features = NULL;
 
-        if(g_vk_ctx.create_device(g_vk_ctx.h_physical_device, &device_params, NULL, &g_vk_ctx.h_device) != vk_success)
+        if(g_vk_ctx.create_device(g_vk_ctx.physical_device, &device_params, NULL, &g_vk_ctx.device) != vk_success)
         {
             status = false;
             printf("Failed to create vulkan device\n");
@@ -1127,7 +1147,13 @@ bool present(void)
 {
     bool status = true;
 
+    uint32_t index = INVALID_INDEX;
 
+    if(g_vk_ctx.acquire_next_image(g_vk_ctx.device, g_vk_ctx.swapchain, UINT64_MAX, g_vk_ctx.image_available_semaphore, NULL, &index) != vk_success)
+    {
+        printf("Could not get next surface image\n");
+        status = false;
+    }
 
     return status;
 }

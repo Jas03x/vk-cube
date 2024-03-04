@@ -30,12 +30,14 @@ enum vk_result
 
 enum vk_structure_type
 {
-    vk_application_info   = 0,
-    vk_instance_info      = 1,
-    vk_queue_create_info  = 2,
-    vk_device_create_info = 3,
-    vk_swapchain_create_info = 1000001000,
-    vk_structure_type_debug_report_callback_info = 1000011000
+    vk_structure_type__application_info      = 0,
+    vk_structure_type__instance_info         = 1,
+    vk_structure_type__queue_create_info     = 2,
+    vk_structure_type__device_create_info    = 3,
+    vk_structure_type__fence_create_info     = 8,
+    vk_structure_type__semaphore_create_info = 9,
+    vk_structure_type__swapchain_create_info = 1000001000,
+    vk_structure_type__debug_report_callback_info = 1000011000
 };
 
 enum vk_device_type
@@ -89,14 +91,14 @@ struct vk_extension
 
 typedef uint32_t (*vk_pfn_debug_callback)(uint32_t flags, uint32_t object_type, uint64_t object, uint32_t location, int32_t message_code, const char* layer_prefix, const char* message, void* user_data);
 
-enum vk_debug_callback_flag
+enum vk_debug_callback_flags
 {
-    vk_debug_callback_information_bit         = 0x01,
-    vk_debug_callback_warning_bit             = 0x02,
-    vk_debug_callback_performance_warning_bit = 0x04,
-    vk_debug_callback_error_bit               = 0x08,
-    vk_debug_callback_debug_bit               = 0x10,
-    vk_debug_callback_all_bits                = 0x1F 
+    vk_debug_callback_flag__information_bit         = 0x01,
+    vk_debug_callback_flag__warning_bit             = 0x02,
+    vk_debug_callback_flag__performance_warning_bit = 0x04,
+    vk_debug_callback_flag__error_bit               = 0x08,
+    vk_debug_callback_flag__debug_bit               = 0x10,
+    vk_debug_callback_flag__all_bits                = 0x1F
 };
 
 enum vk_debug_callback_object_type

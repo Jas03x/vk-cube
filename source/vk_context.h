@@ -5,10 +5,13 @@
 
 struct vk_context
 {
-    vk_instance                                      h_instance;
-    vk_device                                        h_device; // logical device
-    vk_physical_device                               h_physical_device;
-    vk_swapchain                                     h_swapchain;
+    vk_instance                                      instance;
+    vk_device                                        device; // logical device
+    vk_physical_device                               physical_device;
+    vk_swapchain                                     swapchain;
+
+    vk_semaphore                                     image_available_semaphore;
+    vk_semaphore                                     rendering_finished_semaphore;
 
     uint32_t                                         graphics_queue_family;
 
