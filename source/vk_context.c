@@ -266,9 +266,39 @@ bool initialize_vulkan_context(pfn_vk_get_instance_proc_addr pfn_get_instance_pr
 
 void uninitialize_vulkan_context(void)
 {
+    if(g_vk_ctx.command_buffer != NULL)
+    {
+        g_vk_ctx.free_command_buffers(g_vk_ctx.device, g_vk_ctx.command_pool, 1, &g_vk_ctx.command_buffer);
+        g_vk_ctx.command_buffer = NULL;
+    }
+
+    if(g_vk_ctx.command_pool != NULL)
+    {
+        g_vk_ctx.destroy_command_pool(g_vk_ctx.device, g_vk_ctx.command_pool, NULL);
+        g_vk_ctx.command_pool = NULL;
+    }
+
+    if(g_vk_ctx.image_available_semaphore != NULL)
+    {
+        g_vk_ctx.destroy_semaphore(g_vk_ctx.device, g_vk_ctx.image_available_semaphore, NULL);
+        g_vk_ctx.image_available_semaphore = NULL;
+    }
+
+    if(g_vk_ctx.rendering_finished_semaphore != NULL)
+    {
+        g_vk_ctx.destroy_semaphore(g_vk_ctx.device, g_vk_ctx.rendering_finished_semaphore, NULL);
+        g_vk_ctx.rendering_finished_semaphore = NULL;
+    }
+
+    if(g_vk_ctx.swapchain != NULL)
+    {
+        g_vk_ctx.destroy_swapchain(g_vk_ctx.device, g_vk_ctx.swapchain, NULL);
+        g_vk_ctx.swapchain = NULL;
+    }
+
     g_vk_ctx.wait_for_device_idle(g_vk_ctx.device);
-    //g_vk_ctx.destroy_device(g_vk_ctx.h_device, NULL);
-    //g_vk_ctx.h_device = NULL;
+    g_vk_ctx.destroy_device(g_vk_ctx.device, NULL);
+    g_vk_ctx.device = NULL;
 
     if(g_vk_ctx.h_debug_callback != NULL)
     {
@@ -277,23 +307,46 @@ void uninitialize_vulkan_context(void)
 
     g_vk_ctx.destroy_instance(g_vk_ctx.instance, NULL);
     g_vk_ctx.instance = NULL;
+
+    memset(&g_vk_ctx, 0, sizeof(struct vk_context));
 }
 
 bool initialize_queues(void)
 {
     bool status = true;
 
-    struct vk_command_pool_create_params params;
-    params.s_type = vk_structure_type__command_pool_create_info;
-    params.p_next = NULL;
-    params.flags = vk_command_pool_flag__reset_bit;
-    params.queue_family_index = g_vk_ctx.graphics_queue_family;
-
-    if(g_vk_ctx.create_command_pool(g_vk_ctx.device, &params, NULL, &g_vk_ctx.command_pool) != vk_success)
+    if(status)
     {
-        printf("Failed to create command pool\n");
-        status = false;
+        struct vk_command_pool_create_params params;
+        params.s_type = vk_structure_type__command_pool_create_info;
+        params.p_next = NULL;
+        params.flags = vk_command_pool_flag__reset_bit;
+        params.queue_family_index = g_vk_ctx.graphics_queue_family;
+
+        if(g_vk_ctx.create_command_pool(g_vk_ctx.device, &params, NULL, &g_vk_ctx.command_pool) != vk_success)
+        {
+            printf("Failed to create command pool\n");
+            status = false;
+        }
     }
+
+    /*
+    if(status)
+    {
+        struct vk_command_buffer_allocate_params params;
+        params.s_type = vk_structure_type__command_buffer_allocate_info;
+        params.p_next = NULL;
+        params.command_pool = g_vk_ctx.command_pool;
+        params.level = command_buffer_level__primary;
+        params.count = 1;
+
+        if(g_vk_ctx.allocate_command_buffer(g_vk_ctx.device, &params, NULL, &g_vk_ctx.command_buffer) != vk_success)
+        {
+            printf("Failed to create command buffer\n");
+            status = false;
+        }
+    }
+    */
 
     return status;
 }
@@ -608,11 +661,16 @@ bool initialize_device_function_pointers(void)
     status &= load_function_pointer(g_vk_ctx.instance, "vkGetDeviceProcAddr", (void**) &g_vk_ctx.get_device_proc_addr);
 
     status &= load_device_function_pointer(g_vk_ctx.device, "vkCreateSemaphore", (void**) &g_vk_ctx.create_semaphore);
+    status &= load_device_function_pointer(g_vk_ctx.device, "vkDestroySemaphore", (void**) &g_vk_ctx.destroy_semaphore);
     status &= load_device_function_pointer(g_vk_ctx.device, "vkCreateSwapchainKHR", (void**) &g_vk_ctx.create_swapchain);
+    status &= load_device_function_pointer(g_vk_ctx.device, "vkDestroySwapchainKHR", (void**) &g_vk_ctx.destroy_swapchain);
     status &= load_device_function_pointer(g_vk_ctx.device, "vkAcquireNextImageKHR", (void**) &g_vk_ctx.acquire_next_image);
     status &= load_device_function_pointer(g_vk_ctx.device, "vkDeviceWaitIdle", (void**) &g_vk_ctx.wait_for_device_idle);
     status &= load_device_function_pointer(g_vk_ctx.device, "vkDestroyDevice", (void**) &g_vk_ctx.destroy_device);
     status &= load_device_function_pointer(g_vk_ctx.device, "vkCreateCommandPool", (void**) &g_vk_ctx.create_command_pool);
+    status &= load_device_function_pointer(g_vk_ctx.device, "vkDestroyCommandPool", (void**) &g_vk_ctx.destroy_command_pool);
+    status &= load_device_function_pointer(g_vk_ctx.device, "vkAllocateCommandBuffers", (void**) &g_vk_ctx.allocate_command_buffers);
+    status &= load_device_function_pointer(g_vk_ctx.device, "vkFreeCommandBuffers", (void**) &g_vk_ctx.free_command_buffers);
 
     return status;
 }

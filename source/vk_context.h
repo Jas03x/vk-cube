@@ -9,8 +9,10 @@ struct vk_context
     vk_device                                        device; // logical device
     vk_physical_device                               physical_device;
     
-    vk_command_pool                                  command_pool;
     vk_swapchain                                     swapchain;
+
+    vk_command_pool                                  command_pool;
+    vk_command_buffer                                command_buffer;
 
     vk_semaphore                                     image_available_semaphore;
     vk_semaphore                                     rendering_finished_semaphore;
@@ -46,8 +48,13 @@ struct vk_context
 
     // device level functions
     pfn_vk_create_semaphore                          create_semaphore;
+    pfn_vk_destroy_semaphore                         destroy_semaphore;
     pfn_vk_create_swapchain                          create_swapchain;
+    pfn_vk_destroy_swapchain                         destroy_swapchain;
     pfn_vk_create_command_pool                       create_command_pool;
+    pfn_vk_destroy_command_pool                      destroy_command_pool;
+    pfn_vk_allocate_command_buffers                  allocate_command_buffers;
+    pfn_vk_free_command_buffers                      free_command_buffers;
     pfn_vk_acquire_next_image                        acquire_next_image;
     pfn_vk_wait_for_device_idle                      wait_for_device_idle;
     pfn_vk_destroy_device                            destroy_device;
