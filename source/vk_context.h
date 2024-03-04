@@ -3,6 +3,8 @@
 
 #include "vk.h"
 
+enum { VK_NUM_SWAPCHAIN_BUFFERS = 2 };
+
 struct vk_context
 {
     vk_instance                                      instance;
@@ -58,6 +60,7 @@ struct vk_context
     pfn_vk_acquire_next_image                        acquire_next_image;
     pfn_vk_wait_for_device_idle                      wait_for_device_idle;
     pfn_vk_destroy_device                            destroy_device;
+    pfn_vk_begin_command_buffer                      begin_command_buffer;
 };
 
 extern struct vk_context* vk_ctx;

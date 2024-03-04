@@ -330,7 +330,6 @@ bool initialize_queues(void)
         }
     }
 
-    /*
     if(status)
     {
         struct vk_command_buffer_allocate_params params;
@@ -340,13 +339,12 @@ bool initialize_queues(void)
         params.level = command_buffer_level__primary;
         params.count = 1;
 
-        if(g_vk_ctx.allocate_command_buffer(g_vk_ctx.device, &params, NULL, &g_vk_ctx.command_buffer) != vk_success)
+        if(g_vk_ctx.allocate_command_buffers(g_vk_ctx.device, &params, NULL, &g_vk_ctx.command_buffer) != vk_success)
         {
             printf("Failed to create command buffer\n");
             status = false;
         }
     }
-    */
 
     return status;
 }
@@ -515,7 +513,7 @@ bool initialize_swapchain(vk_surface surface)
         params.p_next = NULL;
         params.flags = 0;
         params.surface = surface;
-        params.minimum_image_count = 2;
+        params.minimum_image_count = VK_NUM_SWAPCHAIN_BUFFERS;
         params.surface_format = format_array[format_index].format;
         params.surface_colorspace = format_array[format_index].colorspace;
         params.surface_extent.width = surface_capabilities.current_extent.width;
@@ -671,6 +669,7 @@ bool initialize_device_function_pointers(void)
     status &= load_device_function_pointer(g_vk_ctx.device, "vkDestroyCommandPool", (void**) &g_vk_ctx.destroy_command_pool);
     status &= load_device_function_pointer(g_vk_ctx.device, "vkAllocateCommandBuffers", (void**) &g_vk_ctx.allocate_command_buffers);
     status &= load_device_function_pointer(g_vk_ctx.device, "vkFreeCommandBuffers", (void**) &g_vk_ctx.free_command_buffers);
+    status &= load_device_function_pointer(g_vk_ctx.device, "vkBeginCommandBuffer", (void**) &g_vk_ctx.begin_command_buffer);
 
     return status;
 }
@@ -1429,7 +1428,7 @@ bool enumerate_device_layers_and_extensions(vk_physical_device h_physical_device
 
     if(status)
     {
-        for(uint32_t i = 0; i < num_layers; i++)
+        for(uint32_t i = 1; i <= num_layers; i++)
         {
             printf("Device layer %s (0x%X, %u): %s\n", layers.array[i].name, layers.array[i].spec_version, layers.array[i].impl_version, layers.array[i].desc);
             status = enumerate_device_extensions(h_physical_device, layers.array[i].name, &layers.extension_lists[i]);

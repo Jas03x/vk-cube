@@ -131,6 +131,18 @@ bool render(void)
 {
     bool status = true;
 
+    struct vk_command_buffer_begin_params params;
+    params.s_type = vk_structure_type__command_buffer_begin_info;
+    params.p_next = NULL;
+    params.usage_flags = vk_command_buffer_usage_flag__one_time_submit;
+    params.p_inheritance_info = NULL;
+
+    if(vk_ctx->begin_command_buffer(vk_ctx->command_buffer, &params) != vk_success)
+    {
+        printf("Failed to begin command buffer\n");
+        status = false;
+    }
+
     return status;
 }
 
