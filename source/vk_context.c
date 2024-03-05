@@ -514,7 +514,7 @@ bool initialize_swapchain(vk_surface surface)
         params.p_next = NULL;
         params.flags = 0;
         params.surface = surface;
-        params.minimum_image_count = VK_NUM_SWAPCHAIN_BUFFERS;
+        params.minimum_image_count = VK_CTX_NUM_SWAPCHAIN_BUFFERS;
         params.surface_format = format_array[format_index].format;
         params.surface_colorspace = format_array[format_index].colorspace;
         params.surface_extent.width = surface_capabilities.current_extent.width;
@@ -561,7 +561,7 @@ bool initialize_swapchain(vk_surface surface)
     {
         if(g_vk_ctx.get_swapchain_images(g_vk_ctx.device, g_vk_ctx.swapchain, &num_swapchain_images, NULL) == vk_success)
         {
-            if(num_swapchain_images != VK_NUM_SWAPCHAIN_BUFFERS)
+            if(num_swapchain_images != VK_CTX_NUM_SWAPCHAIN_BUFFERS)
             {
                 printf("Unexpected number of swapchain images\n");
                 status = false;
@@ -697,10 +697,13 @@ bool initialize_device_function_pointers(void)
     status &= load_device_function_pointer(g_vk_ctx.device, "vkAllocateCommandBuffers", (void**) &g_vk_ctx.allocate_command_buffers);
     status &= load_device_function_pointer(g_vk_ctx.device, "vkFreeCommandBuffers", (void**) &g_vk_ctx.free_command_buffers);
     status &= load_device_function_pointer(g_vk_ctx.device, "vkBeginCommandBuffer", (void**) &g_vk_ctx.begin_command_buffer);
-    status &= load_device_function_pointer(g_vk_ctx.device, "vkEndCommandBuffer", (void**) g_vk_ctx.end_command_buffer);
+    status &= load_device_function_pointer(g_vk_ctx.device, "vkEndCommandBuffer", (void**) &g_vk_ctx.end_command_buffer);
     status &= load_device_function_pointer(g_vk_ctx.device, "vkCmdPipelineBarrier", (void**) &g_vk_ctx.cmd_pipeline_barrier);
     status &= load_device_function_pointer(g_vk_ctx.device, "vkGetSwapchainImagesKHR", (void**) &g_vk_ctx.get_swapchain_images);
     status &= load_device_function_pointer(g_vk_ctx.device, "vkCmdClearColorImage", (void**) &g_vk_ctx.cmd_clear_color_image);
+    status &= load_device_function_pointer(g_vk_ctx.device, "vkQueueSubmit", (void**) &g_vk_ctx.queue_submit);
+    status &= load_device_function_pointer(g_vk_ctx.device, "vkQueuePresentKHR", (void**) &g_vk_ctx.queue_present);
+    status &= load_device_function_pointer(g_vk_ctx.device, "vkGetDeviceQueue", (void**) &g_vk_ctx.get_device_queue);
 
     return status;
 }
@@ -1202,20 +1205,19 @@ bool initialize_device(void)
 
     if(status)
     {
-        enum { MAX_QUEUES = 2 };
-
-        const float p_queue_priorities[MAX_QUEUES] = { 1.0f, 1.0f };
+        const float p_queue_priorities[VK_CTX_NUM_GRAPHICS_QUEUES] = { 1.0f };
 
         uint32_t queue_count = p_gpu_info[gpu_index].p_queue_group_properties[g_vk_ctx.graphics_queue_family].queue_count;
 
-        if(queue_count > MAX_QUEUES)
+        if(queue_count > VK_CTX_NUM_GRAPHICS_QUEUES)
         {
-            queue_count = MAX_QUEUES;
+            queue_count = VK_CTX_NUM_GRAPHICS_QUEUES;
         }
 
         struct vk_queue_create_params queue_params;
         queue_params.s_type = vk_structure_type__queue_create_info;
         queue_params.p_next = NULL;
+        queue_params.flags = 0;
         queue_params.queue_group_index = g_vk_ctx.graphics_queue_family;
         queue_params.queue_count = queue_count;
         queue_params.p_queue_priorities = p_queue_priorities;
@@ -1241,6 +1243,21 @@ bool initialize_device(void)
     if(status)
     {
         status = initialize_device_function_pointers();
+    }
+
+    if(status)
+    {
+        for(uint32_t i = 0; i < VK_CTX_NUM_GRAPHICS_QUEUES; i++)
+        {
+            g_vk_ctx.get_device_queue(g_vk_ctx.device, g_vk_ctx.graphics_queue_family, i, g_vk_ctx.graphics_queues);
+
+            if(g_vk_ctx.graphics_queues[i] == NULL)
+            {
+                status = false;
+                printf("Could not get graphics queue %u\n", i);
+                break;
+            }
+        }
     }
 
     free_layers(&layers);

@@ -3,7 +3,8 @@
 
 #include "vk.h"
 
-enum { VK_NUM_SWAPCHAIN_BUFFERS = 2 };
+enum { VK_CTX_NUM_GRAPHICS_QUEUES = 1 };
+enum { VK_CTX_NUM_SWAPCHAIN_BUFFERS = 2 };
 
 struct vk_context
 {
@@ -12,10 +13,12 @@ struct vk_context
     vk_physical_device                               physical_device;
     
     vk_swapchain                                     swapchain;
-    vk_image                                         swapchain_images[VK_NUM_SWAPCHAIN_BUFFERS];
+    vk_image                                         swapchain_images[VK_CTX_NUM_SWAPCHAIN_BUFFERS];
 
     vk_command_pool                                  command_pool;
     vk_command_buffer                                command_buffer;
+
+    vk_queue                                         graphics_queues[VK_CTX_NUM_GRAPHICS_QUEUES];
 
     vk_semaphore                                     image_available_semaphore;
     vk_semaphore                                     rendering_finished_semaphore;
@@ -66,6 +69,9 @@ struct vk_context
     pfn_vk_end_command_buffer                        end_command_buffer;
     pfn_vk_cmd_pipeline_barrier                      cmd_pipeline_barrier;
     pfn_vk_cmd_clear_color_image                     cmd_clear_color_image;
+    pfn_vk_queue_submit                              queue_submit;
+    pfn_vk_queue_present                             queue_present;
+    pfn_vk_get_device_queue                          get_device_queue;
 };
 
 extern struct vk_context* vk_ctx;

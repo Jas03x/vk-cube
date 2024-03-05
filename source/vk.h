@@ -22,6 +22,7 @@ typedef void* vk_render_pass;
 typedef void* vk_framebuffer;
 typedef void* vk_buffer;
 typedef void* vk_image;
+typedef void* vk_queue;
 
 enum
 {
@@ -40,6 +41,7 @@ enum vk_structure_type
     vk_structure_type__instance_info                = 1,
     vk_structure_type__queue_create_info            = 2,
     vk_structure_type__device_create_info           = 3,
+    vk_structure_type__submit_info                  = 4,
     vk_structure_type__fence_create_info            = 8,
     vk_structure_type__semaphore_create_info        = 9,
     vk_structure_type__command_pool_create_info     = 39,
@@ -47,6 +49,7 @@ enum vk_structure_type
     vk_structure_type__command_buffer_begin_info    = 42,
     vk_structure_type__image_memory_barrier         = 45,
     vk_structure_type__swapchain_create_info        = 1000001000,
+    vk_structure_type__present_info                 = 1000001001,
     vk_structure_type__debug_report_callback_info   = 1000011000
 };
 
@@ -716,6 +719,31 @@ struct vk_clear_color
     uint32_t uint32[4];
 };
 
+struct vk_submission_info
+{
+    uint32_t                                   s_type;
+    const void*                                p_next;
+    uint32_t                                   wait_semaphore_count;
+    const vk_semaphore*                        wait_semaphores;
+    uint32_t*                                  wait_dst_stage_masks;
+    uint32_t                                   command_buffer_count;
+    const vk_command_buffer*                   command_buffers;
+    uint32_t                                   signal_semaphore_count;
+    const vk_semaphore*                        signal_semahores;
+};
+
+struct vk_present_info
+{
+    uint32_t                                   s_type;
+    const void*                                p_next;
+    uint32_t                                   wait_semaphore_count;
+    const vk_semaphore*                        wait_semaphores;
+    uint32_t                                   swapchain_count;
+    const vk_swapchain*                        swapchains;
+    const uint32_t*                            image_indices;
+    uint32_t*                                  results;
+};
+
 typedef void*    (*pfn_vk_get_instance_proc_addr)(vk_instance h_instance, const char* p_name);
 typedef void*    (*pfn_vk_get_device_proc_addr)(vk_device h_device, const char* p_name);
 
@@ -762,5 +790,8 @@ typedef uint32_t (*pfn_vk_cmd_pipeline_barrier)(vk_command_buffer h_command_buff
 );
 typedef uint32_t (*pfn_vk_get_swapchain_images)(vk_device h_device, vk_swapchain swapchain, uint32_t* image_count, vk_image* p_images);
 typedef void     (*pfn_vk_cmd_clear_color_image)(vk_command_buffer h_command_buffer, vk_image image, uint32_t image_layout, struct vk_clear_color* p_color, uint32_t range_count, struct vk_image_subresource_range* ranges);
+typedef uint32_t (*pfn_vk_queue_submit)(vk_queue h_queue, uint32_t submission_count, const struct vk_submission_info* submission_array, vk_fence fence);
+typedef uint32_t (*pfn_vk_queue_present)(vk_queue h_queue, struct vk_present_info* info);
+typedef void     (*pfn_vk_get_device_queue)(vk_device h_device, uint32_t queue_family_index, uint32_t queue_index, vk_queue* p_queue);
 
 #endif // VK_H

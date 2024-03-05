@@ -234,6 +234,47 @@ bool render(void)
         }
     }
 
+    if(status)
+    {
+        uint32_t wait_dst_stage_masks[] = { vk_pipeline_stage_flag__transfer };
+
+        struct vk_submission_info submit_info;
+        submit_info.s_type = vk_structure_type__submit_info;
+        submit_info.p_next = NULL;
+        submit_info.wait_semaphore_count = 1;
+        submit_info.wait_semaphores = &vk_ctx->image_available_semaphore;
+        submit_info.wait_dst_stage_masks = wait_dst_stage_masks;
+        submit_info.command_buffer_count = 1;
+        submit_info.command_buffers = &vk_ctx->command_buffer;
+        submit_info.signal_semaphore_count = 1;
+        submit_info.signal_semahores = &vk_ctx->rendering_finished_semaphore;
+
+        if(vk_ctx->queue_submit(vk_ctx->graphics_queues[0], 1, &submit_info, NULL) != vk_success)
+        {
+            printf("Failed to submit command buffer\n");
+            status = false;
+        }
+    }
+
+    if(status)
+    {
+        struct vk_present_info present_info;
+        present_info.s_type = vk_structure_type__present_info;
+        present_info.p_next = NULL;
+        present_info.wait_semaphore_count = 1;
+        present_info.wait_semaphores = &vk_ctx->rendering_finished_semaphore;
+        present_info.swapchain_count = 1;
+        present_info.swapchains = &vk_ctx->swapchain;
+        present_info.image_indices = &swapchain_index;
+        present_info.results = NULL;
+
+        if(vk_ctx->queue_present(vk_ctx->graphics_queues[0], &present_info) != vk_success)
+        {
+            printf("Failed to present\n");
+            status = false;
+        }
+    }
+
     return status;
 }
 
