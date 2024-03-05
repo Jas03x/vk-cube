@@ -175,11 +175,7 @@ bool render(void)
         barrier.subresource_range.base_array_layer = 0,
         barrier.subresource_range.layer_count = 1;
 
-        if(vk_ctx->cmd_pipeline_barrier(vk_ctx->command_buffer, vk_pipeline_stage_flag__transfer, vk_pipeline_stage_flag__transfer, 0, 0, NULL, 0, NULL, 1, &barrier) != vk_success)
-        {
-            printf("Failed to insert barrier command\n");
-            status = false;
-        }
+        vk_ctx->cmd_pipeline_barrier(vk_ctx->command_buffer, vk_pipeline_stage_flag__transfer, vk_pipeline_stage_flag__transfer, 0, 0, NULL, 0, NULL, 1, &barrier);
     }
 
     if(status)
@@ -218,11 +214,7 @@ bool render(void)
         barrier.subresource_range.base_array_layer = 0,
         barrier.subresource_range.layer_count = 1;
 
-        if(vk_ctx->cmd_pipeline_barrier(vk_ctx->command_buffer, vk_pipeline_stage_flag__transfer, vk_pipeline_stage_flag__transfer, 0, 0, NULL, 0, NULL, 1, &barrier) != vk_success)
-        {
-            printf("Failed to insert barrier command\n");
-            status = false;
-        }
+        vk_ctx->cmd_pipeline_barrier(vk_ctx->command_buffer, vk_pipeline_stage_flag__transfer, vk_pipeline_stage_flag__transfer, 0, 0, NULL, 0, NULL, 1, &barrier);
     }
 
     if(status)

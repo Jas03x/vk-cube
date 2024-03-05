@@ -317,6 +317,21 @@ bool initialize_queues(void)
 
     if(status)
     {
+        for(uint32_t i = 0; i < VK_CTX_NUM_GRAPHICS_QUEUES; i++)
+        {
+            g_vk_ctx.get_device_queue(g_vk_ctx.device, g_vk_ctx.graphics_queue_family, i, g_vk_ctx.graphics_queues);
+
+            if(g_vk_ctx.graphics_queues[i] == NULL)
+            {
+                status = false;
+                printf("Could not get graphics queue %u\n", i);
+                break;
+            }
+        }
+    }
+
+    if(status)
+    {
         struct vk_command_pool_create_params params;
         params.s_type = vk_structure_type__command_pool_create_info;
         params.p_next = NULL;
@@ -1243,21 +1258,6 @@ bool initialize_device(void)
     if(status)
     {
         status = initialize_device_function_pointers();
-    }
-
-    if(status)
-    {
-        for(uint32_t i = 0; i < VK_CTX_NUM_GRAPHICS_QUEUES; i++)
-        {
-            g_vk_ctx.get_device_queue(g_vk_ctx.device, g_vk_ctx.graphics_queue_family, i, g_vk_ctx.graphics_queues);
-
-            if(g_vk_ctx.graphics_queues[i] == NULL)
-            {
-                status = false;
-                printf("Could not get graphics queue %u\n", i);
-                break;
-            }
-        }
     }
 
     free_layers(&layers);

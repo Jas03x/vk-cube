@@ -783,10 +783,10 @@ typedef uint32_t (*pfn_vk_wait_for_device_idle)(vk_device h_device);
 typedef void     (*pfn_vk_destroy_device)(vk_device h_device, const void* reserved);
 typedef uint32_t (*pfn_vk_begin_command_buffer)(vk_command_buffer h_command_buffer, const struct vk_command_buffer_begin_params* params);
 typedef uint32_t (*pfn_vk_end_command_buffer)(vk_command_buffer h_command_buffer);
-typedef uint32_t (*pfn_vk_cmd_pipeline_barrier)(vk_command_buffer h_command_buffer, uint32_t src_stage_mask, uint32_t dst_stage_mask, uint32_t dependency_flags, 
-    uint32_t memory_barrier_count, const struct vk_memory_barrier* p_memory_barriers,
-    uint32_t buffer_memory_barrier_count, const struct vk_buffer_memory_barrier* p_buffer_memory_barriers,
-    uint32_t image_memory_barrier, const struct vk_image_memory_barrier* p_image_memory_barriers
+typedef void     (*pfn_vk_cmd_pipeline_barrier)(vk_command_buffer h_command_buffer, uint32_t src_stage_mask, uint32_t dst_stage_mask, uint32_t dependency_flags, 
+    uint32_t memory_barrier_count, const struct vk_memory_barrier* p_memory_barrier_array,
+    uint32_t buffer_memory_barrier_count, const struct vk_buffer_memory_barrier* p_buffer_memory_barrier_array,
+    uint32_t image_memory_barrier_count, const struct vk_image_memory_barrier* p_image_memory_barrier_array
 );
 typedef uint32_t (*pfn_vk_get_swapchain_images)(vk_device h_device, vk_swapchain swapchain, uint32_t* image_count, vk_image* p_images);
 typedef void     (*pfn_vk_cmd_clear_color_image)(vk_command_buffer h_command_buffer, vk_image image, uint32_t image_layout, struct vk_clear_color* p_color, uint32_t range_count, struct vk_image_subresource_range* ranges);
