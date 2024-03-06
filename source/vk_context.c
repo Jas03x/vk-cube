@@ -266,6 +266,8 @@ bool initialize_vulkan_context(pfn_vk_get_instance_proc_addr pfn_get_instance_pr
 
 void uninitialize_vulkan_context(void)
 {
+    g_vk_ctx.wait_for_device_idle(g_vk_ctx.device);
+
     if(g_vk_ctx.command_buffer != NULL)
     {
         g_vk_ctx.free_command_buffers(g_vk_ctx.device, g_vk_ctx.command_pool, 1, &g_vk_ctx.command_buffer);
@@ -296,7 +298,6 @@ void uninitialize_vulkan_context(void)
         g_vk_ctx.swapchain = NULL;
     }
 
-    g_vk_ctx.wait_for_device_idle(g_vk_ctx.device);
     g_vk_ctx.destroy_device(g_vk_ctx.device, NULL);
     g_vk_ctx.device = NULL;
 

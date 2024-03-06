@@ -228,7 +228,7 @@ bool render(void)
 
     if(status)
     {
-        uint32_t wait_dst_stage_masks[] = { vk_pipeline_stage_flag__transfer };
+        enum vk_pipeline_stage_flags wait_dst_stage_masks[] = { vk_pipeline_stage_flag__transfer };
 
         struct vk_submission_info submit_info;
         submit_info.s_type = vk_structure_type__submit_info;

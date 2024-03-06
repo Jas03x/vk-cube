@@ -24,7 +24,7 @@ typedef void* vk_buffer;
 typedef void* vk_image;
 typedef void* vk_queue;
 
-enum
+enum vk_bool
 {
     vk_false = 0,
     vk_true  = 1
@@ -65,8 +65,7 @@ enum vk_device_type
 
 struct vk_application_info
 {
-    uint32_t                                   s_type;
-    uint32_t                                   reserved0;
+    enum vk_structure_type                     s_type;
     const void*                                p_next;
     const char*                                p_app_name;
     uint32_t                                   app_version;
@@ -77,12 +76,11 @@ struct vk_application_info
 
 struct vk_instance_info
 {
-    uint32_t                                   s_type;
-    uint32_t                                   reserved0;
+    enum vk_structure_type                     s_type;
     const void*                                p_next;
-    uint32_t                                   reserved1;
+    uint32_t                                   flags;
     struct vk_application_info*                p_app_info;
-    uint32_t                                  layer_count;
+    uint32_t                                   layer_count;
     const char* const*                         p_layer_names;
     uint32_t                                   extension_count;
     const char* const*                         p_extension_names;
@@ -155,9 +153,9 @@ enum vk_debug_callback_object_type
 
 struct vk_debug_callback_info
 {
-    uint32_t                                   s_type;
+    enum vk_structure_type                     s_type;
     const void*                                p_next;
-    uint32_t                                   flags;
+    enum vk_debug_callback_flags               flags;
     vk_pfn_debug_callback                      pfn_callback;
     void*                                      user_data;
 };
@@ -255,7 +253,7 @@ struct vk_device_limits
     uint32_t                                   sampled_image_stencil_sample_counts;
     uint32_t                                   storage_image_sample_counts;
     uint32_t                                   max_sample_mask_words;
-    uint32_t                                   timestamp_compute_and_graphics;
+    enum vk_bool                               timestamp_compute_and_graphics;
     float                                      timestamp_period;
     uint32_t                                   max_clip_distances;
     uint32_t                                   max_cull_distances;
@@ -265,8 +263,8 @@ struct vk_device_limits
     float                                      line_width_range[2];
     float                                      point_size_granularity;
     float                                      line_width_granularity;
-    uint32_t                                   strict_lines;
-    uint32_t                                   standard_sample_locations;
+    enum vk_bool                               strict_lines;
+    enum vk_bool                               standard_sample_locations;
     uint64_t                                   optimal_buffer_copy_offset_alignment;
     uint64_t                                   optimal_buffer_copy_row_pitch_alignment;
     uint64_t                                   non_coherent_atom_size;
@@ -274,11 +272,11 @@ struct vk_device_limits
 
 struct vk_device_sparse_properties
 {
-    uint32_t                                   residency_standard_2D_block_shape;
-    uint32_t                                   residency_standard_2D_multisample_block_shape;
-    uint32_t                                   residency_standard_3D_block_shape;
-    uint32_t                                   residency_aligned_mip_size;
-    uint32_t                                   residency_non_resident_strict;
+    enum vk_bool                               residency_standard_2D_block_shape;
+    enum vk_bool                               residency_standard_2D_multisample_block_shape;
+    enum vk_bool                               residency_standard_3D_block_shape;
+    enum vk_bool                               residency_aligned_mip_size;
+    enum vk_bool                               residency_non_resident_strict;
 };
 
 struct vk_physical_device_properties
@@ -287,7 +285,7 @@ struct vk_physical_device_properties
     uint32_t                                   driver_version;
     uint32_t                                   vendor_id;
     uint32_t                                   device_id;
-    uint32_t                                   device_type;
+    enum vk_device_type                        device_type;
     char                                       device_name[VK_MAX_DEVICE_NAME_LENGTH];
     uint8_t                                    pipeline_cache_uuid[VK_UUID_SIZE];
     struct vk_device_limits                    limits;
@@ -324,68 +322,68 @@ struct vk_queue_group_properties
 
 struct vk_physical_device_features
 {
-    uint32_t                                   robust_buffer_access;
-    uint32_t                                   full_draw_index_uint32;
-    uint32_t                                   image_cube_array;
-    uint32_t                                   independent_blend;
-    uint32_t                                   geometry_shader;
-    uint32_t                                   tessellation_shader;
-    uint32_t                                   sample_rate_shading;
-    uint32_t                                   dual_src_blend;
-    uint32_t                                   logic_op;
-    uint32_t                                   multi_draw_indirect;
-    uint32_t                                   draw_indirect_first_instance;
-    uint32_t                                   depth_clamp;
-    uint32_t                                   depth_bias_clamp;
-    uint32_t                                   fill_mode_non_solid;
-    uint32_t                                   depth_bounds;
-    uint32_t                                   wide_lines;
-    uint32_t                                   large_points;
-    uint32_t                                   alpha_to_one;
-    uint32_t                                   multi_viewport;
-    uint32_t                                   sampler_anisotropy;
-    uint32_t                                   texture_compression_etc2;
-    uint32_t                                   texture_compression_astc_ldr;
-    uint32_t                                   texture_compression_bc;
-    uint32_t                                   occlusion_query_precise;
-    uint32_t                                   pipeline_statistics_query;
-    uint32_t                                   vertex_pipeline_stores_and_atomics;
-    uint32_t                                   fragment_stores_and_atomics;
-    uint32_t                                   shader_tessellation_and_geometry_point_size;
-    uint32_t                                   shader_image_gather_extended;
-    uint32_t                                   shader_storage_image_extended_formats;
-    uint32_t                                   shader_storage_image_multisample;
-    uint32_t                                   shader_storage_image_read_without_format;
-    uint32_t                                   shader_storage_image_write_without_format;
-    uint32_t                                   shader_uniform_buffer_array_dynamic_indexing;
-    uint32_t                                   shader_sampled_image_array_dynamic_indexing;
-    uint32_t                                   shader_storage_buffer_array_dynamic_indexing;
-    uint32_t                                   shader_storage_image_array_dynamic_indexing;
-    uint32_t                                   shader_clip_distance;
-    uint32_t                                   shader_cull_distance;
-    uint32_t                                   shader_float64;
-    uint32_t                                   shader_int64;
-    uint32_t                                   shader_int16;
-    uint32_t                                   shader_resource_residency;
-    uint32_t                                   shader_resource_min_lod;
-    uint32_t                                   sparse_binding;
-    uint32_t                                   sparse_residency_buffer;
-    uint32_t                                   sparse_residency_image2D;
-    uint32_t                                   sparse_residency_image3D;
-    uint32_t                                   sparse_residency2_samples;
-    uint32_t                                   sparse_residency4_samples;
-    uint32_t                                   sparse_residency8_samples;
-    uint32_t                                   sparse_residency16_samples;
-    uint32_t                                   sparse_residency_aliased;
-    uint32_t                                   variable_multisample_rate;
-    uint32_t                                   inherited_queries;
+    enum vk_bool                               robust_buffer_access;
+    enum vk_bool                               full_draw_index_uint32;
+    enum vk_bool                               image_cube_array;
+    enum vk_bool                               independent_blend;
+    enum vk_bool                               geometry_shader;
+    enum vk_bool                               tessellation_shader;
+    enum vk_bool                               sample_rate_shading;
+    enum vk_bool                               dual_src_blend;
+    enum vk_bool                               logic_op;
+    enum vk_bool                               multi_draw_indirect;
+    enum vk_bool                               draw_indirect_first_instance;
+    enum vk_bool                               depth_clamp;
+    enum vk_bool                               depth_bias_clamp;
+    enum vk_bool                               fill_mode_non_solid;
+    enum vk_bool                               depth_bounds;
+    enum vk_bool                               wide_lines;
+    enum vk_bool                               large_points;
+    enum vk_bool                               alpha_to_one;
+    enum vk_bool                               multi_viewport;
+    enum vk_bool                               sampler_anisotropy;
+    enum vk_bool                               texture_compression_etc2;
+    enum vk_bool                               texture_compression_astc_ldr;
+    enum vk_bool                               texture_compression_bc;
+    enum vk_bool                               occlusion_query_precise;
+    enum vk_bool                               pipeline_statistics_query;
+    enum vk_bool                               vertex_pipeline_stores_and_atomics;
+    enum vk_bool                               fragment_stores_and_atomics;
+    enum vk_bool                               shader_tessellation_and_geometry_point_size;
+    enum vk_bool                               shader_image_gather_extended;
+    enum vk_bool                               shader_storage_image_extended_formats;
+    enum vk_bool                               shader_storage_image_multisample;
+    enum vk_bool                               shader_storage_image_read_without_format;
+    enum vk_bool                               shader_storage_image_write_without_format;
+    enum vk_bool                               shader_uniform_buffer_array_dynamic_indexing;
+    enum vk_bool                               shader_sampled_image_array_dynamic_indexing;
+    enum vk_bool                               shader_storage_buffer_array_dynamic_indexing;
+    enum vk_bool                               shader_storage_image_array_dynamic_indexing;
+    enum vk_bool                               shader_clip_distance;
+    enum vk_bool                               shader_cull_distance;
+    enum vk_bool                               shader_float64;
+    enum vk_bool                               shader_int64;
+    enum vk_bool                               shader_int16;
+    enum vk_bool                               shader_resource_residency;
+    enum vk_bool                               shader_resource_min_lod;
+    enum vk_bool                               sparse_binding;
+    enum vk_bool                               sparse_residency_buffer;
+    enum vk_bool                               sparse_residency_image2D;
+    enum vk_bool                               sparse_residency_image3D;
+    enum vk_bool                               sparse_residency2_samples;
+    enum vk_bool                               sparse_residency4_samples;
+    enum vk_bool                               sparse_residency8_samples;
+    enum vk_bool                               sparse_residency16_samples;
+    enum vk_bool                               sparse_residency_aliased;
+    enum vk_bool                               variable_multisample_rate;
+    enum vk_bool                               inherited_queries;
 };
 
 struct vk_queue_create_params
 {
-    uint32_t                                   s_type;
+    enum vk_structure_type                     s_type;
     const void*                                p_next;
-    uint32_t                                   flags;
+    enum vk_queue_create_flags                 flags;
     uint32_t                                   queue_group_index;
     uint32_t                                   queue_count;
     const float*                               p_queue_priorities;
@@ -393,9 +391,9 @@ struct vk_queue_create_params
 
 struct vk_device_create_params
 {
-    uint32_t                                   s_type;
+    enum vk_structure_type                     s_type;
     const void*                                p_next;
-    uint32_t                                   flags;
+    enum vk_device_create_flags                flags;
     uint32_t                                   queue_info_count;
     const struct vk_queue_create_params*       p_queue_info_array;
     uint32_t                                   layer_count; // deprecated and ignored
@@ -407,9 +405,9 @@ struct vk_device_create_params
 
 struct vk_semaphore_create_params
 {
-    uint32_t                                   s_type;
+    enum vk_structure_type                     s_type;
     const void*                                p_next;
-    uint32_t                                   flags;
+    enum vk_semaphore_create_flags             flags;
 };
 
 enum vk_transform
@@ -449,10 +447,10 @@ struct vk_surface_capabilities
     } max_image_extent;
 
     uint32_t                                   max_image_array_layers;
-    uint32_t                                   supported_transforms;
-    uint32_t                                   current_transform;
-    uint32_t                                   supported_composite_alpha;
-    uint32_t                                   supported_usage_flags;
+    enum vk_transform                          supported_transforms;
+    enum vk_transform                          current_transform;
+    enum vk_composite_alpha_flags              supported_composite_alpha;
+    enum vk_image_usage_flags                  supported_usage_flags;
 };
 
 enum vk_present_mode
@@ -465,15 +463,15 @@ enum vk_present_mode
     vk_present_mode__shared_continuous_refresh = 1000111001
 };
 
-struct vk_surface_format
-{
-    uint32_t                                   format;
-    uint32_t                                   colorspace;
-};
-
 enum vk_format
 {
     vk_format__unorm_r8g8b8a8 = 37 // unsigned normalized 8-bit rgba packed into a uint32_t
+};
+
+struct vk_surface_format
+{
+    enum vk_format                             format;
+    enum vk_colorspace                         colorspace;
 };
 
 enum vk_sharing_mode
@@ -484,27 +482,27 @@ enum vk_sharing_mode
 
 struct vk_swapchain_create_params
 {
-    uint32_t                                   s_type;
+    enum vk_structure_type                     s_type;
     const void*                                p_next;
-    uint32_t                                   flags;
+    enum vk_swapchain_create_info              flags;
     vk_surface                                 surface;
     uint32_t                                   minimum_image_count;
-    uint32_t                                   surface_format;
-    uint32_t                                   surface_colorspace;
+    enum vk_format                             surface_format;
+    enum vk_colorspace                         surface_colorspace;
     struct
     {
         uint32_t                               width;
         uint32_t                               height;
     } surface_extent;
     uint32_t                                   image_array_layers;
-    uint32_t                                   image_usage_flags;
-    uint32_t                                   image_sharing_mode;
+    enum vk_image_usage_flags                  image_usage_flags;
+    enum vk_sharing_mode                       image_sharing_mode;
     uint32_t                                   queue_family_index_count;
     const uint32_t*                            queue_family_index_array;
-    uint32_t                                   pre_transform;
-    uint32_t                                   composite_alpha;
-    uint32_t                                   present_mode;
-    uint32_t                                   clipped;
+    enum vk_transform                          pre_transform;
+    enum vk_composite_alpha_flags              composite_alpha;
+    enum vk_present_mode                       present_mode;
+    enum vk_bool                               clipped;
     vk_swapchain                               old_swapchain;
 };
 
@@ -517,9 +515,9 @@ enum vk_command_pool_flags
 
 struct vk_command_pool_create_params
 {
-    uint32_t                                   s_type;
+    enum vk_structure_type                     s_type;
     const void*                                p_next;
-    uint32_t                                   flags;
+    enum vk_command_pool_create_flags          flags;
     uint32_t                                   queue_family_index;
 };
 
@@ -531,10 +529,10 @@ enum command_buffer_level
 
 struct vk_command_buffer_allocate_params
 {
-    uint32_t                                   s_type;
+    enum vk_structure_type                     s_type;
     const void*                                p_next;
     vk_command_pool                            command_pool;
-    uint32_t                                   level;
+    enum command_buffer_level                  level;
     uint32_t                                   count;
 };
 
@@ -571,21 +569,21 @@ enum vk_query_pipeline_statitic_flags
 
 struct vk_command_buffer_inheritance_info
 {
-    uint32_t                                   s_type;
+    enum vk_structure_type                     s_type;
     const void*                                p_next;
     vk_render_pass                             render_pass;
     uint32_t                                   subpass;
     vk_framebuffer                             framebuffer;
-    uint32_t                                   occlusion_query_enable;
-    uint32_t                                   query_flags;
-    uint32_t                                   pipeline_statistics;
+    enum vk_bool                               occlusion_query_enable;
+    enum vk_query_control_flags                query_flags;
+    enum vk_query_pipeline_statitic_flags      pipeline_statistics;
 };
 
 struct vk_command_buffer_begin_params
 {
-    uint32_t                                   s_type;
+    enum vk_structure_type                     s_type;
     const void*                                p_next;
-    uint32_t                                   usage_flags;
+    enum vk_command_buffer_usage_flags         usage_flags;
     struct vk_command_buffer_inheritance_info* p_inheritance_info;
 };
 
@@ -670,18 +668,18 @@ enum vk_image_aspect_flags
 
 struct vk_memory_barrier
 {
-    uint32_t                                   s_type;
+    enum vk_structure_type                     s_type;
     const void*                                p_next;
-    uint32_t                                   src_access_mask;
-    uint32_t                                   dst_access_mask;
+    enum vk_access_flags                       src_access_mask;
+    enum vk_access_flags                       dst_access_mask;
 };
 
 struct vk_buffer_memory_barrier
 {
-    uint32_t                                   s_type;
+    enum vk_structure_type                     s_type;
     const void*                                p_next;
-    uint32_t                                   src_access_mask;
-    uint32_t                                   dst_access_mask;
+    enum vk_access_flags                       src_access_mask;
+    enum vk_access_flags                       dst_access_mask;
     uint32_t                                   src_queue_family_index;
     uint32_t                                   dst_queue_family_index;
     vk_buffer                                  buffer;
@@ -691,7 +689,7 @@ struct vk_buffer_memory_barrier
 
 struct vk_image_subresource_range
 {
-    uint32_t                                   aspect_mask;
+    enum vk_image_aspect_flags                 aspect_mask;
     uint32_t                                   base_mip_level;
     uint32_t                                   level_count;
     uint32_t                                   base_array_layer;
@@ -700,12 +698,12 @@ struct vk_image_subresource_range
 
 struct vk_image_memory_barrier
 {
-    uint32_t                                   s_type;
+    enum vk_structure_type                     s_type;
     const void*                                p_next;
-    uint32_t                                   src_access_mask;
-    uint32_t                                   dst_access_mask;
-    uint32_t                                   old_layout;
-    uint32_t                                   new_layout;
+    enum vk_access_flags                       src_access_mask;
+    enum vk_access_flags                       dst_access_mask;
+    enum vk_image_layout                       old_layout;
+    enum vk_image_layout                       new_layout;
     uint32_t                                   src_queue_family_index;
     uint32_t                                   dst_queue_family_index;
     vk_image                                   image;
@@ -721,11 +719,11 @@ struct vk_clear_color
 
 struct vk_submission_info
 {
-    uint32_t                                   s_type;
+    enum vk_structure_type                     s_type;
     const void*                                p_next;
     uint32_t                                   wait_semaphore_count;
     const vk_semaphore*                        wait_semaphores;
-    uint32_t*                                  wait_dst_stage_masks;
+    enum vk_pipeline_stage_flags*              wait_dst_stage_masks;
     uint32_t                                   command_buffer_count;
     const vk_command_buffer*                   command_buffers;
     uint32_t                                   signal_semaphore_count;
@@ -734,14 +732,33 @@ struct vk_submission_info
 
 struct vk_present_info
 {
-    uint32_t                                   s_type;
+    enum vk_structure_type                     s_type;
     const void*                                p_next;
     uint32_t                                   wait_semaphore_count;
     const vk_semaphore*                        wait_semaphores;
     uint32_t                                   swapchain_count;
     const vk_swapchain*                        swapchains;
     const uint32_t*                            image_indices;
-    uint32_t*                                  results;
+    enum vk_bool*                              results;
+};
+
+enum vk_attachment_description_flags
+{
+    vk_attachment_description_flag__may_alias = 1
+};
+
+struct vk_attachment_description
+{
+    uint32_t                                   flags;
+    uint32_t                                   format;
+};
+
+struct vk_render_pass_create_params
+{
+    enum vk_structure_type                     s_type;
+    const void*                                p_next;
+    uint32_t                                   flags;
+    uint32_t                                   attachment_count;
 };
 
 typedef void*    (*pfn_vk_get_instance_proc_addr)(vk_instance h_instance, const char* p_name);
@@ -793,5 +810,6 @@ typedef void     (*pfn_vk_cmd_clear_color_image)(vk_command_buffer h_command_buf
 typedef uint32_t (*pfn_vk_queue_submit)(vk_queue h_queue, uint32_t submission_count, const struct vk_submission_info* submission_array, vk_fence fence);
 typedef uint32_t (*pfn_vk_queue_present)(vk_queue h_queue, struct vk_present_info* info);
 typedef void     (*pfn_vk_get_device_queue)(vk_device h_device, uint32_t queue_family_index, uint32_t queue_index, vk_queue* p_queue);
+// typedef uint32_t (*pfn_vk_create_render_pass)();
 
 #endif // VK_H

@@ -3,7 +3,7 @@
 
 #include "vk.h"
 
-enum { VK_CTX_NUM_GRAPHICS_QUEUES = 1 };
+enum { VK_CTX_NUM_GRAPHICS_QUEUES   = 1 };
 enum { VK_CTX_NUM_SWAPCHAIN_BUFFERS = 2 };
 
 struct vk_context
