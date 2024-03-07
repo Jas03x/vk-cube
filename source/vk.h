@@ -23,7 +23,6 @@ typedef void* vk_framebuffer;
 typedef void* vk_buffer;
 typedef void* vk_image;
 typedef void* vk_queue;
-typedef void* vk_renderpass;
 
 enum vk_bool
 {
@@ -45,6 +44,7 @@ enum vk_structure_type
     vk_structure_type__submit_info                  = 4,
     vk_structure_type__fence_create_info            = 8,
     vk_structure_type__semaphore_create_info        = 9,
+    vk_structure_type__render_pass_create_info      = 38,
     vk_structure_type__command_pool_create_info     = 39,
     vk_structure_type__command_buffer_allocate_info = 40,
     vk_structure_type__command_buffer_begin_info    = 42,
@@ -682,7 +682,7 @@ enum vk_image_layout
     vk_image_layout__transfer_src_optimal = 6,
     vk_image_layout__transfer_dst_optimal = 7,
     vk_image_layout__preinitialized = 8,
-    vk_image_layout__present_src_khr = 1000001002
+    vk_image_layout__present_src = 1000001002
 };
 
 enum vk_image_aspect_flags
@@ -917,6 +917,6 @@ typedef void     (*pfn_vk_cmd_clear_color_image)(vk_command_buffer h_command_buf
 typedef uint32_t (*pfn_vk_queue_submit)(vk_queue h_queue, uint32_t submission_count, const struct vk_submission_info* submission_array, vk_fence fence);
 typedef uint32_t (*pfn_vk_queue_present)(vk_queue h_queue, struct vk_present_info* info);
 typedef void     (*pfn_vk_get_device_queue)(vk_device h_device, uint32_t queue_family_index, uint32_t queue_index, vk_queue* p_queue);
-typedef uint32_t (*pfn_vk_create_render_pass)(vk_device h_device, struct vk_render_pass_create_params* params, struct vk_allocation_callbacks* callbacks, vk_renderpass* p_render_pass);
+typedef uint32_t (*pfn_vk_create_render_pass)(vk_device h_device, struct vk_render_pass_create_params* params, struct vk_allocation_callbacks* callbacks, vk_render_pass* p_render_pass);
 
 #endif // VK_H

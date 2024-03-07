@@ -9,10 +9,14 @@ enum { VK_CTX_NUM_SWAPCHAIN_BUFFERS = 2 };
 struct vk_context
 {
     vk_instance                                      instance;
+
+    struct vk_allocation_callbacks*                  callbacks;
+
     vk_device                                        device; // logical device
     vk_physical_device                               physical_device;
 
     vk_surface                                       surface;
+    enum vk_format                                   surface_format;
     
     vk_swapchain                                     swapchain;
     vk_image                                         swapchain_images[VK_CTX_NUM_SWAPCHAIN_BUFFERS];

@@ -13,6 +13,8 @@ const uint32_t window_height = 768;
 
 SDL_Window* g_window = NULL;
 
+vk_render_pass g_render_pass = NULL;
+
 bool initialize(void)
 {
     bool status = true;
@@ -103,6 +105,53 @@ bool initialize(void)
     if(status)
     {
         status = initialize_swapchain(surface);
+    }
+
+    if(status)
+    {
+        struct vk_attachment_description attachment_description;
+        attachment_description.flags = 0;
+        attachment_description.format = vk_ctx->surface_format;
+        attachment_description.samples = vk_sample_count__1;
+        attachment_description.load_op = vk_attachment_load_op__clear;
+        attachment_description.store_op = vk_attachment_store_op__store;
+        attachment_description.stencil_load_op = vk_attachment_load_op__do_not_care;
+        attachment_description.stencil_store_op = vk_attachment_store_op__do_not_care;
+        attachment_description.initial_layout = vk_image_layout__present_src;
+        attachment_description.final_layout = vk_image_layout__present_src;
+
+        struct vk_attachment_reference attachment_reference;
+        attachment_reference.attachment = 0;
+        attachment_reference.layout = vk_image_layout__color_attachment_optimal;
+
+        struct vk_subpass_description subpass_description;
+        subpass_description.flags = 0;
+        subpass_description.pipeline_bind_point = vk_pipeline_bind_point__graphics;
+        subpass_description.input_attachment_count = 0;
+        subpass_description.input_attachment_array = NULL;
+        subpass_description.color_attachment_count = 1;
+        subpass_description.color_attachment_array = &attachment_reference;
+        subpass_description.resolve_attachment_array = NULL;
+        subpass_description.depth_stencil_attachment_array = NULL;
+        subpass_description.preserve_attachment_count = 0;
+        subpass_description.preserve_attachment_array = NULL;
+
+        struct vk_render_pass_create_params params;
+        params.s_type = vk_structure_type__render_pass_create_info;
+        params.p_next = NULL;
+        params.flags = 0;
+        params.attachment_count = 1;
+        params.attachment_array = &attachment_description;
+        params.subpass_count = 1;
+        params.subpass_array = &subpass_description;
+        params.dependency_count = 0;
+        params.dependency_array = NULL;
+
+        if(vk_ctx->create_render_pass(vk_ctx->device, &params, vk_ctx->callbacks, &g_render_pass) != vk_success)
+        {
+            printf("Failed to create render pass\n");
+            status = false;
+        }
     }
 
     if(ext_array != NULL)
@@ -199,7 +248,7 @@ bool render(void)
         barrier.src_access_mask = vk_access_flag__transfer_write;
         barrier.dst_access_mask = vk_access_flag__memory_read;
         barrier.old_layout = vk_image_layout__transfer_dst_optimal;
-        barrier.new_layout = vk_image_layout__present_src_khr;
+        barrier.new_layout = vk_image_layout__present_src;
         barrier.src_queue_family_index = vk_ctx->graphics_queue_family;
         barrier.dst_queue_family_index = vk_ctx->graphics_queue_family;
         barrier.image = vk_ctx->swapchain_images[swapchain_index];

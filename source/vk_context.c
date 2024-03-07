@@ -145,7 +145,7 @@ void vk_free_notification(void* user_data, uint64_t size, enum vk_internal_alloc
 uint32_t debug_callback(uint32_t flags, uint32_t object_type, uint64_t object, uint32_t location, int32_t message_code, const char* layer_prefix, const char* message, void* user_data)
 {
     bool status = true;
-    
+
     enum { buffer_size = 512 };
 
     uint32_t index = 0;
@@ -366,7 +366,7 @@ void uninitialize_vulkan_context(void)
 
     if(g_vk_ctx.command_pool != NULL)
     {
-        g_vk_ctx.destroy_command_pool(g_vk_ctx.device, g_vk_ctx.command_pool, &g_vk_callbacks);
+        g_vk_ctx.destroy_command_pool(g_vk_ctx.device, g_vk_ctx.command_pool, g_vk_ctx.callbacks);
         g_vk_ctx.command_pool = NULL;
     }
 
@@ -378,31 +378,31 @@ void uninitialize_vulkan_context(void)
 
     if(g_vk_ctx.image_available_semaphore != NULL)
     {
-        g_vk_ctx.destroy_semaphore(g_vk_ctx.device, g_vk_ctx.image_available_semaphore, &g_vk_callbacks);
+        g_vk_ctx.destroy_semaphore(g_vk_ctx.device, g_vk_ctx.image_available_semaphore, g_vk_ctx.callbacks);
         g_vk_ctx.image_available_semaphore = NULL;
     }
 
     if(g_vk_ctx.rendering_finished_semaphore != NULL)
     {
-        g_vk_ctx.destroy_semaphore(g_vk_ctx.device, g_vk_ctx.rendering_finished_semaphore, &g_vk_callbacks);
+        g_vk_ctx.destroy_semaphore(g_vk_ctx.device, g_vk_ctx.rendering_finished_semaphore, g_vk_ctx.callbacks);
         g_vk_ctx.rendering_finished_semaphore = NULL;
     }
 
     if(g_vk_ctx.swapchain != NULL)
     {
-        g_vk_ctx.destroy_swapchain(g_vk_ctx.device, g_vk_ctx.swapchain, &g_vk_callbacks);
+        g_vk_ctx.destroy_swapchain(g_vk_ctx.device, g_vk_ctx.swapchain, g_vk_ctx.callbacks);
         g_vk_ctx.swapchain = NULL;
     }
 
-    g_vk_ctx.destroy_device(g_vk_ctx.device, &g_vk_callbacks);
+    g_vk_ctx.destroy_device(g_vk_ctx.device, g_vk_ctx.callbacks);
     g_vk_ctx.device = NULL;
 
     if(g_vk_ctx.h_debug_callback != NULL)
     {
-        g_vk_ctx.unregister_debug_callback(g_vk_ctx.instance, g_vk_ctx.h_debug_callback, &g_vk_callbacks);
+        g_vk_ctx.unregister_debug_callback(g_vk_ctx.instance, g_vk_ctx.h_debug_callback, g_vk_ctx.callbacks);
     }
 
-    g_vk_ctx.destroy_instance(g_vk_ctx.instance, &g_vk_callbacks);
+    g_vk_ctx.destroy_instance(g_vk_ctx.instance, g_vk_ctx.callbacks);
     g_vk_ctx.instance = NULL;
 
     memset(&g_vk_ctx, 0, sizeof(struct vk_context));
@@ -440,7 +440,7 @@ bool initialize_queues(void)
         params.flags = vk_command_pool_flag__reset_bit;
         params.queue_family_index = g_vk_ctx.graphics_queue_family;
 
-        if(g_vk_ctx.create_command_pool(g_vk_ctx.device, &params, &g_vk_callbacks, &g_vk_ctx.command_pool) != vk_success)
+        if(g_vk_ctx.create_command_pool(g_vk_ctx.device, &params, g_vk_ctx.callbacks, &g_vk_ctx.command_pool) != vk_success)
         {
             printf("Failed to create command pool\n");
             status = false;
@@ -660,7 +660,7 @@ bool initialize_swapchain(vk_surface surface)
         params.clipped = vk_true;
         params.old_swapchain = NULL;
 
-        if(g_vk_ctx.create_swapchain(g_vk_ctx.device, &params, &g_vk_callbacks, &g_vk_ctx.swapchain) != vk_success)
+        if(g_vk_ctx.create_swapchain(g_vk_ctx.device, &params, g_vk_ctx.callbacks, &g_vk_ctx.swapchain) != vk_success)
         {
             printf("Could not create swapchain\n");
             status = false;
@@ -669,12 +669,7 @@ bool initialize_swapchain(vk_surface surface)
 
     if(status)
     {
-        struct vk_semaphore_create_params params;
-        params.s_type = vk_structure_type__semaphore_create_info;
-        params.p_next = NULL;
-        params.flags = 0;
-
-        g_vk_ctx.create_semaphore(g_vk_ctx.device, &params, &g_vk_callbacks, &g_vk_ctx.image_available_semaphore);
+        g_vk_ctx.surface_format = format_array[format_index].format;
     }
 
     if(status)
@@ -684,7 +679,17 @@ bool initialize_swapchain(vk_surface surface)
         params.p_next = NULL;
         params.flags = 0;
 
-        g_vk_ctx.create_semaphore(g_vk_ctx.device, &params, &g_vk_callbacks, &g_vk_ctx.rendering_finished_semaphore);
+        g_vk_ctx.create_semaphore(g_vk_ctx.device, &params, g_vk_ctx.callbacks, &g_vk_ctx.image_available_semaphore);
+    }
+
+    if(status)
+    {
+        struct vk_semaphore_create_params params;
+        params.s_type = vk_structure_type__semaphore_create_info;
+        params.p_next = NULL;
+        params.flags = 0;
+
+        g_vk_ctx.create_semaphore(g_vk_ctx.device, &params, g_vk_ctx.callbacks, &g_vk_ctx.rendering_finished_semaphore);
     }
 
     if(status)
@@ -850,6 +855,8 @@ bool initialize_allocation_callbacks(void)
     g_vk_callbacks.free_callback = vk_free_callback;
     g_vk_callbacks.allocation_notification = vk_allocation_notification;
     g_vk_callbacks.free_notification = vk_free_notification;
+
+    g_vk_ctx.callbacks = &g_vk_callbacks;
 
     return status;
 }
@@ -1122,7 +1129,7 @@ bool initialize_instance(uint32_t ext_count, const char** ext_array)
         instance_info.extension_count = num_extensions;
         instance_info.p_extension_names = extensions;
 
-        if(g_vk_ctx.create_instance(&instance_info, &g_vk_callbacks, &g_vk_ctx.instance) != vk_success)
+        if(g_vk_ctx.create_instance(&instance_info, g_vk_ctx.callbacks, &g_vk_ctx.instance) != vk_success)
         {
             status = false;
             printf("Failed to create vulkan instance\n");
@@ -1157,7 +1164,7 @@ bool initialize_debug_layer(void)
     callback_info.pfn_callback = debug_callback;
     callback_info.user_data = NULL;
 
-    if(g_vk_ctx.register_debug_callback(g_vk_ctx.instance, &callback_info, &g_vk_callbacks, &g_vk_ctx.h_debug_callback) != vk_success)
+    if(g_vk_ctx.register_debug_callback(g_vk_ctx.instance, &callback_info, g_vk_ctx.callbacks, &g_vk_ctx.h_debug_callback) != vk_success)
     {
         printf("Failed to register debug callback\n");
         status = false;
@@ -1379,7 +1386,7 @@ bool initialize_device(void)
         device_params.p_extensions = extensions;
         device_params.features = NULL;
 
-        if(g_vk_ctx.create_device(g_vk_ctx.physical_device, &device_params, &g_vk_callbacks, &g_vk_ctx.device) != vk_success)
+        if(g_vk_ctx.create_device(g_vk_ctx.physical_device, &device_params, g_vk_ctx.callbacks, &g_vk_ctx.device) != vk_success)
         {
             status = false;
             printf("Failed to create vulkan device\n");
