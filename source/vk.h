@@ -814,7 +814,7 @@ struct vk_attachment_description
     enum vk_attachment_load_op                 stencil_load_op;
     enum vk_attachment_store_op                stencil_store_op;
     enum vk_image_layout                       initial_layout;
-    enum vk_image_layout                       final_layout
+    enum vk_image_layout                       final_layout;
 };
 
 enum vk_pipeline_bind_point
