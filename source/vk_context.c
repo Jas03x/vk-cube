@@ -17,6 +17,12 @@ struct vk_memory_usage
     uint64_t size;
 } g_vk_memory_usage;
 
+struct vk_allocation_header
+{
+    uint64_t size;
+    uint64_t reserved[3];
+};
+
 enum { MAX_EXTENSIONS = 16 };
 enum { INVALID_INDEX  = 0xFFFFFFFF };
 
@@ -73,51 +79,58 @@ void     free_gpu_info(uint32_t gpu_count, struct gpu_info* p_gpu_info_array);
 void* vk_allocation_callback(void* user_data, uint64_t size, uint64_t alignment, enum vk_system_allocation_scope scope)
 {
     uint64_t aligned_size = size + (alignment-1) & ~(alignment-1);
+    uint64_t total_size = sizeof(struct vk_allocation_header) + aligned_size;
 
-    void* memory = malloc(aligned_size);
+    uint8_t* memory = (uint8_t*) malloc(total_size);
 
     if(memory != NULL)
     {
-        memset(memory, 0, aligned_size);
-    }
-    else
-    {
+        struct vk_allocation_header* header = (struct vk_allocation_header*) memory;
+
+        memset(memory, 0, total_size);
+        header->size = aligned_size;
         g_vk_memory_usage.size += aligned_size;
     }
 
-    return memory;
+    return memory + sizeof(struct vk_allocation_header);
 }
 
 void* vk_reallocation_callback(void* user_data, void* original, uint64_t size, uint64_t alignment, enum vk_system_allocation_scope scope)
 {
-    uint64_t aligned_size = size + (alignment-1) & ~(alignment-1);
+    uint8_t* original_ptr = ((uint8_t*) original) - sizeof(struct vk_allocation_header);
+    uint64_t original_size = ((struct vk_allocation_header*) original_ptr)->size;
 
-    void* memory = realloc(original, aligned_size);
+    uint64_t aligned_size = size + (alignment-1) & ~(alignment-1);
+    uint64_t total_size = sizeof(struct vk_allocation_header) + aligned_size;
+
+    uint8_t* memory = (uint8_t*) realloc(original_ptr, total_size);
 
     if(memory != NULL)
     {
-        memset(memory, 0, aligned_size);
-    }
-    else
-    {
-        g_vk_memory_usage.size += aligned_size;
+        struct vk_allocation_header* header = (struct vk_allocation_header*) memory;
+
+        header->size = aligned_size;
+        g_vk_memory_usage.size += (aligned_size - original_size);
     }
 
-    return memory;
+    return memory + sizeof(struct vk_allocation_header);
 }
 
-void* vk_free_callback(void* user_data, void* allocation, uint64_t size, uint64_t alignment, enum vk_system_allocation_scope scope)
+void vk_free_callback(void* user_data, void* allocation, uint64_t size, uint64_t alignment, enum vk_system_allocation_scope scope)
 {
-    uint64_t aligned_size = size + (alignment-1) & ~(alignment-1);
+    uint8_t* original_ptr = ((uint8_t*) allocation) - sizeof(struct vk_allocation_header);
+    struct vk_allocation_header* header = (struct vk_allocation_header*) original_ptr;
 
-    if(aligned_size >= g_vk_memory_usage.size)
+    if(header->size >= g_vk_memory_usage.size)
     {
-        g_vk_memory_usage.size -= aligned_size;
+        g_vk_memory_usage.size -= header->size;
     }
     else
     {
         printf("Memory over-freed\n");
     }
+
+    free(original_ptr);
 }
 
 void vk_allocation_notification(void* user_data, uint64_t size, enum vk_internal_allocation_type type, enum vk_system_allocation_scope scope)
