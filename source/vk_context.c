@@ -121,7 +121,7 @@ void vk_free_callback(void* user_data, void* allocation, uint64_t size, uint64_t
     uint8_t* original_ptr = ((uint8_t*) allocation) - sizeof(struct vk_allocation_header);
     struct vk_allocation_header* header = (struct vk_allocation_header*) original_ptr;
 
-    if(header->size >= g_vk_memory_usage.size)
+    if(header->size <= g_vk_memory_usage.size)
     {
         g_vk_memory_usage.size -= header->size;
     }
@@ -394,6 +394,11 @@ void uninitialize_vulkan_context(void)
     g_vk_ctx.instance = NULL;
 
     memset(&g_vk_ctx, 0, sizeof(struct vk_context));
+
+    if(g_vk_memory_usage.size != 0)
+    {
+        printf("Critical error: VK leaking %llu bytes\n", g_vk_memory_usage.size);
+    }
 }
 
 bool initialize_queues(void)
