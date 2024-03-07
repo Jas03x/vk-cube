@@ -10,6 +10,13 @@
 struct vk_context  g_vk_ctx = { 0 };
 struct vk_context* vk_ctx   = &g_vk_ctx;
 
+struct vk_allocation_callbacks g_vk_callbacks = { 0 };
+
+struct vk_memory_usage
+{
+    uint64_t size;
+} g_vk_memory_usage;
+
 enum { MAX_EXTENSIONS = 16 };
 enum { INVALID_INDEX  = 0xFFFFFFFF };
 
@@ -40,6 +47,7 @@ struct layer_list
 bool     initialize_global_function_pointers(void);
 bool     initialize_instance_function_pointers(void);
 bool     initialize_device_function_pointers(void);
+bool     initialize_allocation_callbacks(void);
 
 bool     initialize_instance(uint32_t ext_count, const char** ext_array);
 bool     initialize_device(void);
@@ -61,6 +69,64 @@ bool     add_extension(struct extension_list* extensions, const char** ext_array
 void     free_layers(struct layer_list* layers);
 void     free_extensions(struct extension_list* extensions);
 void     free_gpu_info(uint32_t gpu_count, struct gpu_info* p_gpu_info_array);
+
+void* vk_allocation_callback(void* user_data, uint64_t size, uint64_t alignment, enum vk_system_allocation_scope scope)
+{
+    uint64_t aligned_size = size + (alignment-1) & ~(alignment-1);
+
+    void* memory = malloc(aligned_size);
+
+    if(memory != NULL)
+    {
+        memset(memory, 0, aligned_size);
+    }
+    else
+    {
+        g_vk_memory_usage.size += aligned_size;
+    }
+
+    return memory;
+}
+
+void* vk_reallocation_callback(void* user_data, void* original, uint64_t size, uint64_t alignment, enum vk_system_allocation_scope scope)
+{
+    uint64_t aligned_size = size + (alignment-1) & ~(alignment-1);
+
+    void* memory = realloc(original, aligned_size);
+
+    if(memory != NULL)
+    {
+        memset(memory, 0, aligned_size);
+    }
+    else
+    {
+        g_vk_memory_usage.size += aligned_size;
+    }
+
+    return memory;
+}
+
+void* vk_free_callback(void* user_data, void* allocation, uint64_t size, uint64_t alignment, enum vk_system_allocation_scope scope)
+{
+    uint64_t aligned_size = size + (alignment-1) & ~(alignment-1);
+
+    if(aligned_size >= g_vk_memory_usage.size)
+    {
+        g_vk_memory_usage.size -= aligned_size;
+    }
+    else
+    {
+        printf("Memory over-freed\n");
+    }
+}
+
+void vk_allocation_notification(void* user_data, uint64_t size, enum vk_internal_allocation_type type, enum vk_system_allocation_scope scope)
+{
+}
+
+void vk_free_notification(void* user_data, uint64_t size, enum vk_internal_allocation_type type, enum vk_system_allocation_scope scope)
+{
+}
 
 uint32_t debug_callback(uint32_t flags, uint32_t object_type, uint64_t object, uint32_t location, int32_t message_code, const char* layer_prefix, const char* message, void* user_data)
 {
@@ -253,6 +319,11 @@ bool initialize_vulkan_context(pfn_vk_get_instance_proc_addr pfn_get_instance_pr
 
     if(status)
     {
+        status = initialize_allocation_callbacks();
+    }
+
+    if(status)
+    {
         status = initialize_instance(ext_count, ext_array);
     }
 
@@ -276,37 +347,37 @@ void uninitialize_vulkan_context(void)
 
     if(g_vk_ctx.command_pool != NULL)
     {
-        g_vk_ctx.destroy_command_pool(g_vk_ctx.device, g_vk_ctx.command_pool, NULL);
+        g_vk_ctx.destroy_command_pool(g_vk_ctx.device, g_vk_ctx.command_pool, &g_vk_callbacks);
         g_vk_ctx.command_pool = NULL;
     }
 
     if(g_vk_ctx.image_available_semaphore != NULL)
     {
-        g_vk_ctx.destroy_semaphore(g_vk_ctx.device, g_vk_ctx.image_available_semaphore, NULL);
+        g_vk_ctx.destroy_semaphore(g_vk_ctx.device, g_vk_ctx.image_available_semaphore, &g_vk_callbacks);
         g_vk_ctx.image_available_semaphore = NULL;
     }
 
     if(g_vk_ctx.rendering_finished_semaphore != NULL)
     {
-        g_vk_ctx.destroy_semaphore(g_vk_ctx.device, g_vk_ctx.rendering_finished_semaphore, NULL);
+        g_vk_ctx.destroy_semaphore(g_vk_ctx.device, g_vk_ctx.rendering_finished_semaphore, &g_vk_callbacks);
         g_vk_ctx.rendering_finished_semaphore = NULL;
     }
 
     if(g_vk_ctx.swapchain != NULL)
     {
-        g_vk_ctx.destroy_swapchain(g_vk_ctx.device, g_vk_ctx.swapchain, NULL);
+        g_vk_ctx.destroy_swapchain(g_vk_ctx.device, g_vk_ctx.swapchain, &g_vk_callbacks);
         g_vk_ctx.swapchain = NULL;
     }
 
-    g_vk_ctx.destroy_device(g_vk_ctx.device, NULL);
+    g_vk_ctx.destroy_device(g_vk_ctx.device, &g_vk_callbacks);
     g_vk_ctx.device = NULL;
 
     if(g_vk_ctx.h_debug_callback != NULL)
     {
-        g_vk_ctx.unregister_debug_callback(g_vk_ctx.instance, g_vk_ctx.h_debug_callback, NULL);
+        g_vk_ctx.unregister_debug_callback(g_vk_ctx.instance, g_vk_ctx.h_debug_callback, &g_vk_callbacks);
     }
 
-    g_vk_ctx.destroy_instance(g_vk_ctx.instance, NULL);
+    g_vk_ctx.destroy_instance(g_vk_ctx.instance, &g_vk_callbacks);
     g_vk_ctx.instance = NULL;
 
     memset(&g_vk_ctx, 0, sizeof(struct vk_context));
@@ -339,7 +410,7 @@ bool initialize_queues(void)
         params.flags = vk_command_pool_flag__reset_bit;
         params.queue_family_index = g_vk_ctx.graphics_queue_family;
 
-        if(g_vk_ctx.create_command_pool(g_vk_ctx.device, &params, NULL, &g_vk_ctx.command_pool) != vk_success)
+        if(g_vk_ctx.create_command_pool(g_vk_ctx.device, &params, &g_vk_callbacks, &g_vk_ctx.command_pool) != vk_success)
         {
             printf("Failed to create command pool\n");
             status = false;
@@ -546,7 +617,7 @@ bool initialize_swapchain(vk_surface surface)
         params.clipped = vk_true;
         params.old_swapchain = NULL;
 
-        if(g_vk_ctx.create_swapchain(g_vk_ctx.device, &params, NULL, &g_vk_ctx.swapchain) != vk_success)
+        if(g_vk_ctx.create_swapchain(g_vk_ctx.device, &params, &g_vk_callbacks, &g_vk_ctx.swapchain) != vk_success)
         {
             printf("Could not create swapchain\n");
             status = false;
@@ -560,7 +631,7 @@ bool initialize_swapchain(vk_surface surface)
         params.p_next = NULL;
         params.flags = 0;
 
-        g_vk_ctx.create_semaphore(g_vk_ctx.device, &params, NULL, &g_vk_ctx.image_available_semaphore);
+        g_vk_ctx.create_semaphore(g_vk_ctx.device, &params, &g_vk_callbacks, &g_vk_ctx.image_available_semaphore);
     }
 
     if(status)
@@ -570,7 +641,7 @@ bool initialize_swapchain(vk_surface surface)
         params.p_next = NULL;
         params.flags = 0;
 
-        g_vk_ctx.create_semaphore(g_vk_ctx.device, &params, NULL, &g_vk_ctx.rendering_finished_semaphore);
+        g_vk_ctx.create_semaphore(g_vk_ctx.device, &params, &g_vk_callbacks, &g_vk_ctx.rendering_finished_semaphore);
     }
 
     if(status)
@@ -720,6 +791,20 @@ bool initialize_device_function_pointers(void)
     status &= load_device_function_pointer(g_vk_ctx.device, "vkQueueSubmit", (void**) &g_vk_ctx.queue_submit);
     status &= load_device_function_pointer(g_vk_ctx.device, "vkQueuePresentKHR", (void**) &g_vk_ctx.queue_present);
     status &= load_device_function_pointer(g_vk_ctx.device, "vkGetDeviceQueue", (void**) &g_vk_ctx.get_device_queue);
+
+    return status;
+}
+
+bool initialize_allocation_callbacks(void)
+{
+    bool status = true;
+
+    g_vk_callbacks.user_data = NULL;
+    g_vk_callbacks.allocation_callback = vk_allocation_callback;
+    g_vk_callbacks.reallocation_callback = vk_reallocation_callback;
+    g_vk_callbacks.free_callback = vk_free_callback;
+    g_vk_callbacks.allocation_notification = vk_allocation_notification;
+    g_vk_callbacks.free_notification = vk_free_notification;
 
     return status;
 }
@@ -992,7 +1077,7 @@ bool initialize_instance(uint32_t ext_count, const char** ext_array)
         instance_info.extension_count = num_extensions;
         instance_info.p_extension_names = extensions;
 
-        if(g_vk_ctx.create_instance(&instance_info, NULL, &g_vk_ctx.instance) != vk_success)
+        if(g_vk_ctx.create_instance(&instance_info, &g_vk_callbacks, &g_vk_ctx.instance) != vk_success)
         {
             status = false;
             printf("Failed to create vulkan instance\n");
@@ -1027,7 +1112,7 @@ bool initialize_debug_layer(void)
     callback_info.pfn_callback = debug_callback;
     callback_info.user_data = NULL;
 
-    if(g_vk_ctx.register_debug_callback(g_vk_ctx.instance, &callback_info, NULL, &g_vk_ctx.h_debug_callback) != vk_success)
+    if(g_vk_ctx.register_debug_callback(g_vk_ctx.instance, &callback_info, &g_vk_callbacks, &g_vk_ctx.h_debug_callback) != vk_success)
     {
         printf("Failed to register debug callback\n");
         status = false;
@@ -1249,7 +1334,7 @@ bool initialize_device(void)
         device_params.p_extensions = extensions;
         device_params.features = NULL;
 
-        if(g_vk_ctx.create_device(g_vk_ctx.physical_device, &device_params, NULL, &g_vk_ctx.device) != vk_success)
+        if(g_vk_ctx.create_device(g_vk_ctx.physical_device, &device_params, &g_vk_callbacks, &g_vk_ctx.device) != vk_success)
         {
             status = false;
             printf("Failed to create vulkan device\n");
