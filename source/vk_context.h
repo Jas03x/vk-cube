@@ -11,6 +11,8 @@ struct vk_context
     vk_instance                                      instance;
     vk_device                                        device; // logical device
     vk_physical_device                               physical_device;
+
+    vk_surface                                       surface;
     
     vk_swapchain                                     swapchain;
     vk_image                                         swapchain_images[VK_CTX_NUM_SWAPCHAIN_BUFFERS];
@@ -51,6 +53,7 @@ struct vk_context
     pfn_vk_get_physical_device_surface_formats       get_physical_device_surface_formats;
     pfn_vk_enumerate_device_layers                   enumerate_device_layers;
     pfn_vk_enumerate_device_extensions               enumerate_device_extensions;
+    pfn_vk_destroy_surface                           destroy_surface;
 
     // device level functions
     pfn_vk_create_semaphore                          create_semaphore;
@@ -79,7 +82,6 @@ extern struct vk_context* vk_ctx;
 bool initialize_vulkan_context(pfn_vk_get_instance_proc_addr pfn_get_instance_proc_addr, uint32_t ext_count, const char** ext_array);
 void uninitialize_vulkan_context(void);
 
-bool initialize_queues(void);
 bool initialize_swapchain(vk_surface surface);
 
 #endif // VK_INTERFACE_H

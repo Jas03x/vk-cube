@@ -105,11 +105,6 @@ bool initialize(void)
         status = initialize_swapchain(surface);
     }
 
-    if(status)
-    {
-        status = initialize_queues();
-    }
-
     if(ext_array != NULL)
     {
         free(ext_array);

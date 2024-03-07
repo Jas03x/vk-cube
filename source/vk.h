@@ -815,6 +815,7 @@ typedef uint32_t (*pfn_vk_enumerate_device_extensions)(vk_physical_device h_devi
 typedef uint32_t (*pfn_vk_get_physical_device_surface_capabilities)(vk_physical_device h_device, vk_surface surface, struct vk_surface_capabilities* p_capabilities);
 typedef uint32_t (*pfn_vk_get_physical_device_surface_present_modes)(vk_physical_device h_device, vk_surface surface, uint32_t* p_present_mode_count, uint32_t* p_present_mode_array);
 typedef uint32_t (*pfn_vk_get_physical_device_surface_formats)(vk_physical_device h_device, vk_surface surface, uint32_t* p_format_count, struct vk_surface_format* p_format_array);
+typedef void     (*pfn_vk_destroy_surface)(vk_instance h_instance, vk_surface surface, struct vk_allocation_callbacks* callbacks);
 
 // device level functions
 typedef uint32_t (*pfn_vk_create_semaphore)(vk_device h_device, const struct vk_semaphore_create_params* params, struct vk_allocation_callbacks* callbacks, vk_semaphore* p_semaphore);

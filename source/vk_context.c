@@ -57,6 +57,7 @@ bool     initialize_allocation_callbacks(void);
 
 bool     initialize_instance(uint32_t ext_count, const char** ext_array);
 bool     initialize_device(void);
+bool     initialize_queues(void);
 bool     initialize_debug_layer(void);
 
 bool     enumerate_instance_layers(struct layer_list* p_layers);
@@ -345,6 +346,11 @@ bool initialize_vulkan_context(pfn_vk_get_instance_proc_addr pfn_get_instance_pr
         status = initialize_device();
     }
 
+    if(status)
+    {
+        status = initialize_queues();
+    }
+
     return status;
 }
 
@@ -362,6 +368,12 @@ void uninitialize_vulkan_context(void)
     {
         g_vk_ctx.destroy_command_pool(g_vk_ctx.device, g_vk_ctx.command_pool, &g_vk_callbacks);
         g_vk_ctx.command_pool = NULL;
+    }
+
+    if(g_vk_ctx.surface != NULL)
+    {
+        g_vk_ctx.destroy_surface(g_vk_ctx.instance, g_vk_ctx.surface, NULL);
+        g_vk_ctx.surface = NULL;
     }
 
     if(g_vk_ctx.image_available_semaphore != NULL)
@@ -469,10 +481,23 @@ bool initialize_swapchain(vk_surface surface)
 
     struct vk_surface_capabilities surface_capabilities = { 0 };
 
-    if(g_vk_ctx.get_physical_device_surface_support(g_vk_ctx.physical_device, g_vk_ctx.graphics_queue_family, surface, &supported) != vk_success)
+    if(surface != NULL)
     {
-        printf("Failed to check device surface support\n");
+        g_vk_ctx.surface = surface;
+    }
+    else
+    {
+        printf("Invalid surface");
         status = false;
+    }
+
+    if(status)
+    {
+        if(g_vk_ctx.get_physical_device_surface_support(g_vk_ctx.physical_device, g_vk_ctx.graphics_queue_family, surface, &supported) != vk_success)
+        {
+            printf("Failed to check device surface support\n");
+            status = false;
+        }
     }
 
     if(status)
@@ -775,6 +800,7 @@ bool initialize_instance_function_pointers(void)
     status &= load_function_pointer(g_vk_ctx.instance, "vkGetPhysicalDeviceSurfaceCapabilitiesKHR", (void**) &g_vk_ctx.get_physical_device_surface_capabilities);
     status &= load_function_pointer(g_vk_ctx.instance, "vkGetPhysicalDeviceSurfacePresentModesKHR", (void**) &g_vk_ctx.get_physical_device_surface_present_modes);
     status &= load_function_pointer(g_vk_ctx.instance, "vkGetPhysicalDeviceSurfaceFormatsKHR", (void**) &g_vk_ctx.get_physical_device_surface_formats);
+    status &= load_function_pointer(g_vk_ctx.instance, "vkDestroySurfaceKHR", (void**) &g_vk_ctx.destroy_surface);
 
 #ifdef DEBUG
     status &= load_function_pointer(g_vk_ctx.instance, "vkCreateDebugReportCallbackEXT", (void**) &g_vk_ctx.register_debug_callback);
