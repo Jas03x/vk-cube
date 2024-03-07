@@ -23,6 +23,7 @@ typedef void* vk_framebuffer;
 typedef void* vk_buffer;
 typedef void* vk_image;
 typedef void* vk_queue;
+typedef void* vk_renderpass;
 
 enum vk_bool
 {
@@ -84,6 +85,36 @@ struct vk_instance_info
     const char* const*                         p_layer_names;
     uint32_t                                   extension_count;
     const char* const*                         p_extension_names;
+};
+
+enum vk_system_allocation_scope
+{
+    vk_system_allocation_scope__command  = 0,
+    vk_system_allocation_scope__object   = 1,
+    vk_system_allocation_scope__cache    = 2,
+    vk_system_allocation_scope__device   = 3,
+    vk_system_allocation_scope__instance = 4
+};
+
+enum vk_internal_allocation_type
+{
+    vk_internal_allocation_type__executable = 0
+};
+
+typedef void*    (*pfn_vk_allocation_callback)(void* user_data, uint64_t size, uint64_t alignment, enum vk_system_allocation_scope scope);
+typedef void*    (*pfn_vk_reallocation_callback)(void* user_data, void* original, uint64_t size, uint64_t alignment, enum vk_system_allocation_scope scope);
+typedef void     (*pfn_vk_free_callback)(void* user_data, void* allocation, uint64_t size, uint64_t alignment, enum vk_system_allocation_scope scope);
+typedef void     (*pfn_vk_allocation_notification)(void* user_data, uint64_t size, enum vk_internal_allocation_type type, enum vk_system_allocation_scope scope);
+typedef void     (*pfn_vk_free_notification)(void* user_data, uint64_t size, enum vk_internal_allocation_type type, enum vk_system_allocation_scope scope);
+
+struct vk_allocation_callbacks
+{
+    void*                                      user_data;
+    pfn_vk_allocation_callback                 allocation_callback;
+    pfn_vk_reallocation_callback               reallocation_callback;
+    pfn_vk_free_callback                       free_callback;
+    pfn_vk_allocation_notification             allocation_notification;
+    pfn_vk_free_notification                   free_notification;
 };
 
 struct vk_layer
@@ -747,48 +778,93 @@ enum vk_attachment_description_flags
     vk_attachment_description_flag__may_alias = 1
 };
 
+enum vk_sample_count
+{
+    vk_sample_count__1  = 0x1,
+    vk_sample_count__2  = 0x2,
+    vk_sample_count__4  = 0x4,
+    vk_sample_count__8  = 0x8,
+    vk_sample_count__16 = 0x1,
+    vk_sample_count__32 = 0x2,
+    vk_sample_count__64 = 0x3
+};
+
+enum vk_attachment_load_op
+{
+    vk_attachment_load_op__load        = 0,
+    vk_attachment_load_op__clear       = 1,
+    vk_attachment_load_op__do_not_care = 2,
+    vk_attachment_load_op__none        = 1000400000
+};
+
+enum vk_attachment_store_op
+{
+    vk_attachment_store_op__store        = 0,
+    vk_attachment_store_op__do_not_care  = 1,
+    vk_attachment_store_op__none         = 1000301000
+};
+
 struct vk_attachment_description
 {
-    uint32_t                                   flags;
-    uint32_t                                   format;
+    enum vk_attachment_description_flags       flags;
+    enum vk_format                             format;
+    enum vk_sample_count                       samples;
+    enum vk_attachment_load_op                 load_op;
+    enum vk_attachment_store_op                store_op;
+    enum vk_attachment_load_op                 stencil_load_op;
+    enum vk_attachment_store_op                stencil_store_op;
+    enum vk_image_layout                       initial_layout;
+    enum vk_image_layout                       final_layout
+};
+
+enum vk_pipeline_bind_point
+{
+    vk_pipeline_bind_point__graphics = 0,
+    vk_pipeline_bind_point__compute  = 1
+};
+
+struct vk_attachment_reference
+{
+    uint32_t                                   attachment;
+    enum vk_image_layout                       layout;
+};
+
+struct vk_subpass_description
+{
+    enum vk_subpass_description_flags          flags;
+    enum vk_pipeline_bind_point                pipeline_bind_point;
+    uint32_t                                   input_attachment_count;
+    struct vk_attachment_reference*            input_attachment_array;
+    uint32_t                                   color_attachment_count;
+    struct vk_attachment_reference*            color_attachment_array;
+    struct vk_attachment_reference*            resolve_attachment_array;
+    struct vk_attachment_reference*            depth_stencil_attachment_array;
+    uint32_t                                   preserve_attachment_count;
+    const uint32_t*                            preserve_attachment_array;
+};
+
+struct vk_subpass_dependency
+{
+    uint32_t                                   src_subpass;
+    uint32_t                                   dst_subpass;
+    enum vk_pipeline_stage_flags               src_stage_mask;
+    enum vk_pipeline_stage_flags               dst_stage_mask;
+    enum vk_access_flags                       src_access_mask;
+    enum vk_access_flags                       dst_access_mask;
+    enum vk_dependency_flags                   dependency_flags;
 };
 
 struct vk_render_pass_create_params
 {
     enum vk_structure_type                     s_type;
     const void*                                p_next;
-    uint32_t                                   flags;
+    enum vk_render_pass_create_flags           flags;
     uint32_t                                   attachment_count;
-};
-
-enum vk_system_allocation_scope
-{
-    vk_system_allocation_scope__command  = 0,
-    vk_system_allocation_scope__object   = 1,
-    vk_system_allocation_scope__cache    = 2,
-    vk_system_allocation_scope__device   = 3,
-    vk_system_allocation_scope__instance = 4
-};
-
-enum vk_internal_allocation_type
-{
-    vk_internal_allocation_type__executable = 0
-};
-
-typedef void*    (*pfn_vk_allocation_callback)(void* user_data, uint64_t size, uint64_t alignment, enum vk_system_allocation_scope scope);
-typedef void*    (*pfn_vk_reallocation_callback)(void* user_data, void* original, uint64_t size, uint64_t alignment, enum vk_system_allocation_scope scope);
-typedef void     (*pfn_vk_free_callback)(void* user_data, void* allocation, uint64_t size, uint64_t alignment, enum vk_system_allocation_scope scope);
-typedef void     (*pfn_vk_allocation_notification)(void* user_data, uint64_t size, enum vk_internal_allocation_type type, enum vk_system_allocation_scope scope);
-typedef void     (*pfn_vk_free_notification)(void* user_data, uint64_t size, enum vk_internal_allocation_type type, enum vk_system_allocation_scope scope);
-
-struct vk_allocation_callbacks
-{
-    void*                                      user_data;
-    pfn_vk_allocation_callback                 allocation_callback;
-    pfn_vk_reallocation_callback               reallocation_callback;
-    pfn_vk_free_callback                       free_callback;
-    pfn_vk_allocation_notification             allocation_notification;
-    pfn_vk_free_notification                   free_notification;
+    struct vk_attachment_description*          attachment_array;
+    uint32_t                                   subpass_count;
+    struct vk_subpass_description*             subpass_array;
+    uint32_t                                   dependency_count;
+    struct vk_subpass_dependency*              dependency_array;
 };
 
 typedef void*    (*pfn_vk_get_instance_proc_addr)(vk_instance h_instance, const char* p_name);
@@ -841,6 +917,6 @@ typedef void     (*pfn_vk_cmd_clear_color_image)(vk_command_buffer h_command_buf
 typedef uint32_t (*pfn_vk_queue_submit)(vk_queue h_queue, uint32_t submission_count, const struct vk_submission_info* submission_array, vk_fence fence);
 typedef uint32_t (*pfn_vk_queue_present)(vk_queue h_queue, struct vk_present_info* info);
 typedef void     (*pfn_vk_get_device_queue)(vk_device h_device, uint32_t queue_family_index, uint32_t queue_index, vk_queue* p_queue);
-// typedef uint32_t (*pfn_vk_create_render_pass)();
+typedef uint32_t (*pfn_vk_create_render_pass)(vk_device h_device, struct vk_render_pass_create_params* params, struct vk_allocation_callbacks* callbacks, vk_renderpass* p_render_pass);
 
 #endif // VK_H

@@ -835,6 +835,7 @@ bool initialize_device_function_pointers(void)
     status &= load_device_function_pointer(g_vk_ctx.device, "vkQueueSubmit", (void**) &g_vk_ctx.queue_submit);
     status &= load_device_function_pointer(g_vk_ctx.device, "vkQueuePresentKHR", (void**) &g_vk_ctx.queue_present);
     status &= load_device_function_pointer(g_vk_ctx.device, "vkGetDeviceQueue", (void**) &g_vk_ctx.get_device_queue);
+    status &= load_device_function_pointer(g_vk_ctx.device, "vkCreateRenderPass", (void**) &g_vk_ctx.create_render_pass);
 
     return status;
 }

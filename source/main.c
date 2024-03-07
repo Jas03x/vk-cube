@@ -292,13 +292,6 @@ bool run(void)
         if(!exit)
         {
             status = render();
-
-            /*
-            if(status)
-            {
-                status = present();
-            }
-            */
         }
         else
         {

@@ -75,6 +75,7 @@ struct vk_context
     pfn_vk_queue_submit                              queue_submit;
     pfn_vk_queue_present                             queue_present;
     pfn_vk_get_device_queue                          get_device_queue;
+    pfn_vk_create_render_pass                        create_render_pass;
 };
 
 extern struct vk_context* vk_ctx;
