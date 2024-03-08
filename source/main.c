@@ -15,6 +15,7 @@ SDL_Window* g_window = NULL;
 
 vk_render_pass g_render_pass = NULL;
 vk_image_view  g_image_views[VK_CTX_NUM_SWAPCHAIN_BUFFERS];
+vk_framebuffer g_framebuffer;
 
 bool initialize(void)
 {
@@ -181,6 +182,26 @@ bool initialize(void)
                 printf("Failed to create swapchain image view\n");
                 status = false;
             }
+        }
+    }
+
+    if(status)
+    {
+        struct vk_framebuffer_create_params params;
+        params.s_type = vk_structure_type__framebuffer_create_info;
+        params.p_next = NULL;
+        params.flags = 0;
+        params.render_pass = g_render_pass;
+        params.attachment_count = 1;
+        params.attachment_array = &g_image_views;
+        params.width = window_width;
+        params.height = window_height;
+        params.layers = 1;
+
+        if(vk_ctx->create_framebuffer(vk_ctx->device, &params, vk_ctx->callbacks, &g_framebuffer) != vk_success)
+        {
+            printf("Failed to create framebuffer\n");
+            status = false;
         }
     }
 
