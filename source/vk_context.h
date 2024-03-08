@@ -31,7 +31,7 @@ struct vk_context
 
     uint32_t                                         graphics_queue_family;
 
-    vk_debug_callback                                h_debug_callback;
+    vk_debug_callback                                debug_callback;
 
     pfn_vk_get_instance_proc_addr                    get_instance_proc_addr;
     pfn_vk_get_device_proc_addr                      get_device_proc_addr;

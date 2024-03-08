@@ -222,7 +222,7 @@ bool render(void)
         params.s_type = vk_structure_type__command_buffer_begin_info;
         params.p_next = NULL;
         params.usage_flags = vk_command_buffer_usage_flag__one_time_submit;
-        params.p_inheritance_info = NULL;
+        params.inheritance_info = NULL;
 
         if(vk_ctx->begin_command_buffer(vk_ctx->command_buffer, &params) != vk_success)
         {
