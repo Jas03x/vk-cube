@@ -13,9 +13,9 @@ const uint32_t window_height = 768;
 
 SDL_Window* g_window = NULL;
 
-vk_render_pass g_render_pass = NULL;
-vk_image_view  g_image_views[VK_CTX_NUM_SWAPCHAIN_BUFFERS];
-vk_framebuffer g_framebuffer;
+VkRenderPass  g_render_pass = NULL;
+VkImageView   g_image_views[VK_CTX_NUM_SWAPCHAIN_BUFFERS];
+VkFramebuffer g_framebuffer = NULL;
 
 bool initialize(void)
 {
@@ -24,7 +24,7 @@ bool initialize(void)
     uint32_t ext_count = 0;
     const char** ext_array = NULL;
 
-    vk_surface surface = NULL;
+    VkSurfaceKHR surface = NULL;
 
     if(SDL_Init(SDL_INIT_EVERYTHING) != 0)
     {
@@ -111,45 +111,45 @@ bool initialize(void)
 
     if(status)
     {
-        struct vk_attachment_description attachment_description;
+        VkAttachmentDescription attachment_description;
         attachment_description.flags = 0;
         attachment_description.format = vk_ctx->surface_format;
-        attachment_description.samples = vk_sample_count__1;
-        attachment_description.load_op = vk_attachment_load_op__clear;
-        attachment_description.store_op = vk_attachment_store_op__store;
-        attachment_description.stencil_load_op = vk_attachment_load_op__do_not_care;
-        attachment_description.stencil_store_op = vk_attachment_store_op__do_not_care;
-        attachment_description.initial_layout = vk_image_layout__present_src;
-        attachment_description.final_layout = vk_image_layout__present_src;
+        attachment_description.samples = VK_SAMPLE_COUNT_1_BIT;
+        attachment_description.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        attachment_description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachment_description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachment_description.initialLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        attachment_description.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-        struct vk_attachment_reference attachment_reference;
+        VkAttachmentReference attachment_reference;
         attachment_reference.attachment = 0;
-        attachment_reference.layout = vk_image_layout__color_attachment_optimal;
+        attachment_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-        struct vk_subpass_description subpass_description;
+        VkSubpassDescription subpass_description;
         subpass_description.flags = 0;
-        subpass_description.pipeline_bind_point = vk_pipeline_bind_point__graphics;
-        subpass_description.input_attachment_count = 0;
-        subpass_description.input_attachment_array = NULL;
-        subpass_description.color_attachment_count = 1;
-        subpass_description.color_attachment_array = &attachment_reference;
-        subpass_description.resolve_attachment_array = NULL;
-        subpass_description.depth_stencil_attachment_array = NULL;
-        subpass_description.preserve_attachment_count = 0;
-        subpass_description.preserve_attachment_array = NULL;
+        subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass_description.inputAttachmentCount = 0;
+        subpass_description.pInputAttachments = NULL;
+        subpass_description.colorAttachmentCount = 1;
+        subpass_description.pColorAttachments = &attachment_reference;
+        subpass_description.pResolveAttachments = NULL;
+        subpass_description.pDepthStencilAttachment = NULL;
+        subpass_description.preserveAttachmentCount = 0;
+        subpass_description.pPreserveAttachments = NULL;
 
-        struct vk_render_pass_create_params params;
-        params.s_type = vk_structure_type__render_pass_create_info;
-        params.p_next = NULL;
-        params.flags = 0;
-        params.attachment_count = 1;
-        params.attachment_array = &attachment_description;
-        params.subpass_count = 1;
-        params.subpass_array = &subpass_description;
-        params.dependency_count = 0;
-        params.dependency_array = NULL;
+        VkRenderPassCreateInfo render_pass_info;
+        render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        render_pass_info.pNext = NULL;
+        render_pass_info.flags = 0;
+        render_pass_info.attachmentCount = 1;
+        render_pass_info.pAttachments = &attachment_description;
+        render_pass_info.subpassCount = 1;
+        render_pass_info.pSubpasses = &subpass_description;
+        render_pass_info.dependencyCount = 0;
+        render_pass_info.pDependencies = NULL;
 
-        if(vk_ctx->create_render_pass(vk_ctx->device, &params, vk_ctx->callbacks, &g_render_pass) != vk_success)
+        if(vk_ctx->create_render_pass(vk_ctx->device, &render_pass_info, vk_ctx->callbacks, &g_render_pass) != VK_SUCCESS)
         {
             printf("Failed to create render pass\n");
             status = false;
@@ -160,24 +160,24 @@ bool initialize(void)
     {
         for(uint32_t i = 0; i < VK_CTX_NUM_SWAPCHAIN_BUFFERS; i++)
         {
-            struct vk_image_view_create_params params;
-            params.s_type = vk_structure_type__image_view_create_info;
-            params.p_next = NULL;
+            VkImageViewCreateInfo params;
+            params.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            params.pNext = NULL;
             params.flags = 0;
             params.image = vk_ctx->swapchain_images[i];
-            params.view_type = vk_image_view_type__2D;
+            params.viewType = VK_IMAGE_VIEW_TYPE_2D;
             params.format = vk_ctx->surface_format;
-            params.components.r = vk_component_swizzle__identity;
-            params.components.g = vk_component_swizzle__identity;
-            params.components.b = vk_component_swizzle__identity;
-            params.components.a = vk_component_swizzle__identity;
-            params.subresource_range.aspect_mask = vk_image_aspect__color;
-            params.subresource_range.base_mip_level = 0;
-            params.subresource_range.level_count = 1;
-            params.subresource_range.base_array_layer = 0;
-            params.subresource_range.layer_count = 1;
+            params.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+            params.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+            params.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+            params.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+            params.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            params.subresourceRange.baseMipLevel = 0;
+            params.subresourceRange.levelCount = 1;
+            params.subresourceRange.baseArrayLayer = 0;
+            params.subresourceRange.layerCount = 1;
 
-            if(vk_ctx->create_image_view(vk_ctx->device, &params, vk_ctx->callbacks, &g_image_views[i]) != vk_success)
+            if(vk_ctx->create_image_view(vk_ctx->device, &params, vk_ctx->callbacks, &g_image_views[i]) != VK_SUCCESS)
             {
                 printf("Failed to create swapchain image view\n");
                 status = false;
@@ -187,18 +187,18 @@ bool initialize(void)
 
     if(status)
     {
-        struct vk_framebuffer_create_params params;
-        params.s_type = vk_structure_type__framebuffer_create_info;
-        params.p_next = NULL;
+        VkFramebufferCreateInfo params;
+        params.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        params.pNext = NULL;
         params.flags = 0;
-        params.render_pass = g_render_pass;
-        params.attachment_count = 1;
-        params.attachment_array = &g_image_views;
+        params.renderPass = g_render_pass;
+        params.attachmentCount = 1;
+        params.pAttachments = g_image_views;
         params.width = window_width;
         params.height = window_height;
         params.layers = 1;
 
-        if(vk_ctx->create_framebuffer(vk_ctx->device, &params, vk_ctx->callbacks, &g_framebuffer) != vk_success)
+        if(vk_ctx->create_framebuffer(vk_ctx->device, &params, vk_ctx->callbacks, &g_framebuffer) != VK_SUCCESS)
         {
             printf("Failed to create framebuffer\n");
             status = false;
@@ -230,7 +230,7 @@ bool render(void)
 
     if(status)
     {
-        if(vk_ctx->acquire_next_image(vk_ctx->device, vk_ctx->swapchain, UINT64_MAX, vk_ctx->image_available_semaphore, NULL, &swapchain_index) != vk_success)
+        if(vk_ctx->acquire_next_image(vk_ctx->device, vk_ctx->swapchain, UINT64_MAX, vk_ctx->image_available_semaphore, NULL, &swapchain_index) != VK_SUCCESS)
         {
             printf("Could not get next surface image\n");
             status = false;
@@ -239,13 +239,13 @@ bool render(void)
 
     if(status)
     {
-        struct vk_command_buffer_begin_params params;
-        params.s_type = vk_structure_type__command_buffer_begin_info;
-        params.p_next = NULL;
-        params.usage_flags = vk_command_buffer_usage_flag__one_time_submit;
-        params.inheritance_info = NULL;
+        VkCommandBufferBeginInfo params;
+        params.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        params.pNext = NULL;
+        params.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+        params.pInheritanceInfo = NULL;
 
-        if(vk_ctx->begin_command_buffer(vk_ctx->command_buffer, &params) != vk_success)
+        if(vk_ctx->begin_command_buffer(vk_ctx->command_buffer, &params) != VK_SUCCESS)
         {
             printf("Failed to begin command buffer\n");
             status = false;
@@ -254,67 +254,67 @@ bool render(void)
 
     if(status)
     {
-        struct vk_image_memory_barrier barrier;
-        barrier.s_type = vk_structure_type__image_memory_barrier;
-        barrier.p_next = NULL;
-        barrier.src_access_mask = vk_access_flag__memory_read;
-        barrier.dst_access_mask = vk_access_flag__transfer_write;
-        barrier.old_layout = vk_image_layout__undefined;
-        barrier.new_layout = vk_image_layout__transfer_dst_optimal;
-        barrier.src_queue_family_index = vk_ctx->graphics_queue_family;
-        barrier.dst_queue_family_index = vk_ctx->graphics_queue_family;
+        VkImageMemoryBarrier barrier;
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.pNext = NULL;
+        barrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+        barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        barrier.srcQueueFamilyIndex = vk_ctx->graphics_queue_family;
+        barrier.dstQueueFamilyIndex = vk_ctx->graphics_queue_family;
         barrier.image = vk_ctx->swapchain_images[swapchain_index];
-        barrier.subresource_range.aspect_mask = vk_image_aspect__color;
-        barrier.subresource_range.base_mip_level = 0;
-        barrier.subresource_range.level_count = 1;
-        barrier.subresource_range.base_array_layer = 0,
-        barrier.subresource_range.layer_count = 1;
+        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        barrier.subresourceRange.baseMipLevel = 0;
+        barrier.subresourceRange.levelCount = 1;
+        barrier.subresourceRange.baseArrayLayer = 0,
+        barrier.subresourceRange.layerCount = 1;
 
-        vk_ctx->cmd_pipeline_barrier(vk_ctx->command_buffer, vk_pipeline_stage_flag__transfer, vk_pipeline_stage_flag__transfer, 0, 0, NULL, 0, NULL, 1, &barrier);
+        vk_ctx->cmd_pipeline_barrier(vk_ctx->command_buffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1, &barrier);
     }
 
     if(status)
     {
-        struct vk_clear_color color;
+        VkClearColorValue color;
         color.float32[0] = 0.0f;
         color.float32[1] = 0.0f;
         color.float32[2] = 1.0f;
         color.float32[3] = 0.0f;
 
-        struct vk_image_subresource_range subresource_range;
-        subresource_range.aspect_mask = vk_image_aspect__color;
-        subresource_range.base_mip_level = 0;
-        subresource_range.level_count = 1;
-        subresource_range.base_array_layer = 0,
-        subresource_range.layer_count = 1;
+        VkImageSubresourceRange subresource_range;
+        subresource_range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        subresource_range.baseMipLevel = 0;
+        subresource_range.levelCount = 1;
+        subresource_range.baseArrayLayer = 0,
+        subresource_range.layerCount = 1;
 
-        vk_ctx->cmd_clear_color_image(vk_ctx->command_buffer, vk_ctx->swapchain_images[swapchain_index], vk_image_layout__transfer_dst_optimal, &color, 1, &subresource_range);
+        vk_ctx->cmd_clear_color_image(vk_ctx->command_buffer, vk_ctx->swapchain_images[swapchain_index], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &color, 1, &subresource_range);
     }
 
     if(status)
     {
-        struct vk_image_memory_barrier barrier;
-        barrier.s_type = vk_structure_type__image_memory_barrier;
-        barrier.p_next = NULL;
-        barrier.src_access_mask = vk_access_flag__transfer_write;
-        barrier.dst_access_mask = vk_access_flag__memory_read;
-        barrier.old_layout = vk_image_layout__transfer_dst_optimal;
-        barrier.new_layout = vk_image_layout__present_src;
-        barrier.src_queue_family_index = vk_ctx->graphics_queue_family;
-        barrier.dst_queue_family_index = vk_ctx->graphics_queue_family;
+        VkImageMemoryBarrier barrier;
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.pNext = NULL;
+        barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        barrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+        barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        barrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        barrier.srcQueueFamilyIndex = vk_ctx->graphics_queue_family;
+        barrier.dstQueueFamilyIndex = vk_ctx->graphics_queue_family;
         barrier.image = vk_ctx->swapchain_images[swapchain_index];
-        barrier.subresource_range.aspect_mask = vk_image_aspect__color;
-        barrier.subresource_range.base_mip_level = 0;
-        barrier.subresource_range.level_count = 1;
-        barrier.subresource_range.base_array_layer = 0,
-        barrier.subresource_range.layer_count = 1;
+        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        barrier.subresourceRange.baseMipLevel = 0;
+        barrier.subresourceRange.levelCount = 1;
+        barrier.subresourceRange.baseArrayLayer = 0,
+        barrier.subresourceRange.layerCount = 1;
 
-        vk_ctx->cmd_pipeline_barrier(vk_ctx->command_buffer, vk_pipeline_stage_flag__transfer, vk_pipeline_stage_flag__transfer, 0, 0, NULL, 0, NULL, 1, &barrier);
+        vk_ctx->cmd_pipeline_barrier(vk_ctx->command_buffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1, &barrier);
     }
 
     if(status)
     {
-        if(vk_ctx->end_command_buffer(vk_ctx->command_buffer) != vk_success)
+        if(vk_ctx->end_command_buffer(vk_ctx->command_buffer) != VK_SUCCESS)
         {
             printf("Failed to end command buffer\n");
             status = false;
@@ -323,20 +323,20 @@ bool render(void)
 
     if(status)
     {
-        enum vk_pipeline_stage_flags wait_dst_stage_masks[] = { vk_pipeline_stage_flag__transfer };
+        VkPipelineStageFlags wait_dst_stage_masks[] = { VK_PIPELINE_STAGE_TRANSFER_BIT };
 
-        struct vk_submission_info submit_info;
-        submit_info.s_type = vk_structure_type__submit_info;
-        submit_info.p_next = NULL;
-        submit_info.wait_semaphore_count = 1;
-        submit_info.wait_semaphores = &vk_ctx->image_available_semaphore;
-        submit_info.wait_dst_stage_masks = wait_dst_stage_masks;
-        submit_info.command_buffer_count = 1;
-        submit_info.command_buffers = &vk_ctx->command_buffer;
-        submit_info.signal_semaphore_count = 1;
-        submit_info.signal_semahores = &vk_ctx->rendering_finished_semaphore;
+        VkSubmitInfo submit_info;
+        submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submit_info.pNext = NULL;
+        submit_info.waitSemaphoreCount = 1;
+        submit_info.pWaitSemaphores = &vk_ctx->image_available_semaphore;
+        submit_info.pWaitDstStageMask = wait_dst_stage_masks;
+        submit_info.commandBufferCount = 1;
+        submit_info.pCommandBuffers = &vk_ctx->command_buffer;
+        submit_info.signalSemaphoreCount = 1;
+        submit_info.pSignalSemaphores = &vk_ctx->rendering_finished_semaphore;
 
-        if(vk_ctx->queue_submit(vk_ctx->graphics_queues[0], 1, &submit_info, NULL) != vk_success)
+        if(vk_ctx->queue_submit(vk_ctx->graphics_queues[0], 1, &submit_info, NULL) != VK_SUCCESS)
         {
             printf("Failed to submit command buffer\n");
             status = false;
@@ -345,17 +345,17 @@ bool render(void)
 
     if(status)
     {
-        struct vk_present_info present_info;
-        present_info.s_type = vk_structure_type__present_info;
-        present_info.p_next = NULL;
-        present_info.wait_semaphore_count = 1;
-        present_info.wait_semaphores = &vk_ctx->rendering_finished_semaphore;
-        present_info.swapchain_count = 1;
-        present_info.swapchains = &vk_ctx->swapchain;
-        present_info.image_indices = &swapchain_index;
-        present_info.results = NULL;
+        VkPresentInfoKHR present_info;
+        present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+        present_info.pNext = NULL;
+        present_info.waitSemaphoreCount = 1;
+        present_info.pWaitSemaphores = &vk_ctx->rendering_finished_semaphore;
+        present_info.swapchainCount = 1;
+        present_info.pSwapchains = &vk_ctx->swapchain;
+        present_info.pImageIndices = &swapchain_index;
+        present_info.pResults = NULL;
 
-        if(vk_ctx->queue_present(vk_ctx->graphics_queues[0], &present_info) != vk_success)
+        if(vk_ctx->queue_present(vk_ctx->graphics_queues[0], &present_info) != VK_SUCCESS)
         {
             printf("Failed to present\n");
             status = false;

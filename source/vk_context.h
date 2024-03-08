@@ -1,94 +1,94 @@
 #ifndef VK_INTERFACE_H
 #define VK_INTERFACE_H
 
-#include "vk.h"
+#include <vulkan/vulkan.h>
 
 enum { VK_CTX_NUM_GRAPHICS_QUEUES   = 1 };
 enum { VK_CTX_NUM_SWAPCHAIN_BUFFERS = 2 };
 
 struct vk_context
 {
-    vk_instance                                      instance;
+    VkInstance                                       instance;
 
-    struct vk_allocation_callbacks*                  callbacks;
+    VkAllocationCallbacks*                           callbacks;
 
-    vk_device                                        device; // logical device
-    vk_physical_device                               physical_device;
+    VkDevice                                         device;
+    VkPhysicalDevice                                 physical_device;
 
-    vk_surface                                       surface;
-    enum vk_format                                   surface_format;
+    VkSurfaceKHR                                     surface;
+    VkFormat                                         surface_format;
     
-    vk_swapchain                                     swapchain;
-    vk_image                                         swapchain_images[VK_CTX_NUM_SWAPCHAIN_BUFFERS];
+    VkSwapchainKHR                                   swapchain;
+    VkImage                                          swapchain_images[VK_CTX_NUM_SWAPCHAIN_BUFFERS];
 
-    vk_command_pool                                  command_pool;
-    vk_command_buffer                                command_buffer;
+    VkCommandPool                                    command_pool;
+    VkCommandBuffer                                  command_buffer;
 
-    vk_queue                                         graphics_queues[VK_CTX_NUM_GRAPHICS_QUEUES];
+    VkQueue                                          graphics_queues[VK_CTX_NUM_GRAPHICS_QUEUES];
 
-    vk_semaphore                                     image_available_semaphore;
-    vk_semaphore                                     rendering_finished_semaphore;
+    VkSemaphore                                      image_available_semaphore;
+    VkSemaphore                                      rendering_finished_semaphore;
 
     uint32_t                                         graphics_queue_family;
 
-    vk_debug_callback                                debug_callback;
+    VkDebugReportCallbackEXT                         debug_callback;
 
-    pfn_vk_get_instance_proc_addr                    get_instance_proc_addr;
-    pfn_vk_get_device_proc_addr                      get_device_proc_addr;
+    PFN_vkGetInstanceProcAddr                        get_instance_proc_addr;
+    PFN_vkGetDeviceProcAddr                          get_device_proc_addr;
 
     // global functions
-    pfn_vk_create_instance                           create_instance;
-    pfn_vk_destroy_instance                          destroy_instance;
-    pfn_vk_get_version                               get_version;
-    pfn_vk_enumerate_layers                          enumerate_layers;
-    pfn_vk_enumerate_extensions                      enumerate_extensions;
+    PFN_vkCreateInstance                             create_instance;
+    PFN_vkDestroyInstance                            destroy_instance;
+    PFN_vkEnumerateInstanceVersion                   get_version;
+    PFN_vkEnumerateInstanceLayerProperties           enumerate_layers;
+    PFN_vkEnumerateInstanceExtensionProperties       enumerate_extensions;
 
     // instance level functions
-    pfn_vk_enumerate_physical_devices                enumerate_devices;
-    pfn_vk_get_physical_device_properties            get_physical_device_properties;
-    pfn_vk_get_physical_device_features              get_physical_device_features;
-    pfn_vk_get_physical_queue_group_properties       get_physical_queue_group_properties;
-    pfn_vk_create_device                             create_device;
-    pfn_vk_register_debug_callback                   register_debug_callback;
-    pfn_vk_unregister_debug_callback                 unregister_debug_callback;
-    pfn_vk_get_physical_device_surface_support       get_physical_device_surface_support;
-    pfn_vk_get_physical_device_surface_capabilities  get_physical_device_surface_capabilities;
-    pfn_vk_get_physical_device_surface_present_modes get_physical_device_surface_present_modes;
-    pfn_vk_get_physical_device_surface_formats       get_physical_device_surface_formats;
-    pfn_vk_enumerate_device_layers                   enumerate_device_layers;
-    pfn_vk_enumerate_device_extensions               enumerate_device_extensions;
-    pfn_vk_destroy_surface                           destroy_surface;
+    PFN_vkEnumeratePhysicalDevices                   enumerate_devices;
+    PFN_vkGetPhysicalDeviceProperties                get_physical_device_properties;
+    PFN_vkGetPhysicalDeviceFeatures                  get_physical_device_features;
+    PFN_vkGetPhysicalDeviceQueueFamilyProperties     get_physical_queue_group_properties;
+    PFN_vkCreateDevice                               create_device;
+    PFN_vkCreateDebugReportCallbackEXT               register_debug_callback;
+    PFN_vkDestroyDebugReportCallbackEXT              unregister_debug_callback;
+    PFN_vkGetPhysicalDeviceSurfaceSupportKHR         get_physical_device_surface_support;
+    PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR    get_physical_device_surface_capabilities;
+    PFN_vkGetPhysicalDeviceSurfacePresentModesKHR    get_physical_device_surface_present_modes;
+    PFN_vkGetPhysicalDeviceSurfaceFormatsKHR         get_physical_device_surface_formats;
+    PFN_vkEnumerateDeviceLayerProperties             enumerate_device_layers;
+    PFN_vkEnumerateDeviceExtensionProperties         enumerate_device_extensions;
+    PFN_vkDestroySurfaceKHR                          destroy_surface;
 
     // device level functions
-    pfn_vk_create_semaphore                          create_semaphore;
-    pfn_vk_destroy_semaphore                         destroy_semaphore;
-    pfn_vk_create_swapchain                          create_swapchain;
-    pfn_vk_destroy_swapchain                         destroy_swapchain;
-    pfn_vk_create_command_pool                       create_command_pool;
-    pfn_vk_destroy_command_pool                      destroy_command_pool;
-    pfn_vk_allocate_command_buffers                  allocate_command_buffers;
-    pfn_vk_free_command_buffers                      free_command_buffers;
-    pfn_vk_acquire_next_image                        acquire_next_image;
-    pfn_vk_wait_for_device_idle                      wait_for_device_idle;
-    pfn_vk_destroy_device                            destroy_device;
-    pfn_vk_get_swapchain_images                      get_swapchain_images;
-    pfn_vk_begin_command_buffer                      begin_command_buffer;
-    pfn_vk_end_command_buffer                        end_command_buffer;
-    pfn_vk_cmd_pipeline_barrier                      cmd_pipeline_barrier;
-    pfn_vk_cmd_clear_color_image                     cmd_clear_color_image;
-    pfn_vk_queue_submit                              queue_submit;
-    pfn_vk_queue_present                             queue_present;
-    pfn_vk_get_device_queue                          get_device_queue;
-    pfn_vk_create_render_pass                        create_render_pass;
-    pfn_vk_create_image_view                         create_image_view;
-    pfn_vk_create_framebuffer                        create_framebuffer;
+    PFN_vkCreateSemaphore                            create_semaphore;
+    PFN_vkDestroySemaphore                           destroy_semaphore;
+    PFN_vkCreateSwapchainKHR                         create_swapchain;
+    PFN_vkDestroySwapchainKHR                        destroy_swapchain;
+    PFN_vkCreateCommandPool                          create_command_pool;
+    PFN_vkDestroyCommandPool                         destroy_command_pool;
+    PFN_vkAllocateCommandBuffers                     allocate_command_buffers;
+    PFN_vkFreeCommandBuffers                         free_command_buffers;
+    PFN_vkAcquireNextImageKHR                        acquire_next_image;
+    PFN_vkDeviceWaitIdle                             wait_for_device_idle;
+    PFN_vkDestroyDevice                              destroy_device;
+    PFN_vkGetSwapchainImagesKHR                      get_swapchain_images;
+    PFN_vkBeginCommandBuffer                         begin_command_buffer;
+    PFN_vkEndCommandBuffer                           end_command_buffer;
+    PFN_vkCmdPipelineBarrier                         cmd_pipeline_barrier;
+    PFN_vkCmdClearColorImage                         cmd_clear_color_image;
+    PFN_vkQueueSubmit                                queue_submit;
+    PFN_vkQueuePresentKHR                            queue_present;
+    PFN_vkGetDeviceQueue                             get_device_queue;
+    PFN_vkCreateRenderPass                           create_render_pass;
+    PFN_vkCreateImageView                            create_image_view;
+    PFN_vkCreateFramebuffer                          create_framebuffer;
 };
 
 extern struct vk_context* vk_ctx;
 
-bool initialize_vulkan_context(pfn_vk_get_instance_proc_addr pfn_get_instance_proc_addr, uint32_t ext_count, const char** ext_array);
+bool initialize_vulkan_context(PFN_vkGetInstanceProcAddr pfn_get_instance_proc_addr, uint32_t ext_count, const char** ext_array);
 void uninitialize_vulkan_context(void);
 
-bool initialize_swapchain(vk_surface surface);
+bool initialize_swapchain(VkSurfaceKHR surface);
 
 #endif // VK_INTERFACE_H
