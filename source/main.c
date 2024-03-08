@@ -14,6 +14,7 @@ const uint32_t window_height = 768;
 SDL_Window* g_window = NULL;
 
 vk_render_pass g_render_pass = NULL;
+vk_image_view  g_image_views[VK_CTX_NUM_SWAPCHAIN_BUFFERS];
 
 bool initialize(void)
 {
@@ -151,6 +152,35 @@ bool initialize(void)
         {
             printf("Failed to create render pass\n");
             status = false;
+        }
+    }
+
+    if(status)
+    {
+        for(uint32_t i = 0; i < VK_CTX_NUM_SWAPCHAIN_BUFFERS; i++)
+        {
+            struct vk_image_view_create_params params;
+            params.s_type = vk_structure_type__image_view_create_info;
+            params.p_next = NULL;
+            params.flags = 0;
+            params.image = vk_ctx->swapchain_images[i];
+            params.view_type = vk_image_view_type__2D;
+            params.format = vk_ctx->surface_format;
+            params.components.r = vk_component_swizzle__identity;
+            params.components.g = vk_component_swizzle__identity;
+            params.components.b = vk_component_swizzle__identity;
+            params.components.a = vk_component_swizzle__identity;
+            params.subresource_range.aspect_mask = vk_image_aspect__color;
+            params.subresource_range.base_mip_level = 0;
+            params.subresource_range.level_count = 1;
+            params.subresource_range.base_array_layer = 0;
+            params.subresource_range.layer_count = 1;
+
+            if(vk_ctx->create_image_view(vk_ctx->device, &params, vk_ctx->callbacks, &g_image_views[i]) != vk_success)
+            {
+                printf("Failed to create swapchain image view\n");
+                status = false;
+            }
         }
     }
 

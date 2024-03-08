@@ -80,6 +80,7 @@ struct vk_context
     pfn_vk_queue_present                             queue_present;
     pfn_vk_get_device_queue                          get_device_queue;
     pfn_vk_create_render_pass                        create_render_pass;
+    pfn_vk_create_image_view                         create_image_view;
 };
 
 extern struct vk_context* vk_ctx;

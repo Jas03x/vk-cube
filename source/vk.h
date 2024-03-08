@@ -23,6 +23,7 @@ typedef void* vk_framebuffer;
 typedef void* vk_buffer;
 typedef void* vk_image;
 typedef void* vk_queue;
+typedef void* vk_image_view;
 
 enum vk_bool
 {
@@ -44,6 +45,7 @@ enum vk_structure_type
     vk_structure_type__submit_info                  = 4,
     vk_structure_type__fence_create_info            = 8,
     vk_structure_type__semaphore_create_info        = 9,
+    vk_structure_type__image_view_create_info       = 15,
     vk_structure_type__render_pass_create_info      = 38,
     vk_structure_type__command_pool_create_info     = 39,
     vk_structure_type__command_buffer_allocate_info = 40,
@@ -867,12 +869,54 @@ struct vk_render_pass_create_params
     struct vk_subpass_dependency*              dependency_array;
 };
 
+enum vk_image_view_type
+{
+    vk_image_view_type__1D         = 0,
+    vk_image_view_type__2D         = 1,
+    vk_image_view_type__3D         = 2,
+    vk_image_view_type__cube       = 3,
+    vk_image_view_type__1D_array   = 4,
+    vk_image_view_type__2D_array   = 5,
+    vk_image_view_type__cube_array = 6
+};
+
+enum vk_component_swizzle
+{
+    vk_component_swizzle__identity = 0,
+    vk_component_swizzle__zero     = 1,
+    vk_component_swizzle__one      = 2,
+    vk_component_swizzle__r        = 3,
+    vk_component_swizzle__g        = 4,
+    vk_component_swizzle__b        = 5,
+    vk_component_swizzle__a        = 6
+};
+
+struct vk_component_mapping
+{
+    enum vk_component_swizzle                  r;
+    enum vk_component_swizzle                  g;
+    enum vk_component_swizzle                  b;
+    enum vk_component_swizzle                  a;
+};
+
+struct vk_image_view_create_params
+{
+    enum vk_structure_type                     s_type;
+    const void*                                p_next;
+    enum vk_image_view_create_flags            flags;
+    vk_image                                   image;
+    enum vk_image_view_type                    view_type;
+    enum vk_format                             format;
+    struct vk_component_mapping                components;
+    struct vk_image_subresource_range          subresource_range;
+};
+
 typedef void*    (*pfn_vk_get_instance_proc_addr)(vk_instance h_instance, const char* p_name);
 typedef void*    (*pfn_vk_get_device_proc_addr)(vk_device h_device, const char* p_name);
 
 // global functions
-typedef uint32_t (*pfn_vk_create_instance)(struct vk_instance_info* p_info, struct vk_allocation_callbacks* callbacks, vk_instance* p_instance);
-typedef void     (*pfn_vk_destroy_instance)(vk_instance h_instance, struct vk_allocation_callbacks* callbacks);
+typedef uint32_t (*pfn_vk_create_instance)(struct vk_instance_info* p_info, const struct vk_allocation_callbacks* callbacks, vk_instance* p_instance);
+typedef void     (*pfn_vk_destroy_instance)(vk_instance h_instance, const struct vk_allocation_callbacks* callbacks);
 typedef uint32_t (*pfn_vk_get_version)(uint32_t* p_version);
 typedef uint32_t (*pfn_vk_enumerate_layers)(uint32_t* p_count, struct vk_layer* p_layers);
 typedef uint32_t (*pfn_vk_enumerate_extensions)(const char* p_layer_name, uint32_t* p_count, struct vk_extension* p_extensions);
@@ -882,29 +926,29 @@ typedef uint32_t (*pfn_vk_enumerate_physical_devices)(vk_instance h_instance, ui
 typedef void     (*pfn_vk_get_physical_device_properties)(vk_physical_device h_device, struct vk_physical_device_properties* p_properties);
 typedef void     (*pfn_vk_get_physical_device_features)(vk_physical_device h_device, struct vk_physical_device_features* p_features);
 typedef void     (*pfn_vk_get_physical_queue_group_properties)(vk_physical_device h_device, uint32_t* p_count, struct vk_queue_group_properties* p_properties);
-typedef uint32_t (*pfn_vk_create_device)(vk_physical_device h_physical_device, const struct vk_device_create_params* params, struct vk_allocation_callbacks* callbacks, vk_device* p_device);
-typedef uint32_t (*pfn_vk_register_debug_callback)(vk_instance h_instance, const struct vk_debug_callback_info* p_info, struct vk_allocation_callbacks* callbacks, vk_debug_callback* p_callback);
-typedef void     (*pfn_vk_unregister_debug_callback)(vk_instance instance, vk_debug_callback* callback, struct vk_allocation_callbacks* callbacks);
+typedef uint32_t (*pfn_vk_create_device)(vk_physical_device h_physical_device, const struct vk_device_create_params* params, const struct vk_allocation_callbacks* callbacks, vk_device* p_device);
+typedef uint32_t (*pfn_vk_register_debug_callback)(vk_instance h_instance, const struct vk_debug_callback_info* p_info, const struct vk_allocation_callbacks* callbacks, vk_debug_callback* p_callback);
+typedef void     (*pfn_vk_unregister_debug_callback)(vk_instance instance, vk_debug_callback* callback, const struct vk_allocation_callbacks* callbacks);
 typedef uint32_t (*pfn_vk_get_physical_device_surface_support)(vk_physical_device h_device, uint32_t queue_family, vk_surface surface, uint32_t* p_supported);
 typedef uint32_t (*pfn_vk_enumerate_device_layers)(vk_physical_device h_device, uint32_t* p_count, struct vk_layer* p_layers);
 typedef uint32_t (*pfn_vk_enumerate_device_extensions)(vk_physical_device h_device, const char* p_layer_name, uint32_t* p_count, struct vk_extension* p_extensions);
 typedef uint32_t (*pfn_vk_get_physical_device_surface_capabilities)(vk_physical_device h_device, vk_surface surface, struct vk_surface_capabilities* p_capabilities);
 typedef uint32_t (*pfn_vk_get_physical_device_surface_present_modes)(vk_physical_device h_device, vk_surface surface, uint32_t* p_present_mode_count, uint32_t* p_present_mode_array);
 typedef uint32_t (*pfn_vk_get_physical_device_surface_formats)(vk_physical_device h_device, vk_surface surface, uint32_t* p_format_count, struct vk_surface_format* p_format_array);
-typedef void     (*pfn_vk_destroy_surface)(vk_instance h_instance, vk_surface surface, struct vk_allocation_callbacks* callbacks);
+typedef void     (*pfn_vk_destroy_surface)(vk_instance h_instance, vk_surface surface, const struct vk_allocation_callbacks* callbacks);
 
 // device level functions
-typedef uint32_t (*pfn_vk_create_semaphore)(vk_device h_device, const struct vk_semaphore_create_params* params, struct vk_allocation_callbacks* callbacks, vk_semaphore* p_semaphore);
-typedef void     (*pfn_vk_destroy_semaphore)(vk_device h_device, vk_semaphore semaphore, struct vk_allocation_callbacks* callbacks);
-typedef uint32_t (*pfn_vk_create_swapchain)(vk_device h_device, const struct vk_swapchain_create_params* params, struct vk_allocation_callbacks* callbacks, vk_swapchain* p_swapchain);
-typedef void     (*pfn_vk_destroy_swapchain)(vk_device h_device, vk_swapchain swapchain, struct vk_allocation_callbacks* callbacks);
+typedef uint32_t (*pfn_vk_create_semaphore)(vk_device h_device, const struct vk_semaphore_create_params* params, const struct vk_allocation_callbacks* callbacks, vk_semaphore* p_semaphore);
+typedef void     (*pfn_vk_destroy_semaphore)(vk_device h_device, vk_semaphore semaphore, const struct vk_allocation_callbacks* callbacks);
+typedef uint32_t (*pfn_vk_create_swapchain)(vk_device h_device, const struct vk_swapchain_create_params* params, const struct vk_allocation_callbacks* callbacks, vk_swapchain* p_swapchain);
+typedef void     (*pfn_vk_destroy_swapchain)(vk_device h_device, vk_swapchain swapchain, const struct vk_allocation_callbacks* callbacks);
 typedef uint32_t (*pfn_vk_acquire_next_image)(vk_device h_device, vk_swapchain swapchain, uint64_t timeout, vk_semaphore semaphore, vk_fence fence, uint32_t* p_index);
-typedef uint32_t (*pfn_vk_create_command_pool)(vk_device h_device, const struct vk_command_pool_create_params* params, struct vk_allocation_callbacks* callbacks, vk_command_pool* p_command_pool);
-typedef void     (*pfn_vk_destroy_command_pool)(vk_device h_device, vk_command_pool command_pool, struct vk_allocation_callbacks* callbacks);
+typedef uint32_t (*pfn_vk_create_command_pool)(vk_device h_device, const struct vk_command_pool_create_params* params, const struct vk_allocation_callbacks* callbacks, vk_command_pool* p_command_pool);
+typedef void     (*pfn_vk_destroy_command_pool)(vk_device h_device, vk_command_pool command_pool, const struct vk_allocation_callbacks* callbacks);
 typedef uint32_t (*pfn_vk_allocate_command_buffers)(vk_device h_device, const struct vk_command_buffer_allocate_params* params, vk_command_buffer* p_command_buffers);
 typedef void     (*pfn_vk_free_command_buffers)(vk_device h_device, vk_command_pool command_pool, uint32_t command_buffer_count, const vk_command_buffer* p_command_buffers);
 typedef uint32_t (*pfn_vk_wait_for_device_idle)(vk_device h_device);
-typedef void     (*pfn_vk_destroy_device)(vk_device h_device, struct vk_allocation_callbacks* callbacks);
+typedef void     (*pfn_vk_destroy_device)(vk_device h_device, const struct vk_allocation_callbacks* callbacks);
 typedef uint32_t (*pfn_vk_begin_command_buffer)(vk_command_buffer h_command_buffer, const struct vk_command_buffer_begin_params* params);
 typedef uint32_t (*pfn_vk_end_command_buffer)(vk_command_buffer h_command_buffer);
 typedef void     (*pfn_vk_cmd_pipeline_barrier)(vk_command_buffer h_command_buffer, enum vk_pipeline_stage_flags src_stage_mask, enum vk_pipeline_stage_flags dst_stage_mask, enum vk_dependency_flags dependency_flags, 
@@ -913,10 +957,11 @@ typedef void     (*pfn_vk_cmd_pipeline_barrier)(vk_command_buffer h_command_buff
     uint32_t image_memory_barrier_count, const struct vk_image_memory_barrier* p_image_memory_barrier_array
 );
 typedef uint32_t (*pfn_vk_get_swapchain_images)(vk_device h_device, vk_swapchain swapchain, uint32_t* image_count, vk_image* p_images);
-typedef void     (*pfn_vk_cmd_clear_color_image)(vk_command_buffer h_command_buffer, vk_image image, enum vk_image_layout image_layout, struct vk_clear_color* p_color, uint32_t range_count, struct vk_image_subresource_range* ranges);
+typedef void     (*pfn_vk_cmd_clear_color_image)(vk_command_buffer h_command_buffer, vk_image image, enum vk_image_layout image_layout, const struct vk_clear_color* p_color, uint32_t range_count, const struct vk_image_subresource_range* ranges);
 typedef uint32_t (*pfn_vk_queue_submit)(vk_queue h_queue, uint32_t submission_count, const struct vk_submission_info* submission_array, vk_fence fence);
 typedef uint32_t (*pfn_vk_queue_present)(vk_queue h_queue, struct vk_present_info* info);
 typedef void     (*pfn_vk_get_device_queue)(vk_device h_device, uint32_t queue_family_index, uint32_t queue_index, vk_queue* p_queue);
-typedef uint32_t (*pfn_vk_create_render_pass)(vk_device h_device, struct vk_render_pass_create_params* params, struct vk_allocation_callbacks* callbacks, vk_render_pass* p_render_pass);
+typedef uint32_t (*pfn_vk_create_render_pass)(vk_device h_device, const struct vk_render_pass_create_params* params, const struct vk_allocation_callbacks* callbacks, vk_render_pass* p_render_pass);
+typedef uint32_t (*pfn_vk_create_image_view)(vk_device h_device, const struct vk_image_view_create_params* params, const struct vk_allocation_callbacks* callbacks, vk_image_view* p_image_view);
 
 #endif // VK_H
