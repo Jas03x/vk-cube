@@ -10,7 +10,7 @@ struct vk_context
 {
     VkInstance                                       instance;
 
-    VkAllocationCallbacks*                           callbacks;
+    VkAllocationCallbacks*                           allocation_callbacks;
 
     VkDevice                                         device;
     VkPhysicalDevice                                 physical_device;
@@ -39,12 +39,12 @@ struct vk_context
     // global functions
     PFN_vkCreateInstance                             create_instance;
     PFN_vkDestroyInstance                            destroy_instance;
-    PFN_vkEnumerateInstanceVersion                   get_version;
-    PFN_vkEnumerateInstanceLayerProperties           enumerate_layers;
-    PFN_vkEnumerateInstanceExtensionProperties       enumerate_extensions;
+    PFN_vkEnumerateInstanceVersion                   enumerate_instance_version;
+    PFN_vkEnumerateInstanceLayerProperties           enumerate_instance_layers;
+    PFN_vkEnumerateInstanceExtensionProperties       enumerate_instance_extensions;
 
     // instance level functions
-    PFN_vkEnumeratePhysicalDevices                   enumerate_devices;
+    PFN_vkEnumeratePhysicalDevices                   enumerate_physical_devices;
     PFN_vkGetPhysicalDeviceProperties                get_physical_device_properties;
     PFN_vkGetPhysicalDeviceFeatures                  get_physical_device_features;
     PFN_vkGetPhysicalDeviceQueueFamilyProperties     get_physical_queue_group_properties;
@@ -82,6 +82,9 @@ struct vk_context
     PFN_vkCreateRenderPass                           create_render_pass;
     PFN_vkCreateImageView                            create_image_view;
     PFN_vkCreateFramebuffer                          create_framebuffer;
+    PFN_vkCreateShaderModule                         create_shader_module;
+    PFN_vkCreatePipelineLayout                       create_pipeline_layout;
+    PFN_vkCreateGraphicsPipelines                    create_graphics_pipelines;
 };
 
 extern struct vk_context* vk_ctx;
