@@ -209,14 +209,77 @@ bool initialize(void)
         }
     }
 
+
+    uint8_t* vertex_shader_code = NULL;
+    uint64_t vertex_shader_code_size = 0;
+
+    uint8_t* fragment_shader_code = NULL;
+    uint64_t fragment_shader_code_size = 0;
+
+    if(status)
+    {
+        FILE* file = fopen("c:/workspace/vk-cube/bin/shader.vert.spv", "rb");
+        if(file != NULL)
+        {
+            fseek(file, 0, SEEK_END);
+            vertex_shader_code_size = ftell(file);
+            rewind(file);
+            vertex_shader_code = (uint8_t*) malloc(vertex_shader_code_size * sizeof(uint8_t));
+            if(fread(vertex_shader_code, sizeof(uint8_t), vertex_shader_code_size, file) != vertex_shader_code_size)
+            {
+                printf("Error reading vertex shader code\n");
+                status = false;
+            }
+        }
+        else
+        {
+            printf("Could not read vertex shader\n");
+            status = false;
+        }
+
+        if(file != NULL)
+        {
+            fclose(file);
+            file = NULL;
+        }
+    }
+
+    if(status)
+    {
+        FILE* file = fopen("c:/workspace/vk-cube/bin/shader.frag.spv", "rb");
+        if(file != NULL)
+        {
+            fseek(file, 0, SEEK_END);
+            fragment_shader_code_size = ftell(file);
+            rewind(file);
+            fragment_shader_code = (uint8_t*) malloc(fragment_shader_code_size * sizeof(uint8_t));
+            if(fread(fragment_shader_code, sizeof(uint8_t), fragment_shader_code_size, file) != fragment_shader_code_size)
+            {
+                printf("Error reading fragment shader code\n");
+                status = false;
+            }
+        }
+        else
+        {
+            printf("Could not read fragment shader\n");
+            status = false;
+        }
+
+        if(file != NULL)
+        {
+            fclose(file);
+            file = NULL;
+        }
+    }
+
     if(status)
     {
         VkShaderModuleCreateInfo vertex_shader_info;
         vertex_shader_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
         vertex_shader_info.pNext = NULL;
         vertex_shader_info.flags = 0;
-        vertex_shader_info.codeSize = 0;
-        vertex_shader_info.pCode = NULL;
+        vertex_shader_info.codeSize = vertex_shader_code_size;
+        vertex_shader_info.pCode = (const uint32_t*) vertex_shader_code;
 
         if(vk_ctx->create_shader_module(vk_ctx->device, &vertex_shader_info, vk_ctx->allocation_callbacks, &g_vertex_shader_module) != VK_SUCCESS)
         {
@@ -231,10 +294,10 @@ bool initialize(void)
         fragment_shader_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
         fragment_shader_info.pNext = NULL;
         fragment_shader_info.flags = 0;
-        fragment_shader_info.codeSize = 0;
-        fragment_shader_info.pCode = NULL;
+        fragment_shader_info.codeSize = fragment_shader_code_size;
+        fragment_shader_info.pCode = (const uint32_t*) fragment_shader_code;
 
-        if(vk_ctx->create_shader_module(vk_ctx->device, &fragment_shader_info, vk_ctx->allocation_callbacks, &g_vertex_shader_module) != VK_SUCCESS)
+        if(vk_ctx->create_shader_module(vk_ctx->device, &fragment_shader_info, vk_ctx->allocation_callbacks, &g_fragment_shader_module) != VK_SUCCESS)
         {
             printf("Failed to create fragment shader\n");
             status = false;

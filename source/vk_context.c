@@ -119,19 +119,22 @@ void* vk_reallocation_callback(void* user_data, void* original, uint64_t size, u
 
 void vk_free_callback(void* user_data, void* allocation)
 {
-    uint8_t* original_ptr = ((uint8_t*) allocation) - sizeof(struct vk_allocation_header);
-    struct vk_allocation_header* header = (struct vk_allocation_header*) original_ptr;
-
-    if(header->size <= g_vk_memory_usage.size)
+    if(allocation != NULL)
     {
-        g_vk_memory_usage.size -= header->size;
-    }
-    else
-    {
-        printf("Memory over-freed\n");
-    }
+        uint8_t* original_ptr = ((uint8_t*) allocation) - sizeof(struct vk_allocation_header);
+        struct vk_allocation_header* header = (struct vk_allocation_header*) original_ptr;
 
-    free(original_ptr);
+        if(header->size <= g_vk_memory_usage.size)
+        {
+            g_vk_memory_usage.size -= header->size;
+        }
+        else
+        {
+            printf("Memory over-freed\n");
+        }
+
+        free(original_ptr);
+    }
 }
 
 void vk_allocation_notification(void* user_data, uint64_t size, enum vk_internal_allocation_type type, enum vk_system_allocation_scope scope)
