@@ -1,5 +1,6 @@
 msvc_path = "c:\program files\microsoft visual studio\2022\community\vc\tools\msvc\14.38.33130\bin\hostx64\x64"
 cygwin_path = "c:\cygwin64\bin"
+vulkan_sdk = "c:\libraries\vulkansdk\1.3.275.0\bin"
 
 cc = $(msvc_path)/cl.exe
 gcc = $(cygwin_path)/g++.exe
@@ -10,7 +11,7 @@ pdb = $(output).pdb
 
 include_paths  = -I "c:\program files (x86)\windows kits\10\include\10.0.22621.0\ucrt"
 include_paths += -I "c:\program files\microsoft visual studio\2022\community\vc\tools\msvc\14.38.33130\include"
-include_paths += -I "c:\libraries\vulkan-headers\include"
+include_paths += -I "c:\libraries\vulkansdk\1.3.275.0\include"
 include_paths += -I "c:\libraries\sdl2\include"
 
 library_paths  = -LIBPATH:"c:\program files (x86)\windows kits\10\lib\10.0.22621.0\um\x64"
@@ -31,8 +32,8 @@ debug: $(bin)/$(exe)
 
 release: $(bin)/$(exe)
 
-$(bin)/$(exe): $(objects)
-	$(link) -SUBSYSTEM:CONSOLE $(lflags) $(library_paths) $^ $(libraries) -OUT:$@ -PDB:$(bin)/$(pdb)
+$(bin)/$(exe): $(objects) $(vertex_shaders) $(fragment_shaders)
+	$(link) -SUBSYSTEM:CONSOLE $(lflags) $(library_paths) $(objects) $(libraries) -OUT:$@ -PDB:$(bin)/$(pdb)
 
 ifneq (,$(filter debug release, $(MAKECMDGOALS)))
 -include $(objects:.o=.d)
@@ -44,9 +45,16 @@ $(bin)/%.d:
 $(bin)/%.o:
 	$(cc) $(cflags) $(include_paths) $(defines) -c $(src)/$*.c -Fo:$@ -Fd:$(bin)/$(pdb)
 
+$(bin)/%.vert.spv: $(src)/%.vert.glsl
+	$(vulkan_sdk)/glslangvalidator.exe -V -S vert $< -o $@
+
+$(bin)/%.frag.spv: $(src)/%.frag.glsl
+	$(vulkan_sdk)/glslangvalidator.exe -V -S frag $< -o $@
+
 clean:
 	rm -f $(bin)/*.d
 	rm -f $(bin)/*.o
 	rm -f $(bin)/*.ilk
+	rm -f $(bin)/*.spv
 	rm -f $(bin)/$(exe)
 	rm -f $(bin)/$(pdb)
